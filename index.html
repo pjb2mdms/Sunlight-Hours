@@ -7,63 +7,64 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      margin: 2rem;
-      background: #f7fafc;
-      color: #222;
+      background: #f4f4f4;
+      color: #333;
+      margin: 0;
+      padding: 0;
     }
-    input, select, button {
+    header {
+      background: #004c91;
+      color: white;
+      text-align: center;
+      padding: 1rem 0;
+    }
+    main {
+      padding: 1rem;
+      max-width: 800px;
+      margin: auto;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    label, select, input, button {
+      display: block;
       margin: 0.5rem 0;
+      font-size: 1rem;
+    }
+    select, input {
+      width: 100%;
       padding: 0.4rem;
     }
-    .card {
-      background: #fff;
-      padding: 1rem;
-      border-radius: 10px;
-      box-shadow: 0 0 5px rgba(0,0,0,0.1);
-      max-width: 600px;
+    button {
+      background: #004c91;
+      color: white;
+      border: none;
+      padding: 0.6rem 1rem;
+      border-radius: 5px;
+      cursor: pointer;
     }
-    pre {
-      white-space: pre-line;
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 0.5rem;
+      text-align: center;
+    }
+    th {
+      background: #f0f0f0;
     }
   </style>
 </head>
 <body>
-  <h1>🌅 Sunlight Angle Comparator</h1>
-  <p>Compare solar elevation angles and find the equivalent date with matching sunlight angle at noon.</p>
+  <header>
+    <h1>Sunlight Angle Comparator</h1>
+    <p>Compare solar noon angles and daylight duration for selected cities</p>
+  </header>
+  <main>
+    <label for="dateInput">Select Date:</label>
+    <input type="date" id="dateInput" value="2025-06-21" />
 
-  <div class="card">
-    <label for="city">Primary City:</label>
-    <select id="city">
-      <option value="27.9506,-82.4572">Tampa, FL</option>
-      <option value="29.7604,-95.3698">Houston, TX</option>
-      <option value="56.3389,-2.7960">St Andrews, Scotland</option>
-      <option value="40.7128,-74.0060">New York, NY</option>
-      <option value="34.0522,-118.2437">Los Angeles, CA</option>
-      <option value="41.8781,-87.6298">Chicago, IL</option>
-    </select><br>
-
-    <label for="city2">Compare With:</label>
-    <select id="city2">
-      <option value="">(none)</option>
-      <option value="56.3389,-2.7960">St Andrews, Scotland</option>
-      <option value="29.7604,-95.3698">Houston, TX</option>
-      <option value="47.6062,-122.3321">Seattle, WA</option>
-      <option value="40.7128,-74.0060">New York, NY</option>
-      <option value="34.0522,-118.2437">Los Angeles, CA</option>
-    </select><br>
-
-    <label for="date">Date:</label>
-    <input type="date" id="date" /><br>
-
-    <button onclick="getSunlightAngle()">Get Sunlight Angle Info</button>
-
-    <pre id="output"></pre>
-    <canvas id="chart" width="500" height="300"></canvas>
-  </div>
-
-  <!-- External Libraries -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script>
-alert("JavaScript is executing correctly.");
-</script>
-
+    <label for="citySelect">Select Cities (multiple allowed):</l
