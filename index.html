@@ -22,22 +22,22 @@
       background: white;
       max-width: 950px;
       margin: 1rem auto;
-      padding: 1.5rem 2rem;
+      padding: 1.2rem 2rem;
       border-radius: 8px;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
-    h2 { margin-top: 1.5rem; }
-    label { display: block; margin-top: 0.5rem; }
+    h2 { margin-top: 1.2rem; }
+    label { display: block; margin-top: 0.4rem; }
     .city-list {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-      gap: 0.3rem;
+      gap: 0.25rem;
     }
     button {
       background: #004c91;
       color: white;
       border: none;
-      padding: 0.6rem 1rem;
+      padding: 0.5rem 1rem;
       border-radius: 5px;
       cursor: pointer;
       margin-top: 1rem;
@@ -46,17 +46,25 @@
       width: 100%;
       border-collapse: collapse;
       margin-top: 1rem;
+      font-size: 0.95rem;
     }
     th, td {
       border: 1px solid #ddd;
-      padding: 0.4rem;
+      padding: 0.35rem 0.4rem;
       text-align: center;
+      white-space: nowrap;
     }
     th {
       background: #f0f0f0;
     }
+    th.city-col, td.city-col {
+      text-align: left;
+      width: 25%;
+      white-space: normal;
+    }
     canvas {
-      margin-top: 2rem;
+      margin-top: 1.2rem;
+      height: 300px !important;
     }
   </style>
 </head>
@@ -77,11 +85,11 @@
     <table id="resultsTable">
       <thead>
         <tr>
-          <th>City</th>
-          <th>Latitude</th>
-          <th>Longitude</th>
-          <th>Solar Noon Elevation (°)</th>
-          <th>Daylight Duration (hrs)</th>
+          <th class="city-col">City</th>
+          <th>Lat</th>
+          <th>Lon</th>
+          <th>Noon Elev (°)</th>
+          <th>Daylight (hrs)</th>
           <th>Equivalent Date</th>
         </tr>
       </thead>
@@ -89,20 +97,21 @@
     </table>
 
     <h2>Daylight Duration Chart</h2>
-    <canvas id="daylightChart" height="400"></canvas>
+    <canvas id="daylightChart"></canvas>
   </main>
 
   <script>
+    // Cities sorted north → south
     const cityData = {
-      "Houston, TX": { lat: 29.7604, lon: -95.3698 },
-      "St Andrews, Scotland": { lat: 56.3398, lon: -2.7967 },
-      "Tampa, FL": { lat: 27.9506, lon: -82.4572 },
       "Fairbanks, AK": { lat: 64.8378, lon: -147.7164 },
+      "St Andrews, Scotland": { lat: 56.3398, lon: -2.7967 },
+      "Hanover, NH": { lat: 43.7022, lon: -72.2896 },
       "East Longmeadow, MA": { lat: 42.0645, lon: -72.5126 },
       "Crozet, VA": { lat: 38.0696, lon: -78.7000 },
-      "Hanover, NH": { lat: 43.7022, lon: -72.2896 },
       "Nashville, TN": { lat: 36.1627, lon: -86.7816 },
-      "Asheville, NC": { lat: 35.5951, lon: -82.5515 }
+      "Asheville, NC": { lat: 35.5951, lon: -82.5515 },
+      "Houston, TX": { lat: 29.7604, lon: -95.3698 },
+      "Tampa, FL": { lat: 27.9506, lon: -82.4572 }
     };
 
     // Populate city checkboxes
@@ -157,6 +166,13 @@
       return new Date(year, 0, bestDay);
     }
 
+    function formatDateMMDDYYYY(date) {
+      const mm = String(date.getMonth() + 1).padStart(2, '0');
+      const dd = String(date.getDate()).padStart(2, '0');
+      const yyyy = date.getFullYear();
+      return `${mm}/${dd}/${yyyy}`;
+    }
+
     let daylightChart;
 
     function plotChart(selectedCities, eqDateObj, refDay) {
@@ -185,11 +201,7 @@
           xMax: refDay,
           borderColor: 'black',
           borderWidth: 2,
-          label: {
-            enabled: true,
-            content: 'Selected Date',
-            position: 'start'
-          }
+          label: { enabled: true, content: 'Selected', position: 'start' }
         }
       };
 
@@ -200,11 +212,7 @@
           xMax: dayOfYear(eqDateObj),
           borderColor: 'red',
           borderWidth: 2,
-          label: {
-            enabled: true,
-            content: 'Equivalent Date',
-            position: 'start'
-          }
+          label: { enabled: true, content: 'Equivalent', position: 'start' }
         };
       }
 
@@ -213,10 +221,10 @@
         data: { labels, datasets },
         options: {
           responsive: true,
-          interaction: { mode: 'index', intersect: false },
+          maintainAspectRatio: false,
           plugins: {
             legend: { position: 'bottom' },
-            title: { display: true, text: 'Daylight Hours Throughout the Year' },
+            title: { display: true, text: 'Daylight Hours Through the Year' },
             annotation: { annotations }
           },
           scales: {
@@ -246,7 +254,7 @@
       const refHours = daylightHours(refLat, refDec);
 
       const eqDateObj = findEquivalentDate(refLat, refHours, refDay, year);
-      const eqDate = eqDateObj ? eqDateObj.toISOString().split('T')[0] : "—";
+      const eqDateStr = eqDateObj ? formatDateMMDDYYYY(eqDateObj) : "—";
 
       selected.forEach(city => {
         const { lat, lon } = cityData[city];
@@ -255,12 +263,12 @@
         const hours = daylightHours(lat, dec);
 
         const row = `<tr>
-          <td>${city}</td>
+          <td class="city-col">${city}</td>
           <td>${lat.toFixed(2)}</td>
           <td>${lon.toFixed(2)}</td>
           <td>${elev.toFixed(2)}</td>
           <td>${hours.toFixed(2)}</td>
-          <td>${eqDate}</td>
+          <td>${eqDateStr}</td>
         </tr>`;
         resultsBody.insertAdjacentHTML("beforeend", row);
       });
