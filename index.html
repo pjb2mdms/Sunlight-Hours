@@ -8,9 +8,7 @@
     body {
       font-family: Arial, sans-serif;
       background: #f4f4f4;
-      color: #333;
       margin: 0;
-      padding: 0;
     }
     header {
       background: #004c91;
@@ -19,22 +17,16 @@
       padding: 1rem 0;
     }
     main {
-      padding: 1rem;
-      max-width: 800px;
-      margin: auto;
       background: white;
+      max-width: 900px;
+      margin: 1rem auto;
+      padding: 1rem 2rem;
       border-radius: 8px;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
-    label, select, input, button {
-      display: block;
-      margin: 0.5rem 0;
-      font-size: 1rem;
-    }
-    select, input {
-      width: 100%;
-      padding: 0.4rem;
-    }
+    h2 { margin-top: 1.5rem; }
+    label { display: block; margin-top: 0.5rem; }
+    .city-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 0.3rem; }
     button {
       background: #004c91;
       color: white;
@@ -42,6 +34,7 @@
       padding: 0.6rem 1rem;
       border-radius: 5px;
       cursor: pointer;
+      margin-top: 1rem;
     }
     table {
       width: 100%;
@@ -50,7 +43,7 @@
     }
     th, td {
       border: 1px solid #ddd;
-      padding: 0.5rem;
+      padding: 0.4rem;
       text-align: center;
     }
     th {
@@ -61,24 +54,14 @@
 <body>
   <header>
     <h1>Sunlight Angle Comparator</h1>
-    <p>Compare solar noon angles and daylight duration for selected cities</p>
+    <p>Compare solar noon elevation, daylight duration, and equivalent dates</p>
   </header>
   <main>
-    <label for="dateInput">Select Date:</label>
-    <input type="date" id="dateInput" value="2025-06-21" />
+    <label for="dateInput"><strong>Select Date:</strong></label>
+    <input type="date" id="dateInput" value="2025-06-21">
 
-    <label for="citySelect">Select Cities (multiple allowed):</label>
-    <select id="citySelect" multiple size="9">
-      <option value="Houston,TX">Houston, TX</option>
-      <option value="St Andrews,Scotland">St Andrews, Scotland</option>
-      <option value="Tampa,FL">Tampa, FL</option>
-      <option value="Fairbanks,AK">Fairbanks, AK</option>
-      <option value="East Longmeadow,MA">East Longmeadow, MA</option>
-      <option value="Crozet,VA">Crozet, VA</option>
-      <option value="Hanover,NH">Hanover, NH</option>
-      <option value="Nashville,TN">Nashville, TN</option>
-      <option value="Asheville,NC">Asheville, NC</option>
-    </select>
+    <h2>Select Cities:</h2>
+    <div class="city-list" id="cityList"></div>
 
     <button onclick="compareCities()">Compare</button>
 
@@ -90,6 +73,7 @@
           <th>Longitude</th>
           <th>Solar Noon Elevation (°)</th>
           <th>Daylight Duration (hrs)</th>
+          <th>Equivalent Date (same daylight)</th>
         </tr>
       </thead>
       <tbody></tbody>
@@ -98,71 +82,12 @@
 
   <script>
     const cityData = {
-      "Houston,TX": { lat: 29.7604, lon: -95.3698 },
-      "St Andrews,Scotland": { lat: 56.3398, lon: -2.7967 },
-      "Tampa,FL": { lat: 27.9506, lon: -82.4572 },
-      "Fairbanks,AK": { lat: 64.8378, lon: -147.7164 },
-      "East Longmeadow,MA": { lat: 42.0645, lon: -72.5126 },
-      "Crozet,VA": { lat: 38.0696, lon: -78.7000 },
-      "Hanover,NH": { lat: 43.7022, lon: -72.2896 },
-      "Nashville,TN": { lat: 36.1627, lon: -86.7816 },
-      "Asheville,NC": { lat: 35.5951, lon: -82.5515 }
-    };
-
-    function toRadians(deg) { return deg * Math.PI / 180; }
-    function toDegrees(rad) { return rad * 180 / Math.PI; }
-
-    function getDayOfYear(date) {
-      const start = new Date(date.getFullYear(), 0, 0);
-      const diff = date - start + (start.getTimezoneOffset() - date.getTimezoneOffset()) * 60000;
-      return Math.floor(diff / 86400000);
-    }
-
-    // Calculate solar declination (δ)
-    function solarDeclination(day) {
-      return 23.44 * Math.sin(toRadians((360 / 365) * (day - 81)));
-    }
-
-    // Solar elevation at noon (degrees)
-    function solarNoonElevation(lat, decl) {
-      return 90 - Math.abs(lat - decl);
-    }
-
-    // Daylight duration (hours)
-    function daylightDuration(lat, decl) {
-      const latRad = toRadians(lat);
-      const declRad = toRadians(decl);
-      const h = Math.acos(-Math.tan(latRad) * Math.tan(declRad));
-      return (2 * h * 180 / Math.PI) / 15; // convert hour angle to hours
-    }
-
-    function compareCities() {
-      const dateInput = document.getElementById("dateInput").value;
-      const selected = Array.from(document.getElementById("citySelect").selectedOptions).map(o => o.value);
-      const resultsBody = document.querySelector("#resultsTable tbody");
-      resultsBody.innerHTML = "";
-
-      if (selected.length === 0) return alert("Please select at least one city.");
-
-      const date = new Date(dateInput);
-      const dayOfYear = getDayOfYear(date);
-      const decl = solarDeclination(dayOfYear);
-
-      selected.forEach(city => {
-        const { lat, lon } = cityData[city];
-        const elevation = solarNoonElevation(lat, decl);
-        const daylight = daylightDuration(lat, decl);
-
-        const row = `<tr>
-          <td>${city}</td>
-          <td>${lat.toFixed(2)}</td>
-          <td>${lon.toFixed(2)}</td>
-          <td>${elevation.toFixed(2)}</td>
-          <td>${daylight.toFixed(2)}</td>
-        </tr>`;
-        resultsBody.insertAdjacentHTML("beforeend", row);
-      });
-    }
-  </script>
-</body>
-</html>
+      "Houston, TX": { lat: 29.7604, lon: -95.3698 },
+      "St Andrews, Scotland": { lat: 56.3398, lon: -2.7967 },
+      "Tampa, FL": { lat: 27.9506, lon: -82.4572 },
+      "Fairbanks, AK": { lat: 64.8378, lon: -147.7164 },
+      "East Longmeadow, MA": { lat: 42.0645, lon: -72.5126 },
+      "Crozet, VA": { lat: 38.0696, lon: -78.7000 },
+      "Hanover, NH": { lat: 43.7022, lon: -72.2896 },
+      "Nashville, TN": { lat: 36.1627, lon: -86.7816 },
+      "Asheville, NC": { lat: 35.5951, l
