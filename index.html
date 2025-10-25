@@ -28,7 +28,6 @@
     }
     h2 { margin-top: 1.2rem; }
 
-    /* Date row */
     .date-row {
       display: flex;
       flex-wrap: wrap;
@@ -46,7 +45,6 @@
       font-size: 1rem;
     }
 
-    /* City selection */
     .city-list {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
@@ -63,7 +61,6 @@
       margin-bottom: 1rem;
     }
 
-    /* Comparison table */
     table {
       width: 100%;
       border-collapse: collapse;
@@ -88,7 +85,7 @@
     }
     td svg {
       width: 60px;
-      height: 30px;
+      height: 40px;
     }
 
     canvas {
@@ -105,7 +102,6 @@
   </header>
 
   <main>
-    <!-- Date Inputs -->
     <div class="date-row">
       <div>
         <label for="dateInput">Selected Date:</label>
@@ -117,12 +113,10 @@
       </div>
     </div>
 
-    <!-- City Selection -->
     <h2>Select Cities:</h2>
     <div class="city-list" id="cityList"></div>
     <button onclick="compareCities()">Compare</button>
 
-    <!-- City Comparison Table -->
     <div class="table-wrapper">
       <table id="resultsTable">
         <thead id="tableHead"></thead>
@@ -130,7 +124,6 @@
       </table>
     </div>
 
-    <!-- Chart -->
     <h2>Daylight Duration Chart</h2>
     <canvas id="daylightChart"></canvas>
   </main>
@@ -148,7 +141,6 @@
       "Tampa, FL": { abbr: "TPA", lat: 27.9506, lon: -82.4572 }
     };
 
-    // Build city checkboxes
     const cityList = document.getElementById("cityList");
     Object.keys(cityData).forEach(city => {
       const label = document.createElement("label");
@@ -156,7 +148,6 @@
       cityList.appendChild(label);
     });
 
-    // Math helpers
     const toRad = deg => deg * Math.PI / 180;
     const toDeg = rad => rad * 180 / Math.PI;
     function dayOfYear(date) {
@@ -227,13 +218,11 @@
       tableHead.innerHTML = "";
       tableBody.innerHTML = "";
 
-      // Header row with abbreviations
       const headRow = document.createElement("tr");
       headRow.innerHTML = `<th class="label-col"></th>` +
         selectedCities.map(city => `<th class="city-col" title="${city}">${cityData[city].abbr}</th>`).join('');
       tableHead.appendChild(headRow);
 
-      // Row helper
       const makeRow = (label, fn) => {
         const row = document.createElement("tr");
         row.innerHTML = `<td class="label-col">${label}</td>` +
@@ -244,17 +233,27 @@
       makeRow("Latitude", c => cityData[c].lat.toFixed(2));
       makeRow("Longitude", c => cityData[c].lon.toFixed(2));
 
-      // Noon elevation with visual arc
+      // Noon elevation with sky dome visualization
       makeRow("Noon Elev (°)", c => {
         const elev = noonElevation(cityData[c].lat, declination(refDay));
         const radius = 28;
         const endAngle = Math.min(90, elev) * Math.PI / 180;
         const x = 30 + radius * Math.cos(Math.PI - endAngle);
-        const y = 28 - radius * Math.sin(Math.PI - endAngle);
+        const y = 32 - radius * Math.sin(Math.PI - endAngle);
         return `
-          <svg viewBox="0 0 60 30">
-            <path d="M2 28 A28 28 0 0 1 58 28" stroke="#ccc" stroke-width="2" fill="none"/>
-            <path d="M30 28 L${x.toFixed(1)} ${y.toFixed(1)}" stroke="orange" stroke-width="2"/>
+          <svg viewBox="0 0 60 35">
+            <defs>
+              <linearGradient id="skyGrad" x1="0" y1="35" x2="0" y2="0">
+                <stop offset="0%" stop-color="#bde0fe" />
+                <stop offset="100%" stop-color="#90c9ff" />
+              </linearGradient>
+            </defs>
+            <!-- Sky dome -->
+            <path d="M2 32 A28 28 0 0 1 58 32" fill="url(#skyGrad)" stroke="#ccc" stroke-width="1"/>
+            <!-- Horizon line -->
+            <line x1="2" y1="32" x2="58" y2="32" stroke="#666" stroke-width="1" />
+            <!-- Sun ray -->
+            <path d="M30 32 L${x.toFixed(1)} ${y.toFixed(1)}" stroke="orange" stroke-width="2"/>
             <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3" fill="orange"/>
           </svg>
           <div>${elev.toFixed(1)}°</div>`;
