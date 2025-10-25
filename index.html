@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sunlight Hours Comparison</title>
+  <title>Sunlight Angle Comparator</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -28,13 +28,15 @@
   </style>
 </head>
 <body>
-  <h1>🌅 Sunlight Hours Comparison</h1>
-  <p>Compare daylight hours and solar angles, find the equivalent date, and view annual daylight curves.</p>
+  <h1>🌅 Sunlight Angle Comparator</h1>
+  <p>Compare solar elevation angles and find the equivalent date with matching sunlight angle at noon.</p>
 
   <div class="card">
     <label for="city">Primary City:</label>
     <select id="city">
       <option value="27.9506,-82.4572">Tampa, FL</option>
+      <option value="29.7604,-95.3698">Houston, TX</option>
+      <option value="56.3389,-2.7960">St Andrews, Scotland</option>
       <option value="40.7128,-74.0060">New York, NY</option>
       <option value="34.0522,-118.2437">Los Angeles, CA</option>
       <option value="41.8781,-87.6298">Chicago, IL</option>
@@ -43,6 +45,8 @@
     <label for="city2">Compare With:</label>
     <select id="city2">
       <option value="">(none)</option>
+      <option value="56.3389,-2.7960">St Andrews, Scotland</option>
+      <option value="29.7604,-95.3698">Houston, TX</option>
       <option value="47.6062,-122.3321">Seattle, WA</option>
       <option value="40.7128,-74.0060">New York, NY</option>
       <option value="34.0522,-118.2437">Los Angeles, CA</option>
@@ -51,7 +55,7 @@
     <label for="date">Date:</label>
     <input type="date" id="date" /><br>
 
-    <button onclick="getDaylight()">Get Daylight Info</button>
+    <button onclick="getSunlightAngle()">Get Sunlight Angle Info</button>
 
     <pre id="output"></pre>
     <canvas id="chart" width="500" height="300"></canvas>
@@ -66,140 +70,10 @@
   <script>
     let chart;
 
-    function getDaylight() {
+    function getSunlightAngle() {
       const [lat, lon] = document.getElementById('city').value.split(',').map(Number);
       const date = new Date(document.getElementById('date').value);
       if (isNaN(date)) return alert("Please select a valid date.");
 
-      const daylightHrs = getDaylightHours(date, lat, lon);
-      const solarNoon = getSolarElevation(date, lat, lon);
-      const equivalent = findEquivalentDate(date, lat, lon);
-      const eqDaylight = getDaylightHours(equivalent, lat, lon);
-
-      document.getElementById('output').textContent =
-        `📍 Location: ${document.getElementById('city').selectedOptions[0].text}\n` +
-        `📅 Selected Date: ${date.toDateString()}\n` +
-        `   • Daylight: ${daylightHrs.toFixed(2)} hours\n` +
-        `   • Solar Elevation (noon): ${solarNoon.toFixed(1)}°\n\n` +
-        `🔁 Equivalent Date: ${equivalent.toDateString()}\n` +
-        `   • Daylight: ${eqDaylight.toFixed(2)} hours`;
-
-      plotDaylightCurve(lat, lon, date, equivalent);
-    }
-
-    function getDaylightHours(date, lat, lon) {
-      const times = SunCalc.getTimes(date, lat, lon);
-      return (times.sunset - times.sunrise) / 1000 / 3600;
-    }
-
-    function getSolarElevation(date, lat, lon) {
-      const times = SunCalc.getTimes(date, lat, lon);
-      const pos = SunCalc.getPosition(times.solarNoon, lat, lon);
-      return pos.altitude * (180 / Math.PI);
-    }
-
-    function findEquivalentDate(date, lat, lon) {
-      const base = getDaylightHours(date, lat, lon);
-      const year = date.getFullYear();
-      const start = new Date(year, 0, 1);
-      const end = new Date(year, 11, 31);
-
-      for (let d = new Date(date); d <= end; d.setDate(d.getDate() + 1)) {
-        const diff = Math.abs(getDaylightHours(d, lat, lon) - base);
-        if (diff < 0.05 && d - date > 30 * 24 * 3600 * 1000) return new Date(d);
-      }
-      for (let d = new Date(date); d >= start; d.setDate(d.getDate() - 1)) {
-        const diff = Math.abs(getDaylightHours(d, lat, lon) - base);
-        if (diff < 0.05 && date - d > 30 * 24 * 3600 * 1000) return new Date(d);
-      }
-      return new Date(year, (date.getMonth() + 6) % 12, date.getDate());
-    }
-
-    function plotDaylightCurve(lat, lon, date, eqDate) {
-      const labels = [];
-      const data1 = [];
-      const year = date.getFullYear();
-
-      for (let i = 0; i < 365; i++) {
-        const d = new Date(year, 0, 1 + i);
-        labels.push(d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
-        data1.push(getDaylightHours(d, lat, lon));
-      }
-
-      const city2Val = document.getElementById('city2').value;
-      let data2 = null;
-      if (city2Val) {
-        const [lat2, lon2] = city2Val.split(',').map(Number);
-        data2 = [];
-        for (let i = 0; i < 365; i++) {
-          const d = new Date(year, 0, 1 + i);
-          data2.push(getDaylightHours(d, lat2, lon2));
-        }
-      }
-
-      const ctx = document.getElementById('chart').getContext('2d');
-      if (chart) chart.destroy();
-
-      const datasets = [{
-        label: document.getElementById('city').selectedOptions[0].text,
-        data: data1,
-        borderWidth: 2,
-        borderColor: '#0077cc',
-        tension: 0.3,
-        fill: false
-      }];
-
-      if (data2) {
-        datasets.push({
-          label: document.getElementById('city2').selectedOptions[0].text,
-          data: data2,
-          borderWidth: 2,
-          borderColor: '#cc5500',
-          tension: 0.3,
-          fill: false
-        });
-      }
-
-      chart = new Chart(ctx, {
-        type: 'line',
-        data: { labels, datasets },
-        options: {
-          plugins: {
-            title: { display: true, text: 'Daylight Hours Throughout the Year' },
-            annotation: {
-              annotations: {
-                dateLine: {
-                  type: 'line',
-                  xMin: dayOfYear(date),
-                  xMax: dayOfYear(date),
-                  borderColor: 'orange',
-                  borderWidth: 2,
-                  label: { content: 'Selected Date', enabled: true, position: 'start' }
-                },
-                eqLine: {
-                  type: 'line',
-                  xMin: dayOfYear(eqDate),
-                  xMax: dayOfYear(eqDate),
-                  borderColor: 'green',
-                  borderWidth: 2,
-                  label: { content: 'Equivalent Date', enabled: true, position: 'start' }
-                }
-              }
-            }
-          },
-          scales: {
-            y: { title: { display: true, text: 'Hours of Daylight' } },
-            x: { ticks: { maxTicksLimit: 12 } }
-          }
-        }
-      });
-    }
-
-    function dayOfYear(date) {
-      const start = new Date(date.getFullYear(), 0, 0);
-      const diff = date - start;
-      return Math.floor(diff / (1000 * 60 * 60 * 24));
-    }
-  </script>
-</body>
-</html>
+      const angle = getSolarElevation(date, lat, lon);
+      const equivalent = find
