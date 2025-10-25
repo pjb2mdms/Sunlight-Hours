@@ -99,64 +99,87 @@
     return new Date(year, (date.getMonth() + 6) % 12, date.getDate());
   }
 
-  function plotDaylightCurve(lat, lon, date, eqDate) {
-    const labels = [];
-    const data = [];
-    const year = date.getFullYear();
+ function plotDaylightCurve(lat, lon, date, eqDate) {
+  const labels = [];
+  const data1 = [];
+  const year = date.getFullYear();
 
+  for (let i = 0; i < 365; i++) {
+    const d = new Date(year, 0, 1 + i);
+    labels.push(d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+    data1.push(getDaylightHours(d, lat, lon));
+  }
+
+  // Optional second city
+  const city2Val = document.getElementById('city2').value;
+  let data2 = null;
+  if (city2Val) {
+    const [lat2, lon2] = city2Val.split(',').map(Number);
+    data2 = [];
     for (let i = 0; i < 365; i++) {
       const d = new Date(year, 0, 1 + i);
-      labels.push(d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
-      data.push(getDaylightHours(d, lat, lon));
+      data2.push(getDaylightHours(d, lat2, lon2));
     }
+  }
 
-    const ctx = document.getElementById('chart').getContext('2d');
-    if (chart) chart.destroy();
+  const ctx = document.getElementById('chart').getContext('2d');
+  if (chart) chart.destroy();
 
-    chart = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: labels,
-        datasets: [{
-          label: 'Daylight Hours',
-          data: data,
-          borderWidth: 2,
-          borderColor: '#0077cc',
-          tension: 0.3,
-          fill: false
-        }]
-      },
-      options: {
-        plugins: {
-          title: { display: true, text: 'Daylight Hours Throughout the Year' },
-          annotation: {
-            annotations: {
-              dateLine: {
-                type: 'line',
-                xMin: dayOfYear(date),
-                xMax: dayOfYear(date),
-                borderColor: 'orange',
-                borderWidth: 2,
-                label: { content: 'Selected Date', enabled: true, position: 'start' }
-              },
-              eqLine: {
-                type: 'line',
-                xMin: dayOfYear(eqDate),
-                xMax: dayOfYear(eqDate),
-                borderColor: 'green',
-                borderWidth: 2,
-                label: { content: 'Equivalent Date', enabled: true, position: 'start' }
-              }
-            }
-          }
-        },
-        scales: {
-          y: { title: { display: true, text: 'Hours' } },
-          x: { ticks: { maxTicksLimit: 12 } }
-        }
-      }
+  const datasets = [{
+    label: document.getElementById('city').selectedOptions[0].text,
+    data: data1,
+    borderWidth: 2,
+    borderColor: '#0077cc',
+    tension: 0.3,
+    fill: false
+  }];
+
+  if (data2) {
+    datasets.push({
+      label: document.getElementById('city2').selectedOptions[0].text,
+      data: data2,
+      borderWidth: 2,
+      borderColor: '#cc5500',
+      tension: 0.3,
+      fill: false
     });
   }
+
+  chart = new Chart(ctx, {
+    type: 'line',
+    data: { labels, datasets },
+    options: {
+      plugins: {
+        title: { display: true, text: 'Daylight Hours Throughout the Year' },
+        annotation: {
+          annotations: {
+            dateLine: {
+              type: 'line',
+              xMin: dayOfYear(date),
+              xMax: dayOfYear(date),
+              borderColor: 'orange',
+              borderWidth: 2,
+              label: { content: 'Selected Date', enabled: true, position: 'start' }
+            },
+            eqLine: {
+              type: 'line',
+              xMin: dayOfYear(eqDate),
+              xMax: dayOfYear(eqDate),
+              borderColor: 'green',
+              borderWidth: 2,
+              label: { content: 'Equivalent Date', enabled: true, position: 'start' }
+            }
+          }
+        }
+      },
+      scales: {
+        y: { title: { display: true, text: 'Hours of Daylight' } },
+        x: { ticks: { maxTicksLimit: 12 } }
+      }
+    }
+  });
+}
+
 
   function dayOfYear(date) {
     const start = new Date(date.getFullYear(), 0, 0);
