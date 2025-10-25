@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sunlight Angle Comparator</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.2.1"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -85,12 +84,12 @@
     }
     td svg {
       width: 60px;
-      height: 40px;
+      height: 30px;
     }
 
     canvas {
       width: 100% !important;
-      height: 300px !important;
+      height: 450px !important;
       margin-top: 1rem;
     }
   </style>
@@ -124,8 +123,8 @@
       </table>
     </div>
 
-    <h2>Daylight Duration Chart</h2>
-    <canvas id="daylightChart"></canvas>
+    <h2>Daylight Duration (Polar View)</h2>
+    <canvas id="polarChart"></canvas>
   </main>
 
   <script>
@@ -190,7 +189,7 @@
       return `${mm}/${dd}/${yyyy}`;
     }
 
-    let daylightChart;
+    let polarChart;
 
     function compareCities() {
       const selected = Array.from(document.querySelectorAll("#cityList input:checked")).map(cb => cb.value);
@@ -209,7 +208,7 @@
       document.getElementById("equivDate").value = eqDateObj ? formatDate(eqDateObj) : "—";
 
       buildComparisonTable(selected, refDay);
-      plotChart(selected, eqDateObj, refDay);
+      plotPolarChart(selected);
     }
 
     function buildComparisonTable(selectedCities, refDay) {
@@ -233,27 +232,16 @@
       makeRow("Latitude", c => cityData[c].lat.toFixed(2));
       makeRow("Longitude", c => cityData[c].lon.toFixed(2));
 
-      // Noon elevation with sky dome visualization
       makeRow("Noon Elev (°)", c => {
         const elev = noonElevation(cityData[c].lat, declination(refDay));
         const radius = 28;
         const endAngle = Math.min(90, elev) * Math.PI / 180;
         const x = 30 + radius * Math.cos(Math.PI - endAngle);
-        const y = 32 - radius * Math.sin(Math.PI - endAngle);
+        const y = 28 - radius * Math.sin(Math.PI - endAngle);
         return `
-          <svg viewBox="0 0 60 35">
-            <defs>
-              <linearGradient id="skyGrad" x1="0" y1="35" x2="0" y2="0">
-                <stop offset="0%" stop-color="#bde0fe" />
-                <stop offset="100%" stop-color="#90c9ff" />
-              </linearGradient>
-            </defs>
-            <!-- Sky dome -->
-            <path d="M2 32 A28 28 0 0 1 58 32" fill="url(#skyGrad)" stroke="#ccc" stroke-width="1"/>
-            <!-- Horizon line -->
-            <line x1="2" y1="32" x2="58" y2="32" stroke="#666" stroke-width="1" />
-            <!-- Sun ray -->
-            <path d="M30 32 L${x.toFixed(1)} ${y.toFixed(1)}" stroke="orange" stroke-width="2"/>
+          <svg viewBox="0 0 60 30">
+            <path d="M2 28 A28 28 0 0 1 58 28" stroke="#ccc" stroke-width="2" fill="none"/>
+            <path d="M30 28 L${x.toFixed(1)} ${y.toFixed(1)}" stroke="orange" stroke-width="2"/>
             <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3" fill="orange"/>
           </svg>
           <div>${elev.toFixed(1)}°</div>`;
@@ -262,72 +250,57 @@
       makeRow("Daylight (hrs)", c => daylightHours(cityData[c].lat, declination(refDay)).toFixed(2));
     }
 
-    function plotChart(selectedCities, eqDateObj, refDay) {
-      const ctx = document.getElementById('daylightChart').getContext('2d');
+    function plotPolarChart(selectedCities) {
+      const ctx = document.getElementById('polarChart').getContext('2d');
       const labels = Array.from({ length: 365 }, (_, i) => i + 1);
       const datasets = selectedCities.map(city => {
         const { lat } = cityData[city];
         const data = labels.map(d => daylightHours(lat, declination(d)));
         const color = `hsl(${Math.random() * 360}, 70%, 50%)`;
-        return { label: cityData[city].abbr, data, borderColor: color, fill: false, tension: 0.1 };
+        return {
+          label: cityData[city].abbr,
+          data,
+          borderColor: color,
+          borderWidth: 2,
+          fill: false,
+          pointRadius: 0,
+          tension: 0.1
+        };
       });
 
-      if (daylightChart) daylightChart.destroy();
+      if (polarChart) polarChart.destroy();
 
-      const annotations = {
-        selectedDate: {
-          type: 'line',
-          xMin: refDay,
-          xMax: refDay,
-          borderColor: 'black',
-          borderWidth: 2,
-          label: { enabled: true, content: 'Selected', position: 'start' }
-        }
-      };
-      if (eqDateObj) {
-        annotations.equivalentDate = {
-          type: 'line',
-          xMin: dayOfYear(eqDateObj),
-          xMax: dayOfYear(eqDateObj),
-          borderColor: 'red',
-          borderWidth: 2,
-          label: { enabled: true, content: 'Equivalent', position: 'start' }
-        };
-      }
+      // Convert June 21 (day 172) to top of circle (90° rotation)
+      const rotation = -90;
 
-      const monthDays = [21, 52, 80, 111, 141, 172, 203, 234, 265, 295, 326, 356];
-      const monthLabels = ["Jan 21","Feb 21","Mar 21","Apr 21","May 21","Jun 21","Jul 21","Aug 21","Sep 21","Oct 21","Nov 21","Dec 21"];
-
-      daylightChart = new Chart(ctx, {
-        type: 'line',
+      polarChart = new Chart(ctx, {
+        type: 'radar',
         data: { labels, datasets },
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          scales: {
+            r: {
+              angleLines: { color: '#ccc' },
+              grid: { color: '#eee' },
+              suggestedMin: 5,
+              suggestedMax: 20,
+              ticks: { stepSize: 2 },
+              pointLabels: {
+                callback: (val, i) => {
+                  const days = [20, 80, 172, 265, 355];
+                  const labels = ["Mar 21", "Jun 21", "Sep 21", "Dec 21"];
+                  return days.includes(i * 73) ? labels[days.indexOf(i * 73)] : '';
+                }
+              }
+            }
+          },
           plugins: {
             legend: { position: 'bottom' },
-            title: { display: true, text: 'Daylight Hours Throughout the Year' },
-            annotation: { annotations }
+            title: { display: true, text: 'Daylight Hours (Polar Year View)' }
           },
-          scales: {
-            x: {
-              title: { display: true, text: 'Date (21st of each month)' },
-              ticks: {
-                callback: function(value) {
-                  const monthIndex = monthDays.findIndex((d, i) => i < monthDays.length - 1 && value >= d && value < monthDays[i + 1]);
-                  return monthIndex >= 0 ? monthLabels[monthIndex] : "";
-                },
-                maxRotation: 0,
-                autoSkip: false
-              }
-            },
-            y: {
-              title: { display: true, text: 'Daylight Hours' },
-              min: 5, max: 20
-            }
-          }
-        },
-        plugins: [Chart.registry.getPlugin('annotation')]
+          elements: { line: { borderWidth: 2 } }
+        }
       });
     }
   </script>
