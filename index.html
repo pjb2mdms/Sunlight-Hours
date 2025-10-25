@@ -51,6 +51,7 @@
     }
   </style>
 </head>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <body>
   <header>
     <h1>Sunlight Angle Comparator</h1>
@@ -78,6 +79,8 @@
       </thead>
       <tbody></tbody>
     </table>
+    <h2>Daylight Duration Chart</h2>
+<canvas id="daylightChart" height="400"></canvas>
   </main>
 
  <script>
@@ -184,6 +187,116 @@
       </tr>`;
       resultsBody.insertAdjacentHTML("beforeend", row);
     });
+  }
+   let daylightChart; // global chart reference
+
+  function plotChart(selectedCities, eqDateObj, refDay) {
+    const ctx = document.getElementById('daylightChart').getContext('2d');
+    const labels = Array.from({length: 365}, (_, i) => i + 1);
+
+    // Generate daylight data for each selected city
+    const datasets = selectedCities.map(city => {
+      const { lat } = cityData[city];
+      const data = labels.map(d => daylightHours(lat, declination(d)));
+      const color = `hsl(${Math.random()*360},70%,50%)`;
+      return {
+        label: city,
+        data,
+        borderColor: color,
+        fill: false,
+        tension: 0.1
+      };
+    });
+
+    // Destroy old chart if it exists
+    if (daylightChart) daylightChart.destroy();
+
+    daylightChart = new Chart(ctx, {
+      type: 'line',
+      data: { labels, datasets },
+      options: {
+        responsive: true,
+        plugins: {
+          title: {
+            display: true,
+            text: 'Daylight Hours Through the Year'
+          },
+          legend: { position: 'bottom' },
+          annotation: {
+            annotations: {
+              selectedDate: {
+                type: 'line',
+                xMin: refDay,
+                xMax: refDay,
+                borderColor: 'black',
+                borderWidth: 2,
+                label: { content: 'Selected Date', enabled: true, position: 'start' }
+              },
+              equivalentDate: eqDateObj ? {
+                type: 'line',
+                xMin: dayOfYear(eqDateObj),
+                xMax: dayOfYear(eqDateObj),
+                borderColor: 'red',
+                borderWidth: 2,
+                label: { content: 'Equivalent Date', enabled: true, position: 'start' }
+              } : {}
+            }
+          }
+        },
+        scales: {
+          x: {
+            title: { display: true, text: 'Day of Year' }
+          },
+          y: {
+            title: { display: true, text: 'Daylight Hours' },
+            min: 0, max: 24
+          }
+        }
+      },
+      plugins: [Chart.registry.getPlugin('annotation') || {}]
+    });
+  }
+
+  // Replace compareCities() ending with:
+  function compareCities() {
+    const selected = Array.from(document.querySelectorAll("#cityList input:checked")).map(cb => cb.value);
+    if (selected.length === 0) { alert("Select at least one city."); return; }
+
+    const resultsBody = document.querySelector("#resultsTable tbody");
+    resultsBody.innerHTML = "";
+
+    const dateVal = document.getElementById("dateInput").value;
+    const date = new Date(dateVal);
+    const year = date.getFullYear();
+    const refDay = dayOfYear(date);
+
+    const refCity = selected[0];
+    const { lat: refLat } = cityData[refCity];
+    const refDec = declination(refDay);
+    const refHours = daylightHours(refLat, refDec);
+
+    const eqDateObj = findEquivalentDate(refLat, refHours, refDay, year);
+    const eqDate = eqDateObj ? eqDateObj.toISOString().split('T')[0] : "—";
+
+    selected.forEach(city => {
+      const { lat, lon } = cityData[city];
+      const dec = declination(refDay);
+      const elev = noonElevation(lat, dec);
+      const hours = daylightHours(lat, dec);
+
+      const row = `<tr>
+        <td>${city}</td>
+        <td>${lat.toFixed(2)}</td>
+        <td>${lon.toFixed(2)}</td>
+        <td>${elev.toFixed(2)}</td>
+        <td>${hours.toFixed(2)}</td>
+        <td>${eqDate}</td>
+      </tr>`;
+      resultsBody.insertAdjacentHTML("beforeend", row);
+    });
+
+    // Plot chart
+    plotChart(selected, eqDateObj, refDay);
   }
 </script>
 </body>
