@@ -67,4 +67,102 @@
     <label for="dateInput">Select Date:</label>
     <input type="date" id="dateInput" value="2025-06-21" />
 
-    <label for="citySelect">Select Cities (multiple allowed):</l
+    <label for="citySelect">Select Cities (multiple allowed):</label>
+    <select id="citySelect" multiple size="9">
+      <option value="Houston,TX">Houston, TX</option>
+      <option value="St Andrews,Scotland">St Andrews, Scotland</option>
+      <option value="Tampa,FL">Tampa, FL</option>
+      <option value="Fairbanks,AK">Fairbanks, AK</option>
+      <option value="East Longmeadow,MA">East Longmeadow, MA</option>
+      <option value="Crozet,VA">Crozet, VA</option>
+      <option value="Hanover,NH">Hanover, NH</option>
+      <option value="Nashville,TN">Nashville, TN</option>
+      <option value="Asheville,NC">Asheville, NC</option>
+    </select>
+
+    <button onclick="compareCities()">Compare</button>
+
+    <table id="resultsTable">
+      <thead>
+        <tr>
+          <th>City</th>
+          <th>Latitude</th>
+          <th>Longitude</th>
+          <th>Solar Noon Elevation (°)</th>
+          <th>Daylight Duration (hrs)</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </main>
+
+  <script>
+    const cityData = {
+      "Houston,TX": { lat: 29.7604, lon: -95.3698 },
+      "St Andrews,Scotland": { lat: 56.3398, lon: -2.7967 },
+      "Tampa,FL": { lat: 27.9506, lon: -82.4572 },
+      "Fairbanks,AK": { lat: 64.8378, lon: -147.7164 },
+      "East Longmeadow,MA": { lat: 42.0645, lon: -72.5126 },
+      "Crozet,VA": { lat: 38.0696, lon: -78.7000 },
+      "Hanover,NH": { lat: 43.7022, lon: -72.2896 },
+      "Nashville,TN": { lat: 36.1627, lon: -86.7816 },
+      "Asheville,NC": { lat: 35.5951, lon: -82.5515 }
+    };
+
+    function toRadians(deg) { return deg * Math.PI / 180; }
+    function toDegrees(rad) { return rad * 180 / Math.PI; }
+
+    function getDayOfYear(date) {
+      const start = new Date(date.getFullYear(), 0, 0);
+      const diff = date - start + (start.getTimezoneOffset() - date.getTimezoneOffset()) * 60000;
+      return Math.floor(diff / 86400000);
+    }
+
+    // Calculate solar declination (δ)
+    function solarDeclination(day) {
+      return 23.44 * Math.sin(toRadians((360 / 365) * (day - 81)));
+    }
+
+    // Solar elevation at noon (degrees)
+    function solarNoonElevation(lat, decl) {
+      return 90 - Math.abs(lat - decl);
+    }
+
+    // Daylight duration (hours)
+    function daylightDuration(lat, decl) {
+      const latRad = toRadians(lat);
+      const declRad = toRadians(decl);
+      const h = Math.acos(-Math.tan(latRad) * Math.tan(declRad));
+      return (2 * h * 180 / Math.PI) / 15; // convert hour angle to hours
+    }
+
+    function compareCities() {
+      const dateInput = document.getElementById("dateInput").value;
+      const selected = Array.from(document.getElementById("citySelect").selectedOptions).map(o => o.value);
+      const resultsBody = document.querySelector("#resultsTable tbody");
+      resultsBody.innerHTML = "";
+
+      if (selected.length === 0) return alert("Please select at least one city.");
+
+      const date = new Date(dateInput);
+      const dayOfYear = getDayOfYear(date);
+      const decl = solarDeclination(dayOfYear);
+
+      selected.forEach(city => {
+        const { lat, lon } = cityData[city];
+        const elevation = solarNoonElevation(lat, decl);
+        const daylight = daylightDuration(lat, decl);
+
+        const row = `<tr>
+          <td>${city}</td>
+          <td>${lat.toFixed(2)}</td>
+          <td>${lon.toFixed(2)}</td>
+          <td>${elevation.toFixed(2)}</td>
+          <td>${daylight.toFixed(2)}</td>
+        </tr>`;
+        resultsBody.insertAdjacentHTML("beforeend", row);
+      });
+    }
+  </script>
+</body>
+</html>
