@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sunlight Angle Comparator</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.2.1"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -18,15 +20,19 @@
     }
     main {
       background: white;
-      max-width: 900px;
+      max-width: 950px;
       margin: 1rem auto;
-      padding: 1rem 2rem;
+      padding: 1.5rem 2rem;
       border-radius: 8px;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
     h2 { margin-top: 1.5rem; }
     label { display: block; margin-top: 0.5rem; }
-    .city-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 0.3rem; }
+    .city-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 0.3rem;
+    }
     button {
       background: #004c91;
       color: white;
@@ -49,9 +55,11 @@
     th {
       background: #f0f0f0;
     }
+    canvas {
+      margin-top: 2rem;
+    }
   </style>
 </head>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <body>
   <header>
     <h1>Sunlight Angle Comparator</h1>
@@ -74,230 +82,191 @@
           <th>Longitude</th>
           <th>Solar Noon Elevation (°)</th>
           <th>Daylight Duration (hrs)</th>
-          <th>Equivalent Date (same daylight)</th>
+          <th>Equivalent Date</th>
         </tr>
       </thead>
       <tbody></tbody>
     </table>
+
     <h2>Daylight Duration Chart</h2>
-<canvas id="daylightChart" height="400"></canvas>
+    <canvas id="daylightChart" height="400"></canvas>
   </main>
 
- <script>
-  const cityData = {
-    "Houston, TX": { lat: 29.7604, lon: -95.3698 },
-    "St Andrews, Scotland": { lat: 56.3398, lon: -2.7967 },
-    "Tampa, FL": { lat: 27.9506, lon: -82.4572 },
-    "Fairbanks, AK": { lat: 64.8378, lon: -147.7164 },
-    "East Longmeadow, MA": { lat: 42.0645, lon: -72.5126 },
-    "Crozet, VA": { lat: 38.0696, lon: -78.7000 },
-    "Hanover, NH": { lat: 43.7022, lon: -72.2896 },
-    "Nashville, TN": { lat: 36.1627, lon: -86.7816 },
-    "Asheville, NC": { lat: 35.5951, lon: -82.5515 }
-  };
+  <script>
+    const cityData = {
+      "Houston, TX": { lat: 29.7604, lon: -95.3698 },
+      "St Andrews, Scotland": { lat: 56.3398, lon: -2.7967 },
+      "Tampa, FL": { lat: 27.9506, lon: -82.4572 },
+      "Fairbanks, AK": { lat: 64.8378, lon: -147.7164 },
+      "East Longmeadow, MA": { lat: 42.0645, lon: -72.5126 },
+      "Crozet, VA": { lat: 38.0696, lon: -78.7000 },
+      "Hanover, NH": { lat: 43.7022, lon: -72.2896 },
+      "Nashville, TN": { lat: 36.1627, lon: -86.7816 },
+      "Asheville, NC": { lat: 35.5951, lon: -82.5515 }
+    };
 
-  // Populate city checkboxes
-  const cityList = document.getElementById("cityList");
-  Object.keys(cityData).forEach(city => {
-    const label = document.createElement("label");
-    label.innerHTML = `<input type="checkbox" value="${city}"> ${city}`;
-    cityList.appendChild(label);
-  });
+    // Populate city checkboxes
+    const cityList = document.getElementById("cityList");
+    Object.keys(cityData).forEach(city => {
+      const label = document.createElement("label");
+      label.innerHTML = `<input type="checkbox" value="${city}"> ${city}`;
+      cityList.appendChild(label);
+    });
 
-  // --- Math utilities ---
-  const toRad = deg => deg * Math.PI / 180;
-  const toDeg = rad => rad * 180 / Math.PI;
+    // --- Math utilities ---
+    const toRad = deg => deg * Math.PI / 180;
+    const toDeg = rad => rad * 180 / Math.PI;
 
-  function dayOfYear(date) {
-    const start = new Date(date.getFullYear(), 0, 0);
-    const diff = date - start + (start.getTimezoneOffset() - date.getTimezoneOffset()) * 60000;
-    return Math.floor(diff / 86400000);
-  }
-
-  function declination(day) {
-    return 23.44 * Math.sin(toRad((360 / 365) * (day - 81)));
-  }
-
-  function noonElevation(lat, dec) {
-    return 90 - Math.abs(lat - dec);
-  }
-
-  function daylightHours(lat, dec) {
-    const latR = toRad(lat);
-    const decR = toRad(dec);
-    const cosH = -Math.tan(latR) * Math.tan(decR);
-    if (cosH >= 1) return 0;
-    if (cosH <= -1) return 24;
-    const H = Math.acos(cosH);
-    return (2 * toDeg(H)) / 15; // 15° per hour
-  }
-
-  // Find the "mirror" date with the same daylight hours
-  function findEquivalentDate(lat, targetHours, refDay, year) {
-    let bestDay = null;
-    let bestDiff = 999;
-    for (let d = 1; d <= 365; d++) {
-      if (Math.abs(d - refDay) < 5) continue; // skip same date neighborhood
-      const h = daylightHours(lat, declination(d));
-      const diff = Math.abs(h - targetHours);
-      if (diff < 0.1 && diff < bestDiff) {
-        bestDiff = diff;
-        bestDay = d;
-      }
+    function dayOfYear(date) {
+      const start = new Date(date.getFullYear(), 0, 0);
+      const diff = date - start + (start.getTimezoneOffset() - date.getTimezoneOffset()) * 60000;
+      return Math.floor(diff / 86400000);
     }
-    if (!bestDay) return null;
-    const eqDate = new Date(year, 0, bestDay);
-    return eqDate;
-  }
 
-  function compareCities() {
-    const selected = Array.from(document.querySelectorAll("#cityList input:checked")).map(cb => cb.value);
-    if (selected.length === 0) { alert("Select at least one city."); return; }
+    function declination(day) {
+      return 23.44 * Math.sin(toRad((360 / 365) * (day - 81)));
+    }
 
-    const resultsBody = document.querySelector("#resultsTable tbody");
-    resultsBody.innerHTML = "";
+    function noonElevation(lat, dec) {
+      return 90 - Math.abs(lat - dec);
+    }
 
-    const dateVal = document.getElementById("dateInput").value;
-    const date = new Date(dateVal);
-    const year = date.getFullYear();
-    const refDay = dayOfYear(date);
+    function daylightHours(lat, dec) {
+      const latR = toRad(lat);
+      const decR = toRad(dec);
+      const cosH = -Math.tan(latR) * Math.tan(decR);
+      if (cosH >= 1) return 0;
+      if (cosH <= -1) return 24;
+      const H = Math.acos(cosH);
+      return (2 * toDeg(H)) / 15;
+    }
 
-    // Reference city = first selected
-    const refCity = selected[0];
-    const { lat: refLat } = cityData[refCity];
-    const refDec = declination(refDay);
-    const refHours = daylightHours(refLat, refDec);
+    function findEquivalentDate(lat, targetHours, refDay, year) {
+      let bestDay = null;
+      let bestDiff = 999;
+      for (let d = 1; d <= 365; d++) {
+        if (Math.abs(d - refDay) < 5) continue;
+        const h = daylightHours(lat, declination(d));
+        const diff = Math.abs(h - targetHours);
+        if (diff < 0.1 && diff < bestDiff) {
+          bestDiff = diff;
+          bestDay = d;
+        }
+      }
+      if (!bestDay) return null;
+      return new Date(year, 0, bestDay);
+    }
 
-    const eqDateObj = findEquivalentDate(refLat, refHours, refDay, year);
-    const eqDate = eqDateObj ? eqDateObj.toISOString().split('T')[0] : "—";
+    let daylightChart;
 
-    selected.forEach(city => {
-      const { lat, lon } = cityData[city];
-      const dec = declination(refDay);
-      const elev = noonElevation(lat, dec);
-      const hours = daylightHours(lat, dec);
+    function plotChart(selectedCities, eqDateObj, refDay) {
+      const ctx = document.getElementById('daylightChart').getContext('2d');
+      const labels = Array.from({ length: 365 }, (_, i) => i + 1);
 
-      const row = `<tr>
-        <td>${city}</td>
-        <td>${lat.toFixed(2)}</td>
-        <td>${lon.toFixed(2)}</td>
-        <td>${elev.toFixed(2)}</td>
-        <td>${hours.toFixed(2)}</td>
-        <td>${eqDate}</td>
-      </tr>`;
-      resultsBody.insertAdjacentHTML("beforeend", row);
-    });
-  }
-   let daylightChart; // global chart reference
+      const datasets = selectedCities.map(city => {
+        const { lat } = cityData[city];
+        const data = labels.map(d => daylightHours(lat, declination(d)));
+        const color = `hsl(${Math.random() * 360}, 70%, 50%)`;
+        return {
+          label: city,
+          data,
+          borderColor: color,
+          fill: false,
+          tension: 0.1
+        };
+      });
 
-  function plotChart(selectedCities, eqDateObj, refDay) {
-    const ctx = document.getElementById('daylightChart').getContext('2d');
-    const labels = Array.from({length: 365}, (_, i) => i + 1);
+      if (daylightChart) daylightChart.destroy();
 
-    // Generate daylight data for each selected city
-    const datasets = selectedCities.map(city => {
-      const { lat } = cityData[city];
-      const data = labels.map(d => daylightHours(lat, declination(d)));
-      const color = `hsl(${Math.random()*360},70%,50%)`;
-      return {
-        label: city,
-        data,
-        borderColor: color,
-        fill: false,
-        tension: 0.1
-      };
-    });
-
-    // Destroy old chart if it exists
-    if (daylightChart) daylightChart.destroy();
-
-    daylightChart = new Chart(ctx, {
-      type: 'line',
-      data: { labels, datasets },
-      options: {
-        responsive: true,
-        plugins: {
-          title: {
-            display: true,
-            text: 'Daylight Hours Through the Year'
-          },
-          legend: { position: 'bottom' },
-          annotation: {
-            annotations: {
-              selectedDate: {
-                type: 'line',
-                xMin: refDay,
-                xMax: refDay,
-                borderColor: 'black',
-                borderWidth: 2,
-                label: { content: 'Selected Date', enabled: true, position: 'start' }
-              },
-              equivalentDate: eqDateObj ? {
-                type: 'line',
-                xMin: dayOfYear(eqDateObj),
-                xMax: dayOfYear(eqDateObj),
-                borderColor: 'red',
-                borderWidth: 2,
-                label: { content: 'Equivalent Date', enabled: true, position: 'start' }
-              } : {}
-            }
-          }
-        },
-        scales: {
-          x: {
-            title: { display: true, text: 'Day of Year' }
-          },
-          y: {
-            title: { display: true, text: 'Daylight Hours' },
-            min: 0, max: 24
+      const annotations = {
+        selectedDate: {
+          type: 'line',
+          xMin: refDay,
+          xMax: refDay,
+          borderColor: 'black',
+          borderWidth: 2,
+          label: {
+            enabled: true,
+            content: 'Selected Date',
+            position: 'start'
           }
         }
-      },
-      plugins: [Chart.registry.getPlugin('annotation') || {}]
-    });
-  }
+      };
 
-  // Replace compareCities() ending with:
-  function compareCities() {
-    const selected = Array.from(document.querySelectorAll("#cityList input:checked")).map(cb => cb.value);
-    if (selected.length === 0) { alert("Select at least one city."); return; }
+      if (eqDateObj) {
+        annotations.equivalentDate = {
+          type: 'line',
+          xMin: dayOfYear(eqDateObj),
+          xMax: dayOfYear(eqDateObj),
+          borderColor: 'red',
+          borderWidth: 2,
+          label: {
+            enabled: true,
+            content: 'Equivalent Date',
+            position: 'start'
+          }
+        };
+      }
 
-    const resultsBody = document.querySelector("#resultsTable tbody");
-    resultsBody.innerHTML = "";
+      daylightChart = new Chart(ctx, {
+        type: 'line',
+        data: { labels, datasets },
+        options: {
+          responsive: true,
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: { position: 'bottom' },
+            title: { display: true, text: 'Daylight Hours Throughout the Year' },
+            annotation: { annotations }
+          },
+          scales: {
+            x: { title: { display: true, text: 'Day of Year' } },
+            y: { title: { display: true, text: 'Daylight Hours' }, min: 0, max: 24 }
+          }
+        },
+        plugins: [Chart.registry.getPlugin('annotation')]
+      });
+    }
 
-    const dateVal = document.getElementById("dateInput").value;
-    const date = new Date(dateVal);
-    const year = date.getFullYear();
-    const refDay = dayOfYear(date);
+    function compareCities() {
+      const selected = Array.from(document.querySelectorAll("#cityList input:checked")).map(cb => cb.value);
+      if (selected.length === 0) { alert("Select at least one city."); return; }
 
-    const refCity = selected[0];
-    const { lat: refLat } = cityData[refCity];
-    const refDec = declination(refDay);
-    const refHours = daylightHours(refLat, refDec);
+      const resultsBody = document.querySelector("#resultsTable tbody");
+      resultsBody.innerHTML = "";
 
-    const eqDateObj = findEquivalentDate(refLat, refHours, refDay, year);
-    const eqDate = eqDateObj ? eqDateObj.toISOString().split('T')[0] : "—";
+      const dateVal = document.getElementById("dateInput").value;
+      const date = new Date(dateVal);
+      const year = date.getFullYear();
+      const refDay = dayOfYear(date);
 
-    selected.forEach(city => {
-      const { lat, lon } = cityData[city];
-      const dec = declination(refDay);
-      const elev = noonElevation(lat, dec);
-      const hours = daylightHours(lat, dec);
+      const refCity = selected[0];
+      const { lat: refLat } = cityData[refCity];
+      const refDec = declination(refDay);
+      const refHours = daylightHours(refLat, refDec);
 
-      const row = `<tr>
-        <td>${city}</td>
-        <td>${lat.toFixed(2)}</td>
-        <td>${lon.toFixed(2)}</td>
-        <td>${elev.toFixed(2)}</td>
-        <td>${hours.toFixed(2)}</td>
-        <td>${eqDate}</td>
-      </tr>`;
-      resultsBody.insertAdjacentHTML("beforeend", row);
-    });
+      const eqDateObj = findEquivalentDate(refLat, refHours, refDay, year);
+      const eqDate = eqDateObj ? eqDateObj.toISOString().split('T')[0] : "—";
 
-    // Plot chart
-    plotChart(selected, eqDateObj, refDay);
-  }
-</script>
+      selected.forEach(city => {
+        const { lat, lon } = cityData[city];
+        const dec = declination(refDay);
+        const elev = noonElevation(lat, dec);
+        const hours = daylightHours(lat, dec);
+
+        const row = `<tr>
+          <td>${city}</td>
+          <td>${lat.toFixed(2)}</td>
+          <td>${lon.toFixed(2)}</td>
+          <td>${elev.toFixed(2)}</td>
+          <td>${hours.toFixed(2)}</td>
+          <td>${eqDate}</td>
+        </tr>`;
+        resultsBody.insertAdjacentHTML("beforeend", row);
+      });
+
+      plotChart(selected, eqDateObj, refDay);
+    }
+  </script>
 </body>
 </html>
