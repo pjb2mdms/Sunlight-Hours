@@ -90,4 +90,90 @@
       "Crozet, VA": { lat: 38.0696, lon: -78.7000 },
       "Hanover, NH": { lat: 43.7022, lon: -72.2896 },
       "Nashville, TN": { lat: 36.1627, lon: -86.7816 },
-      "Asheville, NC": { lat: 35.5951, l
+      "Asheville, NC": { lat: 35.5951, lon: -82.5515 }
+    };
+
+    // Populate city checkboxes
+    const cityList = document.getElementById("cityList");
+    Object.keys(cityData).forEach(city => {
+      const label = document.createElement("label");
+      label.innerHTML = `<input type="checkbox" value="${city}"> ${city}`;
+      cityList.appendChild(label);
+    });
+
+    // --- Math utilities ---
+    const toRad = deg => deg * Math.PI / 180;
+    const toDeg = rad => rad * 180 / Math.PI;
+
+    function dayOfYear(date) {
+      const start = new Date(date.getFullYear(), 0, 0);
+      const diff = date - start + (start.getTimezoneOffset() - date.getTimezoneOffset()) * 60000;
+      return Math.floor(diff / 86400000);
+    }
+
+    // Solar declination angle (degrees)
+    function declination(day) {
+      return 23.44 * Math.sin(toRad((360 / 365) * (day - 81)));
+    }
+
+    // Solar noon elevation (degrees)
+    function noonElevation(lat, dec) {
+      return 90 - Math.abs(lat - dec);
+    }
+
+    // Daylight duration (hours)
+    function daylightHours(lat, dec) {
+      const latR = toRad(lat);
+      const decR = toRad(dec);
+      const cosH = -Math.tan(latR) * Math.tan(decR);
+      if (cosH >= 1) return 0;
+      if (cosH <= -1) return 24;
+      const H = Math.acos(cosH);
+      return (2 * toDeg(H)) / 15; // 15° per hour
+    }
+
+    // Find the approximate other day of year with same daylight length
+    function findEquivalentDate(lat, targetHours, refDay, year) {
+      for (let d = refDay + 1; d <= 365; d++) {
+        const h = daylightHours(lat, declination(d));
+        if (Math.abs(h - targetHours) < 0.05) {
+          const eqDate = new Date(year, 0, d);
+          return eqDate.toISOString().split('T')[0];
+        }
+      }
+      return "—";
+    }
+
+    function compareCities() {
+      const selected = Array.from(document.querySelectorAll("#cityList input:checked")).map(cb => cb.value);
+      if (selected.length === 0) { alert("Select at least one city."); return; }
+
+      const resultsBody = document.querySelector("#resultsTable tbody");
+      resultsBody.innerHTML = "";
+
+      const dateVal = document.getElementById("dateInput").value;
+      const date = new Date(dateVal);
+      const year = date.getFullYear();
+      const day = dayOfYear(date);
+
+      selected.forEach(city => {
+        const { lat, lon } = cityData[city];
+        const dec = declination(day);
+        const elev = noonElevation(lat, dec);
+        const hours = daylightHours(lat, dec);
+        const eq = findEquivalentDate(lat, hours, day, year);
+
+        const row = `<tr>
+          <td>${city}</td>
+          <td>${lat.toFixed(2)}</td>
+          <td>${lon.toFixed(2)}</td>
+          <td>${elev.toFixed(2)}</td>
+          <td>${hours.toFixed(2)}</td>
+          <td>${eq}</td>
+        </tr>`;
+        resultsBody.insertAdjacentHTML("beforeend", row);
+      });
+    }
+  </script>
+</body>
+</html>
