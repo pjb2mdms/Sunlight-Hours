@@ -63,16 +63,7 @@
 
   <!-- External Libraries -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.2.1/dist/chartjs-plugin-annotation.min.js"></script>
-<script src="https://unpkg.com/suncalc@1.9.0/suncalc.js"></script>
 <script>
+alert("JavaScript is executing correctly.");
+</script>
 
-    let chart;
-
-    function getSunlightAngle() {
-      const [lat, lon] = document.getElementById('city').value.split(',').map(Number);
-      const date = new Date(document.getElementById('date').value);
-      if (isNaN(date)) return alert("Please select a valid date.");
-
-      const angle = getSolarElevation(date, lat, lon);
-      const equivalent = find
