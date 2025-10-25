@@ -129,15 +129,22 @@
     return (2 * toDeg(H)) / 15; // 15° per hour
   }
 
-  // Find equivalent date for a given latitude and daylight hours
+  // Find the "mirror" date with the same daylight hours
   function findEquivalentDate(lat, targetHours, refDay, year) {
-    for (let d = refDay + 1; d <= 365; d++) {
+    let bestDay = null;
+    let bestDiff = 999;
+    for (let d = 1; d <= 365; d++) {
+      if (Math.abs(d - refDay) < 5) continue; // skip same date neighborhood
       const h = daylightHours(lat, declination(d));
-      if (Math.abs(h - targetHours) < 0.05) {
-        return new Date(year, 0, d);
+      const diff = Math.abs(h - targetHours);
+      if (diff < 0.1 && diff < bestDiff) {
+        bestDiff = diff;
+        bestDay = d;
       }
     }
-    return null;
+    if (!bestDay) return null;
+    const eqDate = new Date(year, 0, bestDay);
+    return eqDate;
   }
 
   function compareCities() {
@@ -150,20 +157,20 @@
     const dateVal = document.getElementById("dateInput").value;
     const date = new Date(dateVal);
     const year = date.getFullYear();
-    const day = dayOfYear(date);
+    const refDay = dayOfYear(date);
 
-    // --- Determine global equivalent date based on first city ---
+    // Reference city = first selected
     const refCity = selected[0];
     const { lat: refLat } = cityData[refCity];
-    const refDec = declination(day);
+    const refDec = declination(refDay);
     const refHours = daylightHours(refLat, refDec);
-    const eqDateObj = findEquivalentDate(refLat, refHours, day, year);
+
+    const eqDateObj = findEquivalentDate(refLat, refHours, refDay, year);
     const eqDate = eqDateObj ? eqDateObj.toISOString().split('T')[0] : "—";
 
-    // --- Display results for all cities ---
     selected.forEach(city => {
       const { lat, lon } = cityData[city];
-      const dec = declination(day);
+      const dec = declination(refDay);
       const elev = noonElevation(lat, dec);
       const hours = daylightHours(lat, dec);
 
