@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Daylight Comparator</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 2rem; background: #f7fafc; color: #222; }
+    input, select, button { margin: 0.5rem 0; padding: 0.4rem; }
+    .card { background: #fff; padding: 1rem; border-radius: 10px; box-shadow: 0 0 5px rgba(0,0,0,0.1); }
+  </style>
+</head>
+<body>
+  <h1>🌅 Daylight Comparator</h1>
+  <p>Compare daylight hours and solar angles for any date and location.</p>
+
+  <div class="card">
+    <label for="city">City:</label>
+    <select id="city">
+      <option value="27.9506,-82.4572">Tampa, FL</option>
+      <option value="40.7128,-74.0060">New York, NY</option>
+      <option value="34.0522,-118.2437">Los Angeles, CA</option>
+    </select><br>
+
+    <label for="date">Date:</label>
+    <input type="date" id="date" /><br>
+
+    <button onclick="getDaylight()">Get Daylight Info</button>
+
+    <pre id="output"></pre>
+  </div>
+
+  <script src="https://unpkg.com/suncalc@1.9.0/suncalc.js"></script>
+  <script>
+    function getDaylight() {
+      const [lat, lon] = document.getElementById('city').value.split(',').map(Number);
+      const date = new Date(document.getElementById('date').value);
+      if (!date) return;
+
+      const times = SunCalc.getTimes(date, lat, lon);
+      const solarNoon = SunCalc.getPosition(times.solarNoon, lat, lon).altitude * (180/Math.PI);
+      const daylightHrs = (times.sunset - times.sunrise) / 1000 / 3600;
+
+      document.getElementById('output').textContent =
+        `Sunrise: ${times.sunrise.toLocaleTimeString()}\n` +
+        `Sunset: ${times.sunset.toLocaleTimeString()}\n` +
+        `Daylight: ${daylightHrs.toFixed(2)} hours\n` +
+        `Solar Elevation at Noon: ${solarNoon.toFixed(1)}°`;
+    }
+  </script>
+</body>
+</html>
