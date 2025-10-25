@@ -20,7 +20,7 @@
     }
     main {
       background: white;
-      max-width: 950px;
+      max-width: 1100px;
       margin: 1rem auto;
       padding: 1.2rem 2rem;
       border-radius: 8px;
@@ -42,10 +42,30 @@
       cursor: pointer;
       margin-top: 1rem;
     }
+
+    /* Two-column layout container */
+    .results-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    .table-container {
+      flex: 1 1 45%;
+      min-width: 350px;
+      overflow-x: auto;
+    }
+    .chart-container {
+      flex: 1 1 50%;
+      min-width: 350px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 1rem;
       font-size: 0.95rem;
     }
     th, td {
@@ -59,12 +79,21 @@
     }
     th.city-col, td.city-col {
       text-align: left;
-      width: 25%;
+      width: 30%;
       white-space: normal;
     }
     canvas {
-      margin-top: 1.2rem;
+      width: 100% !important;
       height: 300px !important;
+    }
+
+    @media (max-width: 900px) {
+      .results-container {
+        flex-direction: column;
+      }
+      .table-container, .chart-container {
+        flex: 1 1 100%;
+      }
     }
   </style>
 </head>
@@ -82,22 +111,28 @@
 
     <button onclick="compareCities()">Compare</button>
 
-    <table id="resultsTable">
-      <thead>
-        <tr>
-          <th class="city-col">City</th>
-          <th>Lat</th>
-          <th>Lon</th>
-          <th>Noon Elev (°)</th>
-          <th>Daylight (hrs)</th>
-          <th>Equivalent Date</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
+    <div class="results-container">
+      <div class="table-container">
+        <table id="resultsTable">
+          <thead>
+            <tr>
+              <th class="city-col">City</th>
+              <th>Lat</th>
+              <th>Lon</th>
+              <th>Noon Elev (°)</th>
+              <th>Daylight (hrs)</th>
+              <th>Equivalent Date</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
 
-    <h2>Daylight Duration Chart</h2>
-    <canvas id="daylightChart"></canvas>
+      <div class="chart-container">
+        <h2 style="margin-top:0;">Daylight Duration Chart</h2>
+        <canvas id="daylightChart"></canvas>
+      </div>
+    </div>
   </main>
 
   <script>
