@@ -14,37 +14,48 @@
     margin: 0;
     padding: 0;
   }
+
   header {
     background: #003c78;
     color: #fff;
     padding: 1.5rem 0;
     text-align: center;
   }
+
   main {
     max-width: 900px;
     margin: 2rem auto;
     padding: 0 1rem;
   }
+
   h1 {
     margin: 0;
     font-weight: 600;
     font-size: 1.6rem;
   }
+
   .dates {
     display: flex;
-    flex-wrap: wrap;
     gap: 1rem;
+    flex-wrap: wrap;
     justify-content: center;
     margin: 1.5rem 0;
   }
+
   label {
     font-weight: 500;
     margin-right: 0.4rem;
   }
+
   input[type="date"], input[readonly] {
     font-size: 1rem;
-    padding: 0.3rem 0.4rem;
+    padding: 0.4rem 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    color: #333;
+    font-family: inherit;
   }
+
   .city-list {
     display: flex;
     flex-wrap: wrap;
@@ -52,6 +63,7 @@
     justify-content: center;
     margin-bottom: 1rem;
   }
+
   button {
     background: #003c78;
     color: white;
@@ -61,29 +73,35 @@
     border-radius: 4px;
     cursor: pointer;
   }
+
   button:hover {
     background: #004a96;
   }
+
   table {
     width: 100%;
     border-collapse: collapse;
     font-size: 0.95rem;
     margin-top: 1.5rem;
   }
+
   th, td {
     border-bottom: 1px solid #e0e0e0;
     padding: 0.4rem;
     text-align: center;
   }
+
   th.label-col {
     text-align: left;
     width: 150px;
   }
+
   td svg {
-    width: 60px;
-    height: 30px;
+    width: 70px;
+    height: 40px;
     vertical-align: middle;
   }
+
   canvas {
     width: 100% !important;
     height: 400px !important;
@@ -195,7 +213,7 @@
       cityList.appendChild(label);
     });
 
-  /* ---------- Table Builder with Visual Noon Elevation ---------- */
+  /* ---------- Table Builder ---------- */
   function buildTable(selected, refDay) {
     const head = document.getElementById("tableHead");
     const body = document.getElementById("tableBody");
@@ -217,18 +235,17 @@
     addRow("Latitude", c => cityData[c].lat.toFixed(2));
     addRow("Longitude", c => cityData[c].lon.toFixed(2));
 
-    // Noon elevation with simple arcs
     addRow("Noon Elevation", c => {
       const elev = noonElevation(cityData[c].lat, refDay);
-      const radius = 28;
+      const radius = 30;
       const endAngle = Math.min(90, elev) * Math.PI / 180;
       const x = 30 + radius * Math.cos(Math.PI - endAngle);
-      const y = 28 - radius * Math.sin(Math.PI - endAngle);
+      const y = 30 - radius * Math.sin(Math.PI - endAngle);
       return `
-        <svg viewBox="0 0 60 30">
-          <path d="M2 28 A28 28 0 0 1 58 28" stroke="#ccc" stroke-width="1" fill="none"/>
-          <line x1="30" y1="28" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="orange" stroke-width="2"/>
-          <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3" fill="orange"/>
+        <svg viewBox="0 0 60 35">
+          <path d="M2 30 A28 28 0 0 1 58 30" stroke="#ccc" stroke-width="1" fill="none"/>
+          <line x1="30" y1="30" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="orange" stroke-width="2.5"/>
+          <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="4" fill="orange"/>
         </svg>
         <div>${elev.toFixed(1)}°</div>`;
     });
@@ -252,15 +269,29 @@
 
     if (daylightChart) daylightChart.destroy();
 
-    const annotations = {
-      selectedDate: { type: 'line', xMin: refDay, xMax: refDay, borderColor: 'black', borderWidth: 2 }
+    const annotations = {};
+    const selectedLabel = new Date(document.getElementById("dateInput").value);
+    const selectedLabelText = selectedLabel.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+
+    annotations.selectedDate = {
+      type: 'line',
+      xMin: refDay,
+      xMax: refDay,
+      borderColor: 'black',
+      borderWidth: 2,
+      label: { content: selectedLabelText, enabled: true, position: 'start', yAdjust: -10 }
     };
     if (eqDateObj) {
-      annotations.equivalentDate = { type: 'line', xMin: dayOfYear(eqDateObj), xMax: dayOfYear(eqDateObj), borderColor: 'red', borderWidth: 2 };
+      const eqLabelText = eqDateObj.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+      annotations.equivalentDate = {
+        type: 'line',
+        xMin: dayOfYear(eqDateObj),
+        xMax: dayOfYear(eqDateObj),
+        borderColor: 'red',
+        borderWidth: 2,
+        label: { content: eqLabelText, enabled: true, position: 'start', yAdjust: -10 }
+      };
     }
-
-    const monthLabels = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-    const monthPositions = [15,45,74,105,135,166,196,227,258,288,319,349];
 
     daylightChart = new Chart(ctx, {
       type: 'line',
@@ -275,22 +306,18 @@
           x: {
             title: { display: true, text: 'Month' },
             ticks: {
-              callback: function(value) {
-                const day = days[value];
-                for (let i = 0; i < monthPositions.length; i++) {
-                  if (Math.abs(day - monthPositions[i]) < 3) return monthLabels[i];
-                }
-                return "";
-              },
-              maxRotation: 0,
-              autoSkip: false
+              count: 12,
+              callback: function(value, index, ticks) {
+                const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+                return months[index % 12];
+              }
             },
-            grid: { color: "#eee" }
+            grid: { display: false }
           },
           y: {
             title: { display: true, text: 'Daylight Hours' },
             min: 5, max: 20,
-            grid: { color: "#eee" }
+            grid: { display: false }
           }
         }
       },
