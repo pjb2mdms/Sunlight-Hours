@@ -5,11 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sunlight Angle Comparator</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.2.1"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
       background: #f4f4f4;
       margin: 0;
+      color: #222;
     }
     header {
       background: #004c91;
@@ -20,12 +22,14 @@
     main {
       background: white;
       max-width: 1100px;
-      margin: 1rem auto;
-      padding: 1.5rem 2rem;
+      margin: 1.5rem auto;
+      padding: 2rem;
       border-radius: 8px;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
-    h2 { margin-top: 1.2rem; }
+    h1, h2 {
+      margin-top: 0;
+    }
 
     .date-row {
       display: flex;
@@ -34,37 +38,39 @@
       align-items: center;
       margin-bottom: 1rem;
     }
-    .date-row label {
+    label {
       font-weight: bold;
-      margin-right: 0.3rem;
     }
-    .date-row input {
+    input[type="date"], input[readonly] {
       padding: 0.4rem;
-      font-family: Arial, sans-serif;
       font-size: 1rem;
+      margin-left: 0.3rem;
     }
 
     .city-list {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-      gap: 0.25rem;
-      margin-bottom: 0.5rem;
+      gap: 0.3rem;
+      margin-bottom: 0.8rem;
     }
     button {
       background: #004c91;
       color: white;
       border: none;
-      padding: 0.5rem 1rem;
+      padding: 0.6rem 1.2rem;
       border-radius: 5px;
       cursor: pointer;
-      margin-bottom: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    button:hover {
+      background: #0060b4;
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 0.95rem;
       margin-top: 0.5rem;
+      font-size: 0.95rem;
     }
     th, td {
       border: 1px solid #ddd;
@@ -73,31 +79,30 @@
     }
     th.label-col, td.label-col {
       background: #f9f9f9;
-      font-weight: bold;
       text-align: left;
-      width: 150px;
+      font-weight: bold;
+      width: 140px;
     }
     th.city-col {
       background: #f0f0f0;
       font-weight: bold;
-      min-width: 80px;
     }
     td svg {
       width: 60px;
       height: 30px;
     }
-
     canvas {
       width: 100% !important;
-      height: 450px !important;
-      margin-top: 1rem;
+      height: 400px !important;
+      margin-top: 1.2rem;
     }
   </style>
 </head>
+
 <body>
   <header>
     <h1>Sunlight Angle Comparator</h1>
-    <p>Compare solar noon elevation and daylight duration across cities</p>
+    <p>Compare daylight hours and noon elevation across cities</p>
   </header>
 
   <main>
@@ -116,66 +121,70 @@
     <div class="city-list" id="cityList"></div>
     <button onclick="compareCities()">Compare</button>
 
-    <div class="table-wrapper">
-      <table id="resultsTable">
-        <thead id="tableHead"></thead>
-        <tbody id="tableBody"></tbody>
-      </table>
-    </div>
+    <table id="resultsTable">
+      <thead id="tableHead"></thead>
+      <tbody id="tableBody"></tbody>
+    </table>
 
-    <h2>Daylight Duration (Polar View)</h2>
-    <canvas id="polarChart"></canvas>
+    <h2>Daylight Duration Chart</h2>
+    <canvas id="daylightChart"></canvas>
   </main>
 
   <script>
+    /* ---------- Data ---------- */
     const cityData = {
-      "Fairbanks, AK": { abbr: "FAI", lat: 64.8378, lon: -147.7164 },
-      "St Andrews, Scotland": { abbr: "STA", lat: 56.3398, lon: -2.7967 },
-      "Hanover, NH": { abbr: "HAN", lat: 43.7022, lon: -72.2896 },
-      "East Longmeadow, MA": { abbr: "ELM", lat: 42.0645, lon: -72.5126 },
-      "Crozet, VA": { abbr: "CRZ", lat: 38.0696, lon: -78.7000 },
-      "Nashville, TN": { abbr: "BNA", lat: 36.1627, lon: -86.7816 },
-      "Asheville, NC": { abbr: "AVL", lat: 35.5951, lon: -82.5515 },
-      "Houston, TX": { abbr: "HOU", lat: 29.7604, lon: -95.3698 },
-      "Tampa, FL": { abbr: "TPA", lat: 27.9506, lon: -82.4572 }
+      "Fairbanks, AK": { abbr: "FAI", lat: 64.84, lon: -147.72 },
+      "St Andrews, Scotland": { abbr: "STA", lat: 56.34, lon: -2.80 },
+      "Hanover, NH": { abbr: "HAN", lat: 43.70, lon: -72.29 },
+      "East Longmeadow, MA": { abbr: "ELM", lat: 42.06, lon: -72.51 },
+      "Crozet, VA": { abbr: "CRZ", lat: 38.07, lon: -78.70 },
+      "Nashville, TN": { abbr: "BNA", lat: 36.16, lon: -86.78 },
+      "Asheville, NC": { abbr: "AVL", lat: 35.60, lon: -82.55 },
+      "Houston, TX": { abbr: "HOU", lat: 29.76, lon: -95.37 },
+      "Tampa, FL": { abbr: "TPA", lat: 27.95, lon: -82.46 }
     };
 
+    const sortedCities = Object.entries(cityData)
+      .sort((a,b) => b[1].lat - a[1].lat);
+
     const cityList = document.getElementById("cityList");
-    Object.keys(cityData).forEach(city => {
+    sortedCities.forEach(([name]) => {
       const label = document.createElement("label");
-      label.innerHTML = `<input type="checkbox" value="${city}"> ${city}`;
+      label.innerHTML = `<input type="checkbox" value="${name}"> ${name}`;
       cityList.appendChild(label);
     });
 
-    const toRad = deg => deg * Math.PI / 180;
-    const toDeg = rad => rad * 180 / Math.PI;
-    function dayOfYear(date) {
-      const start = new Date(date.getFullYear(), 0, 0);
-      const diff = date - start + (start.getTimezoneOffset() - date.getTimezoneOffset()) * 60000;
-      return Math.floor(diff / 86400000);
-    }
-    function declination(day) {
+    /* ---------- Core math ---------- */
+    const toRad = d => d * Math.PI / 180;
+    const toDeg = r => r * 180 / Math.PI;
+
+    function solarDeclination(day) {
       return 23.44 * Math.sin(toRad((360 / 365) * (day - 81)));
     }
-    function noonElevation(lat, dec) {
-      return 90 - Math.abs(lat - dec);
-    }
-    function daylightHours(lat, dec) {
+    function daylightHours(lat, day) {
+      const dec = toRad(solarDeclination(day));
       const latR = toRad(lat);
-      const decR = toRad(dec);
-      const cosH = -Math.tan(latR) * Math.tan(decR);
+      const cosH = -Math.tan(latR) * Math.tan(dec);
       if (cosH >= 1) return 0;
       if (cosH <= -1) return 24;
       const H = Math.acos(cosH);
       return (2 * toDeg(H)) / 15;
     }
+    function noonElevation(lat, day) {
+      const dec = solarDeclination(day);
+      return 90 - Math.abs(lat - dec);
+    }
+    function dayOfYear(date) {
+      const start = new Date(date.getFullYear(), 0, 0);
+      const diff = date - start + (start.getTimezoneOffset() - date.getTimezoneOffset()) * 60000;
+      return Math.floor(diff / 86400000);
+    }
     function findEquivalentDate(lat, targetHours, refDay, year) {
       let bestDay = null, bestDiff = 999;
       for (let d = 1; d <= 365; d++) {
         if (Math.abs(d - refDay) < 5) continue;
-        const h = daylightHours(lat, declination(d));
-        const diff = Math.abs(h - targetHours);
-        if (diff < 0.1 && diff < bestDiff) {
+        const diff = Math.abs(daylightHours(lat, d) - targetHours);
+        if (diff < bestDiff) {
           bestDiff = diff;
           bestDay = d;
         }
@@ -189,119 +198,118 @@
       return `${mm}/${dd}/${yyyy}`;
     }
 
-    let polarChart;
+    /* ---------- Table builder ---------- */
+    function buildTable(selected, refDay) {
+      const head = document.getElementById("tableHead");
+      const body = document.getElementById("tableBody");
+      head.innerHTML = "";
+      body.innerHTML = "";
 
+      const headRow = document.createElement("tr");
+      headRow.innerHTML = `<th class="label-col"></th>` +
+        selected.map(city => `<th class="city-col">${cityData[city].abbr}</th>`).join('');
+      head.appendChild(headRow);
+
+      const addRow = (label, fn) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td class="label-col">${label}</td>` +
+          selected.map(c => `<td>${fn(c)}</td>`).join('');
+        body.appendChild(tr);
+      };
+
+      addRow("Latitude", c => cityData[c].lat.toFixed(2));
+      addRow("Longitude", c => cityData[c].lon.toFixed(2));
+      addRow("Noon Elev (°)", c => noonElevation(cityData[c].lat, refDay).toFixed(1));
+      addRow("Daylight (hrs)", c => daylightHours(cityData[c].lat, refDay).toFixed(2));
+    }
+
+    /* ---------- Chart.js (Enhanced Line Graph) ---------- */
+    let daylightChart;
+
+    function plotChart(selected, eqDateObj, refDay) {
+      const ctx = document.getElementById('daylightChart').getContext('2d');
+      const days = Array.from({length:365}, (_,i)=>i+1);
+      const datasets = selected.map(city => {
+        const lat = cityData[city].lat;
+        const data = days.map(d => daylightHours(lat, d));
+        const color = `hsl(${Math.random()*360},70%,50%)`;
+        return { label: cityData[city].abbr, data, borderColor: color, fill: false, tension: 0.2 };
+      });
+
+      if (daylightChart) daylightChart.destroy();
+
+      const annotations = {
+        selectedDate: {
+          type: 'line', xMin: refDay, xMax: refDay,
+          borderColor: 'black', borderWidth: 2,
+          label: { enabled: true, content: 'Selected', position: 'start' }
+        }
+      };
+      if (eqDateObj) {
+        annotations.equivalentDate = {
+          type: 'line', xMin: dayOfYear(eqDateObj), xMax: dayOfYear(eqDateObj),
+          borderColor: 'red', borderWidth: 2,
+          label: { enabled: true, content: 'Equivalent', position: 'start' }
+        };
+      }
+
+      const months = [1,32,60,91,121,152,182,213,244,274,305,335];
+      const monthLabels = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+      daylightChart = new Chart(ctx, {
+        type: 'line',
+        data: { labels: days, datasets },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { position: 'bottom' },
+            annotation: { annotations },
+            title: { display: false }
+          },
+          scales: {
+            x: {
+              title: { display: true, text: 'Month' },
+              ticks: {
+                callback: function(value) {
+                  const day = days[value];
+                  for (let i = 0; i < months.length; i++) {
+                    if (Math.abs(day - months[i]) < 2) return monthLabels[i];
+                  }
+                  return "";
+                },
+                autoSkip: false,
+                maxRotation: 0,
+                stepSize: 30
+              }
+            },
+            y: {
+              title: { display: true, text: 'Daylight Hours' },
+              min: 5, max: 20
+            }
+          }
+        },
+        plugins: [Chart.registry.getPlugin('annotation')]
+      });
+    }
+
+    /* ---------- Main handler ---------- */
     function compareCities() {
       const selected = Array.from(document.querySelectorAll("#cityList input:checked")).map(cb => cb.value);
       if (selected.length === 0) { alert("Select at least one city."); return; }
 
       const dateVal = document.getElementById("dateInput").value;
       const date = new Date(dateVal);
-      const year = date.getFullYear();
       const refDay = dayOfYear(date);
+      const year = date.getFullYear();
 
       const refCity = selected[0];
       const refLat = cityData[refCity].lat;
-      const refDec = declination(refDay);
-      const refHours = daylightHours(refLat, refDec);
+      const refHours = daylightHours(refLat, refDay);
       const eqDateObj = findEquivalentDate(refLat, refHours, refDay, year);
       document.getElementById("equivDate").value = eqDateObj ? formatDate(eqDateObj) : "—";
 
-      buildComparisonTable(selected, refDay);
-      plotPolarChart(selected);
-    }
-
-    function buildComparisonTable(selectedCities, refDay) {
-      const tableHead = document.getElementById("tableHead");
-      const tableBody = document.getElementById("tableBody");
-      tableHead.innerHTML = "";
-      tableBody.innerHTML = "";
-
-      const headRow = document.createElement("tr");
-      headRow.innerHTML = `<th class="label-col"></th>` +
-        selectedCities.map(city => `<th class="city-col" title="${city}">${cityData[city].abbr}</th>`).join('');
-      tableHead.appendChild(headRow);
-
-      const makeRow = (label, fn) => {
-        const row = document.createElement("tr");
-        row.innerHTML = `<td class="label-col">${label}</td>` +
-          selectedCities.map(city => `<td>${fn(city)}</td>`).join('');
-        tableBody.appendChild(row);
-      };
-
-      makeRow("Latitude", c => cityData[c].lat.toFixed(2));
-      makeRow("Longitude", c => cityData[c].lon.toFixed(2));
-
-      makeRow("Noon Elev (°)", c => {
-        const elev = noonElevation(cityData[c].lat, declination(refDay));
-        const radius = 28;
-        const endAngle = Math.min(90, elev) * Math.PI / 180;
-        const x = 30 + radius * Math.cos(Math.PI - endAngle);
-        const y = 28 - radius * Math.sin(Math.PI - endAngle);
-        return `
-          <svg viewBox="0 0 60 30">
-            <path d="M2 28 A28 28 0 0 1 58 28" stroke="#ccc" stroke-width="2" fill="none"/>
-            <path d="M30 28 L${x.toFixed(1)} ${y.toFixed(1)}" stroke="orange" stroke-width="2"/>
-            <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3" fill="orange"/>
-          </svg>
-          <div>${elev.toFixed(1)}°</div>`;
-      });
-
-      makeRow("Daylight (hrs)", c => daylightHours(cityData[c].lat, declination(refDay)).toFixed(2));
-    }
-
-    function plotPolarChart(selectedCities) {
-      const ctx = document.getElementById('polarChart').getContext('2d');
-      const labels = Array.from({ length: 365 }, (_, i) => i + 1);
-      const datasets = selectedCities.map(city => {
-        const { lat } = cityData[city];
-        const data = labels.map(d => daylightHours(lat, declination(d)));
-        const color = `hsl(${Math.random() * 360}, 70%, 50%)`;
-        return {
-          label: cityData[city].abbr,
-          data,
-          borderColor: color,
-          borderWidth: 2,
-          fill: false,
-          pointRadius: 0,
-          tension: 0.1
-        };
-      });
-
-      if (polarChart) polarChart.destroy();
-
-      // Convert June 21 (day 172) to top of circle (90° rotation)
-      const rotation = -90;
-
-      polarChart = new Chart(ctx, {
-        type: 'radar',
-        data: { labels, datasets },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: {
-            r: {
-              angleLines: { color: '#ccc' },
-              grid: { color: '#eee' },
-              suggestedMin: 5,
-              suggestedMax: 20,
-              ticks: { stepSize: 2 },
-              pointLabels: {
-                callback: (val, i) => {
-                  const days = [20, 80, 172, 265, 355];
-                  const labels = ["Mar 21", "Jun 21", "Sep 21", "Dec 21"];
-                  return days.includes(i * 73) ? labels[days.indexOf(i * 73)] : '';
-                }
-              }
-            }
-          },
-          plugins: {
-            legend: { position: 'bottom' },
-            title: { display: true, text: 'Daylight Hours (Polar Year View)' }
-          },
-          elements: { line: { borderWidth: 2 } }
-        }
-      });
+      buildTable(selected, refDay);
+      plotChart(selected, eqDateObj, refDay);
     }
   </script>
 </body>
