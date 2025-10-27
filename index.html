@@ -7,217 +7,269 @@
 <style>
   body {
     font-family: "Helvetica Neue", Arial, sans-serif;
-    margin: 0;
-    background: #f4f6f8;
+    background: #f7f9fb;
     color: #222;
     text-align: center;
+    margin: 0;
+    padding: 0;
   }
+
   header {
-    background: white;
     padding: 1rem 0.5rem;
+    background: #fff;
     box-shadow: 0 2px 6px rgba(0,0,0,0.1);
   }
-  h1 { margin: 0; font-size: 1.8rem; }
-  #cityDropdown, #dateSlider {
-    margin: 0.5rem;
+
+  h1 {
+    font-size: 1.8rem;
+    margin: 0.2rem 0;
+  }
+
+  #dateDisplay {
+    margin-top: 0.5rem;
     font-size: 1rem;
-    padding: 0.4rem;
-    border: 1px solid #ccc;
-    border-radius: 6px;
   }
-  main {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin-top: 1rem;
+
+  #dateDisplay span {
+    font-weight: 500;
   }
-  #infoTable {
-    margin-top: 1rem;
+
+  #sliderContainer {
+    margin: 1.2rem auto;
+    width: 80%;
+    max-width: 600px;
+  }
+
+  #dateSlider {
+    width: 100%;
+  }
+
+  #chartContainer {
+    width: 90%;
+    max-width: 700px;
+    margin: 0 auto;
+  }
+
+  canvas {
+    width: 100%;
+    height: 400px;
+  }
+
+  table {
+    margin: 1.5rem auto;
     border-collapse: collapse;
     background: #fff;
     box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     border-radius: 8px;
     overflow: hidden;
   }
-  #infoTable th, #infoTable td {
+
+  th, td {
     padding: 0.6rem 1rem;
     border-bottom: 1px solid #eee;
   }
-  #infoTable th { background: #fafafa; }
-  #chartContainer {
-    width: 90%;
-    max-width: 700px;
-    margin-top: 1rem;
+
+  th {
+    background: #fafafa;
+    font-weight: 600;
   }
-  #axialTiltContainer {
-    margin-top: 1.5rem;
-    width: 280px;
+
+  #arcVisual {
+    width: 180px;
+    height: 90px;
+    margin: 0.5rem auto 1.5rem auto;
   }
-  svg {
+
+  #arcVisual svg {
     width: 100%;
-    height: auto;
+    height: 100%;
   }
 </style>
 </head>
 <body>
 <header>
   <h1>Sunlight Comparator</h1>
-  <div>
-    <select id="cityDropdown">
-      <option value="current">Current Location</option>
-      <option value="St Andrews, Scotland">St Andrews, Scotland</option>
-      <option value="Houston, TX">Houston, TX</option>
-      <option value="Tampa, FL">Tampa, FL</option>
-      <option value="Seattle, WA">Seattle, WA</option>
-    </select>
+  <div id="dateDisplay">
+    <strong>Selected Date:</strong> <span id="selectedDate"></span> &nbsp; | &nbsp;
+    <strong>Equivalent Date:</strong> <span id="equivalentDate"></span>
   </div>
 </header>
 
 <main>
-  <div id="dateDisplay">
-    <strong>Today's Date:</strong> <span id="todayDate"></span> &nbsp; | &nbsp;
-    <strong>Equivalent Date:</strong> <span id="equivalentDate"></span>
+  <div id="sliderContainer">
+    <input type="range" id="dateSlider" min="0" max="364" value="0">
   </div>
-
-  <input type="range" id="dateSlider" min="0" max="364" value="0" style="width:60%;">
-
-  <table id="infoTable">
-    <tr><th>Latitude</th><td id="latVal">--</td></tr>
-    <tr><th>Longitude</th><td id="lonVal">--</td></tr>
-    <tr><th>Solar Elevation Angle (°)</th><td id="angleVal">--</td></tr>
-  </table>
 
   <div id="chartContainer">
     <canvas id="daylightChart"></canvas>
   </div>
 
-  <div id="axialTiltContainer">
-    <svg id="axialTiltSVG" viewBox="0 0 300 300">
-      <circle cx="150" cy="150" r="70" fill="#69b3e7" stroke="#003366" stroke-width="2"/>
-      <line id="axisLine" x1="150" y1="80" x2="150" y2="220"
-            stroke="#222" stroke-width="3" transform="rotate(23.5,150,150)"/>
-      <circle cx="150" cy="150" r="3" fill="#222"/>
-      <line id="sunRays" x1="220" y1="130" x2="300" y2="130"
-            stroke="#f7b500" stroke-width="4" stroke-linecap="round"/>
-      <line x1="220" y1="150" x2="300" y2="150"
-            stroke="#f7b500" stroke-width="4" stroke-linecap="round"/>
-      <line x1="220" y1="170" x2="300" y2="170"
-            stroke="#f7b500" stroke-width="4" stroke-linecap="round"/>
-      <text x="140" y="280" font-size="14" fill="#555">Earth’s Tilt & Sunlight</text>
+  <div id="arcVisual">
+    <svg viewBox="0 0 200 100">
+      <path d="M10,90 A90,90 0 0,1 190,90" fill="none" stroke="#0077cc" stroke-width="3" />
+      <circle id="sunMarker" cx="100" cy="90" r="5" fill="#f7b500"/>
     </svg>
   </div>
+
+  <table>
+    <tr><th>Latitude</th><td id="latVal">--</td></tr>
+    <tr><th>Longitude</th><td id="lonVal">--</td></tr>
+    <tr><th>Solar Elevation Angle (°)</th><td id="angleVal">--</td></tr>
+  </table>
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
+  // ---- Utility functions ----
   const today = new Date();
   const startOfYear = new Date(today.getFullYear(), 0, 1);
   const dayOfYear = Math.floor((today - startOfYear) / (1000*60*60*24));
-  const dateSlider = document.getElementById("dateSlider");
-  const todayDate = document.getElementById("todayDate");
-  const equivalentDate = document.getElementById("equivalentDate");
-  const latVal = document.getElementById("latVal");
-  const lonVal = document.getElementById("lonVal");
-  const angleVal = document.getElementById("angleVal");
 
-  dateSlider.value = dayOfYear;
-  todayDate.textContent = formatMMDDYYYY(today);
-  equivalentDate.textContent = formatMMDDYYYY(getEquivalentDate(today));
-
-  let chart;
-
-  async function getCurrentCityCoords() {
-    return new Promise((resolve)=>{
-      if(navigator.geolocation){
-        navigator.geolocation.getCurrentPosition(pos=>{
-          resolve({lat: pos.coords.latitude, lon: pos.coords.longitude});
-        },()=>resolve({lat:0, lon:0}));
-      } else resolve({lat:0, lon:0});
-    });
+  function formatDate(d) {
+    return d.toLocaleDateString('en-US', { year:'numeric', month:'2-digit', day:'2-digit' });
   }
 
-  function formatMMDDYYYY(date){
-    return date.toLocaleDateString('en-US',{year:'numeric',month:'2-digit',day:'2-digit'});
-  }
-
-  function getEquivalentDate(date){
-    const eq=new Date(date);
-    eq.setDate(eq.getDate()+182);
+  function getEquivalentDate(date) {
+    const eq = new Date(date);
+    eq.setDate(eq.getDate() + 182);
+    if (eq.getFullYear() > date.getFullYear()) eq.setFullYear(date.getFullYear());
     return eq;
   }
 
-  function solarElevation(lat, day){
-    const declination = 23.44 * Math.sin(((360/365)*(day-81)) * Math.PI/180);
-    const elevation = 90 - Math.abs(lat - declination);
-    return Math.max(0, Math.min(90, elevation));
+  // Solar declination approximation
+  function declination(day) {
+    return 23.44 * Math.sin(((360/365)*(day-81)) * Math.PI/180);
   }
 
-  function updateTable(lat, lon, day){
-    latVal.textContent = lat.toFixed(2);
-    lonVal.textContent = lon.toFixed(2);
-    angleVal.textContent = solarElevation(lat, day).toFixed(1);
+  function daylightHours(lat, day) {
+    const radLat = lat * Math.PI / 180;
+    const radDec = declination(day) * Math.PI / 180;
+    const cosH = -Math.tan(radLat) * Math.tan(radDec);
+    const H = Math.acos(Math.min(Math.max(cosH, -1), 1));
+    return (2 * H * 180/Math.PI) / 15; // convert radians to hours
   }
 
-  function updateChart(city, lat){
-    const labels = Array.from({length:12}, (_,i)=>["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][i]);
-    const data = Array.from({length:12}, (_,i)=>{
-      const day=i*30;
-      const declination = 23.44*Math.sin(((360/365)*(day-81))*Math.PI/180);
-      return 12 + 4*Math.sin((lat-declination)*Math.PI/180);
-    });
-    if(chart) chart.destroy();
+  function solarElevation(lat, day) {
+    const dec = declination(day);
+    return 90 - Math.abs(lat - dec);
+  }
+
+  // ---- Chart + UI ----
+  const slider = document.getElementById("dateSlider");
+  const selectedDateEl = document.getElementById("selectedDate");
+  const equivalentDateEl = document.getElementById("equivalentDate");
+  const latVal = document.getElementById("latVal");
+  const lonVal = document.getElementById("lonVal");
+  const angleVal = document.getElementById("angleVal");
+  const sunMarker = document.getElementById("sunMarker");
+
+  const lat = 27.95; // default (Tampa)
+  const lon = -82.46;
+
+  let chart;
+
+  function updateChart(day) {
+    const days = Array.from({length:365}, (_,i)=>i);
+    const hours = days.map(d => daylightHours(lat, d));
     const ctx = document.getElementById('daylightChart').getContext('2d');
+
+    if (chart) chart.destroy();
+
     chart = new Chart(ctx, {
-      type:'line',
-      data:{
-        labels,
-        datasets:[{
-          label:`Daylight Hours (${city})`,
-          data,
-          borderColor:'#0077cc',
-          borderWidth:2,
-          fill:false,
-          tension:0.3
+      type: 'line',
+      data: {
+        labels: days,
+        datasets: [{
+          label: 'Daylight Hours',
+          data: hours,
+          borderColor: '#0077cc',
+          borderWidth: 2,
+          fill: false,
+          tension: 0.3
         }]
       },
-      options:{
-        scales:{
-          x:{grid:{display:false}},
-          y:{beginAtZero:true,max:24,title:{display:true,text:'Hours of Daylight'}}
+      options: {
+        plugins: { legend: { display: false } },
+        scales: {
+          x: {
+            grid: { display: false },
+            title: { display: false },
+            ticks: { display: false }
+          },
+          y: {
+            title: { display: true, text: 'Hours of Daylight' },
+            min: 0, max: 24
+          }
         },
-        plugins:{legend:{display:false}}
+        animation: false
       }
     });
+
+    addVerticalLines(day, (day+182)%365);
   }
 
-  function updateAxialTilt(day){
-    const svgAxis = document.getElementById("axisLine");
-    const tilt = 23.5 * Math.sin(((2*Math.PI)/365)*day);
-    svgAxis.setAttribute("transform", `rotate(${tilt},150,150)`);
+  function addVerticalLines(selectedDay, eqDay) {
+    const chartArea = chart.chartArea;
+    const ctx = chart.ctx;
+    const xScale = chart.scales.x;
+    chart.update();
+
+    // draw after render
+    chart.options.animation = false;
+    chart.render();
+    const x1 = xScale.getPixelForValue(selectedDay);
+    const x2 = xScale.getPixelForValue(eqDay);
+    const yTop = chart.scales.y.top;
+    const yBottom = chart.scales.y.bottom;
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(x1, yTop);
+    ctx.lineTo(x1, yBottom);
+    ctx.strokeStyle = "#f7b500";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(x2, yTop);
+    ctx.lineTo(x2, yBottom);
+    ctx.strokeStyle = "#0077cc";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.restore();
   }
 
-  async function initialize(){
-    const coords = await getCurrentCityCoords();
-    const lat = coords.lat;
-    const lon = coords.lon;
-    updateTable(lat, lon, dayOfYear);
-    updateChart("Current Location", lat);
-    updateAxialTilt(dayOfYear);
-  }
-
-  dateSlider.addEventListener("input",()=>{
-    const d = parseInt(dateSlider.value);
+  function updateDisplay(day) {
     const current = new Date(startOfYear);
-    current.setDate(d);
-    todayDate.textContent = formatMMDDYYYY(current);
-    equivalentDate.textContent = formatMMDDYYYY(getEquivalentDate(current));
-    updateTable( latVal.textContent ? parseFloat(latVal.textContent):0,
-                 lonVal.textContent ? parseFloat(lonVal.textContent):0,
-                 d );
-    updateAxialTilt(d);
-  });
+    current.setDate(day);
+    const eq = getEquivalentDate(current);
 
-  initialize();
+    selectedDateEl.textContent = formatDate(current);
+    equivalentDateEl.textContent = formatDate(eq);
+
+    latVal.textContent = lat.toFixed(2);
+    lonVal.textContent = lon.toFixed(2);
+    const elev = solarElevation(lat, day);
+    angleVal.textContent = elev.toFixed(1);
+
+    // Move sun marker along arc
+    const angleRad = Math.PI * (1 - elev/90);
+    const x = 100 + 80 * Math.cos(angleRad);
+    const y = 90 - 80 * Math.sin(angleRad);
+    sunMarker.setAttribute("cx", x);
+    sunMarker.setAttribute("cy", y);
+  }
+
+  // ---- Initialize ----
+  slider.value = dayOfYear;
+  updateChart(dayOfYear);
+  updateDisplay(dayOfYear);
+
+  slider.addEventListener("input", () => {
+    const d = parseInt(slider.value);
+    updateChart(d);
+    updateDisplay(d);
+  });
 </script>
 </body>
 </html>
