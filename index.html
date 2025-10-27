@@ -8,7 +8,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.2.1"></script>
 <style>
   :root{
-    --blue:#0b5fb3; /* friendlier blue */
+    --blue:#0b5fb3;
     --blue-dark:#084a8b;
     --orange:#f28e2b;
     --text:#222;
@@ -53,7 +53,6 @@
   .slider-area{margin-top:1rem; text-align:center}
   .live-dates{font-weight:700; margin:.25rem 0 .6rem}
   .live-dates span{display:inline-block; min-width:9rem}
-  /* Pretty slider */
   input[type="range"]{
     -webkit-appearance:none; appearance:none; width:100%; max-width:720px; height:10px;
     background:#e6eef8; border-radius:5px; outline:none;
@@ -68,6 +67,15 @@
     border:2px solid #fff; box-shadow:0 0 0 2px var(--blue); cursor:pointer;
   }
   .note{font-size:.9rem; color:#555; text-align:center; margin-top:.35rem}
+
+  /* Fade-in effect for smoother visual updates */
+  .fade-in {
+    opacity: 0;
+    transition: opacity 0.6s ease-in;
+  }
+  .fade-in.show {
+    opacity: 1;
+  }
 </style>
 </head>
 <body>
@@ -78,7 +86,7 @@
   <div class="controls">
     <div>
       <label for="dateInput">Selected Date</label>
-      <input type="date" id="dateInput" value="2025-06-21">
+      <input type="date" id="dateInput">
     </div>
     <div>
       <label for="equivDate">Equivalent Date</label>
@@ -91,13 +99,13 @@
   <div style="text-align:center;"><button class="btn" id="compareBtn">Compare</button></div>
 
   <!-- Results table -->
-  <table id="resultsTable">
+  <table id="resultsTable" class="fade-in">
     <thead id="tableHead"></thead>
     <tbody id="tableBody"></tbody>
   </table>
 
   <!-- Chart + slider -->
-  <div class="chart-wrap">
+  <div class="chart-wrap fade-in" id="chartContainer">
     <canvas id="daylightChart"></canvas>
 
     <div class="slider-area">
@@ -115,16 +123,15 @@
 /* --------------------- Data & utilities --------------------- */
 const cityData = {
   "Fairbanks, AK":         { abbr:"FAI", lat:64.84, lon:-147.72 },
-  "St Andrews, Scotland":  { abbr:"STA", lat:56.34, lon: -2.80 },
-  "Hanover, NH":           { abbr:"HAN", lat:43.70, lon: -72.29 },
-  "East Longmeadow, MA":   { abbr:"ELM", lat:42.06, lon: -72.51 },
-  "Crozet, VA":            { abbr:"CRZ", lat:38.07, lon: -78.70 },
-  "Nashville, TN":         { abbr:"BNA", lat:36.16, lon: -86.78 },
-  "Asheville, NC":         { abbr:"AVL", lat:35.60, lon: -82.55 },
-  "Houston, TX":           { abbr:"HOU", lat:29.76, lon: -95.37 },
-  "Tampa, FL":             { abbr:"TPA", lat:27.95, lon: -82.46 }
+  "St Andrews, Scotland":  { abbr:"STA", lat:56.34, lon:-2.80 },
+  "Hanover, NH":           { abbr:"HAN", lat:43.70, lon:-72.29 },
+  "East Longmeadow, MA":   { abbr:"ELM", lat:42.06, lon:-72.51 },
+  "Crozet, VA":            { abbr:"CRZ", lat:38.07, lon:-78.70 },
+  "Nashville, TN":         { abbr:"BNA", lat:36.16, lon:-86.78 },
+  "Asheville, NC":         { abbr:"AVL", lat:35.60, lon:-82.55 },
+  "Houston, TX":           { abbr:"HOU", lat:29.76, lon:-95.37 },
+  "Tampa, FL":             { abbr:"TPA", lat:27.95, lon:-82.46 }
 };
-// build checkbox list (north → south)
 const cityListEl = document.getElementById("cityList");
 Object.entries(cityData).sort((a,b)=>b[1].lat - a[1].lat).forEach(([name])=>{
   const label = document.createElement("label");
@@ -189,11 +196,9 @@ function buildTable(selected, refDay){
 
   addRow("Latitude",   c => cityData[c].lat.toFixed(2));
   addRow("Longitude",  c => cityData[c].lon.toFixed(2));
-
-  // Noon sun arcs (larger, clearer)
   addRow("Noon Elevation", c => {
     const elev = noonElevation(cityData[c].lat, refDay);
-    const R = 32; // radius
+    const R = 32;
     const a = Math.min(90, Math.max(0, elev)) * Math.PI/180;
     const x = 30 + R * Math.cos(Math.PI - a);
     const y = 34 - R * Math.sin(Math.PI - a);
@@ -205,23 +210,19 @@ function buildTable(selected, refDay){
       </svg>
       <div>${elev.toFixed(1)}°</div>`;
   });
-
   addRow("Daylight (hrs)", c => daylightHours(cityData[c].lat, refDay).toFixed(2));
 }
 
 /* --------------------- Chart --------------------- */
 let chart;
 function getCityColor(cityName){
-  // deterministic but varied palette
   const idx = Object.keys(cityData).indexOf(cityName);
   const colors = ["#0b5fb3","#f28e2b","#59a14f","#e15759","#4e79a7","#edc948","#b07aa1","#76b7b2","#ff9da7"];
   return colors[idx % colors.length];
 }
-
 function plotChart(selected, eqDateObj, refDay){
   const ctx = document.getElementById("daylightChart").getContext("2d");
   const year = new Date(document.getElementById("dateInput").value).getFullYear();
-
   const datasets = selected.map((city)=>({
     label: cityData[city].abbr,
     data: days.map(d=>daylightHours(cityData[city].lat, d)),
@@ -231,44 +232,33 @@ function plotChart(selected, eqDateObj, refDay){
     tension:.25,
     pointRadius:0
   }));
-
   if (chart) chart.destroy();
-
   const annotations = {};
   const selDate = dateFromDay(year, refDay);
   annotations.selected = {
-    type: 'line', xMin: refDay, xMax: refDay,
-    borderColor: '#000', borderWidth: 2,
-    label: { enabled:true, content: fmtMD(selDate), position:'start', yAdjust:-10, backgroundColor:'rgba(255,255,255,.8)', color:'#000' }
+    type:'line', xMin:refDay, xMax:refDay,
+    borderColor:'#000', borderWidth:2,
+    label:{enabled:true, content:fmtMD(selDate), position:'start', yAdjust:-10,
+      backgroundColor:'rgba(255,255,255,.8)', color:'#000'}
   };
   if (eqDateObj){
     const eqDay = dayOfYear(eqDateObj);
     annotations.equivalent = {
-      type: 'line', xMin: eqDay, xMax: eqDay,
-      borderColor: '#e11d48', borderWidth: 2,
-      label: { enabled:true, content: fmtMD(eqDateObj), position:'start', yAdjust:-10, backgroundColor:'rgba(255,255,255,.85)', color:'#e11d48' }
+      type:'line', xMin:eqDay, xMax:eqDay,
+      borderColor:'#e11d48', borderWidth:2,
+      label:{enabled:true, content:fmtMD(eqDateObj), position:'start', yAdjust:-10,
+        backgroundColor:'rgba(255,255,255,.85)', color:'#e11d48'}
     };
   }
-
   chart = new Chart(ctx, {
-    type: 'line',
-    data: { labels: days, datasets },
-    options: {
+    type:'line',
+    data:{labels:days,datasets},
+    options:{
       responsive:true,
-      plugins:{
-        legend:{ position:'bottom' },
-        annotation:{ annotations }
-      },
+      plugins:{legend:{position:'bottom'}, annotation:{annotations}},
       scales:{
-        x:{
-          display:false,  /* hide messy x-axis entirely */
-          min:1, max:365
-        },
-        y:{
-          title:{ display:true, text:'Daylight Hours' },
-          min:5, max:20,
-          grid:{ color: '#f4f5f7' }
-        }
+        x:{display:false,min:1,max:365},
+        y:{title:{display:true,text:'Daylight Hours'},min:5,max:20,grid:{color:'#f4f5f7'}}
       }
     },
     plugins:[Chart.registry.getPlugin('annotation')]
@@ -286,29 +276,23 @@ const compareBtn = document.getElementById("compareBtn");
 function currentSelectedCities(){
   return Array.from(document.querySelectorAll('#cityList input:checked')).map(cb=>cb.value);
 }
-
 function syncFromDateInput(){
-  // Set slider to match date input (Jan 1 = 1 ... Dec 31 = 365)
   const d = new Date(dateInput.value);
   slider.value = String(dayOfYear(d));
   updateAll();
 }
-
 function syncFromSlider(){
-  // Map slider day → date (in current year) → reflect in date input
   const d = new Date(dateInput.value);
   const year = d.getFullYear();
   const newDate = dateFromDay(year, Number(slider.value));
   dateInput.value = newDate.toISOString().slice(0,10);
   updateAll();
 }
-
 function updateAll(){
   const selected = currentSelectedCities();
   if (selected.length === 0){
-    // If nothing chosen, pick two sensible defaults for demo
     const defaults = ["Tampa, FL","St Andrews, Scotland"];
-    defaults.forEach(name => {
+    defaults.forEach(name=>{
       const cb = Array.from(document.querySelectorAll('#cityList input')).find(x=>x.value===name);
       if (cb) cb.checked = true;
     });
@@ -317,36 +301,35 @@ function updateAll(){
   const d = new Date(dateInput.value);
   const refDay = dayOfYear(d);
   const year = d.getFullYear();
-
-  // Equivalent date is based on FIRST selected city
   const refCity = selected[0];
-  const refLat  = cityData[refCity].lat;
-  const refHrs  = daylightHours(refLat, refDay);
-  const eqDate  = findEquivalentDate(refLat, refHrs, refDay, year);
+  const refLat = cityData[refCity].lat;
+  const refHrs = daylightHours(refLat, refDay);
+  const eqDate = findEquivalentDate(refLat, refHrs, refDay, year);
   equivEl.value = eqDate ? fmtMMDDYYYY(eqDate) : "—";
-
-  // Live labels above the slider
   selectedLbl.textContent = `Selected: ${fmtMD(d)}`;
-  equivLbl.textContent    = `Equivalent: ${eqDate ? fmtMD(eqDate) : "—"}`;
-
-  // Table + chart
+  equivLbl.textContent = `Equivalent: ${eqDate ? fmtMD(eqDate) : "—"}`;
   buildTable(selected, refDay);
   plotChart(selected, eqDate, refDay);
+  // Fade in
+  document.getElementById("resultsTable").classList.add("show");
+  document.getElementById("chartContainer").classList.add("show");
 }
 
-/* --------------------- Wire up events --------------------- */
-compareBtn.addEventListener("click", updateAll);
-dateInput.addEventListener("change", syncFromDateInput);
-slider.addEventListener("input", syncFromSlider);
-
-// Initial state: pick two default cities & render once
+/* --------------------- Init --------------------- */
 (function init(){
   ["Tampa, FL","St Andrews, Scotland"].forEach(name=>{
     const cb = Array.from(document.querySelectorAll('#cityList input')).find(x=>x.value===name);
     if (cb) cb.checked = true;
   });
+  // Set selected date to today
+  const today = new Date();
+  document.getElementById("dateInput").value = today.toISOString().split("T")[0];
+  // Render immediately
   syncFromDateInput();
 })();
+compareBtn.addEventListener("click", updateAll);
+dateInput.addEventListener("change", syncFromDateInput);
+slider.addEventListener("input", syncFromSlider);
 </script>
 </body>
 </html>
