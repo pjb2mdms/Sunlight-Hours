@@ -4,8 +4,12 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Sunlight Comparator</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.2.1"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.1.1"></script>
+<script>
+// Register the annotation plugin for Chart.js v4+
+Chart.register(window['chartjs-plugin-annotation']);
+</script>
 <style>
   :root{
     --blue:#0b5fb3;
@@ -184,7 +188,7 @@ function createChart(lat) {
         }
       }
     },
-    plugins: [Chart.registry.getPlugin('annotation')]
+    plugins: []   // plugin already registered globally
   });
 }
 
