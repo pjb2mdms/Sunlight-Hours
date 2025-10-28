@@ -109,8 +109,11 @@
 </main>
 
 <script>
+/* --- Utilities --- */
 const toRad = d=>d*Math.PI/180, toDeg=r=>r*180/Math.PI;
-const days = Array.from({length:365}, (_, i) => ((i + 354) % 365) + 1);
+// Start chart on Dec 21 (day 354) and wrap to Dec 22
+const days = Array.from({length:365},(_,i)=>((i+354)%365)+1);
+
 function solarDeclination(day){return 23.44*Math.sin(toRad((360/365)*(day-81))); }
 function daylightHours(lat,day){const decR=toRad(solarDeclination(day)),latR=toRad(lat);
  const cosH=-Math.tan(latR)*Math.tan(decR); if(cosH>=1)return 0;if(cosH<=-1)return 24;
@@ -123,18 +126,13 @@ function dateFromDay(y,d){return new Date(y,0,d);}
 function fmtMD(date){return date.toLocaleDateString("en-US",{month:"short",day:"numeric"});}
 function fmtMMDDYYYY(date){const mm=String(date.getMonth()+1).padStart(2,'0');
  const dd=String(date.getDate()).padStart(2,'0');return`${mm}/${dd}/${date.getFullYear()}`;}
-function findEquivalentDate(lat, targetElev, refDay, year){
-  let best=null, bestDiff=1e9;
-  for(let d=1; d<=365; d++){
-    if (Math.abs(d-refDay)<5) continue;
-    const diff = Math.abs(noonElevation(lat,d) - targetElev);
-    if (diff < bestDiff){ bestDiff=diff; best=d; }
-  }
-  return best ? dateFromDay(year, best) : null;
-}
+function findEquivalentDate(lat,targetHours,refDay,year){let best=null,bestDiff=1e9;
+ for(let d=1;d<=365;d++){if(Math.abs(d-refDay)<5)continue;
+ const diff=Math.abs(daylightHours(lat,d)-targetHours);
+ if(diff<bestDiff){bestDiff=diff;best=d;}}return best?dateFromDay(year,best):null;}
 function getCityColor(){return "#0b5fb3";}
 
-/* ----- Build table ----- */
+/* --- Build table --- */
 function buildTable(lat,lon,refDay){
  const head=document.getElementById("tableHead"),body=document.getElementById("tableBody");
  head.innerHTML="";body.innerHTML="";
@@ -154,21 +152,20 @@ function buildTable(lat,lon,refDay){
  addRow("Daylight (hrs)",daylightHours(lat,refDay).toFixed(2));
 }
 
-/* ----- Chart ----- */
+/* --- Chart --- */
 let chart;
 
 function createChart(lat) {
   const ctx = document.getElementById("daylightChart").getContext("2d");
   const dataset = {
     label: "Noon Elevation (°)",
-    data: days.map(d => noonElevation(lat, d)),   // changed metric
+    data: days.map(d => noonElevation(lat, d)),
     borderColor: "#0b5fb3",
     borderWidth: 2,
     fill: false,
     tension: 0.25,
     pointRadius: 0
   };
-
   chart = new Chart(ctx, {
     type: 'line',
     data: { labels: days, datasets: [dataset] },
@@ -176,18 +173,15 @@ function createChart(lat) {
       responsive: true,
       plugins: {
         legend: { display: false },
-        annotation: {
-          annotations: {}
-        }
+        annotation: { annotations: {} }
       },
       scales: {
         x: { display: false, min: 1, max: 365 },
         y: {
-  title: { display: true, text: 'Noon Sun Elevation (°)' },
-  min: 0,
-  max: 90,
-  grid: { color: '#f4f5f7' }
-}
+          title: { display: true, text: 'Noon Sun Elevation (°)' },
+          min: 0, max: 90,
+          grid: { color: '#f4f5f7' }
+        }
       }
     },
     plugins: [Chart.registry.getPlugin('annotation')]
@@ -233,12 +227,13 @@ function updateAnnotations(refDay, eqDateObj) {
   chart.update();
 }
 
-/* ----- Slider + updates ----- */
+/* --- Slider + Updates --- */
 const dateInput=document.getElementById("dateInput"),equivEl=document.getElementById("equivDate"),
  slider=document.getElementById("dateSlider"),selectedLbl=document.getElementById("selectedLabel"),
  equivLbl=document.getElementById("equivLabel");
 let userLat=27.95,userLon=-82.46; // fallback Tampa
-  function syncFromDateInput(){const d=new Date(dateInput.value);
+
+function syncFromDateInput(){const d=new Date(dateInput.value);
  slider.value=String(dayOfYear(d));updateAll();}
 function syncFromSlider(){const d=new Date(dateInput.value);
  const y=d.getFullYear(),newD=dateFromDay(y,Number(slider.value));
@@ -247,22 +242,21 @@ function updateAll() {
   const d = new Date(dateInput.value);
   const refDay = dayOfYear(d);
   const year = d.getFullYear();
-  const refElev = noonElevation(userLat, refDay);
-const eqDate = findEquivalentDate(userLat, refElev, refDay, year);
+  const refHrs = daylightHours(userLat, refDay); // still use daylight to find equivalent
+  const eqDate = findEquivalentDate(userLat, refHrs, refDay, year);
 
   equivEl.value = eqDate ? fmtMMDDYYYY(eqDate) : "—";
   selectedLbl.textContent = `Selected: ${fmtMD(d)}`;
   equivLbl.textContent = `Equivalent: ${eqDate ? fmtMD(eqDate) : "—"}`;
   buildTable(userLat, userLon, refDay);
 
-  // update only annotation lines
   updateAnnotations(refDay, eqDate);
 
   document.getElementById("resultsTable").classList.add("show");
   document.getElementById("chartContainer").classList.add("show");
 }
 
-/* ----- Geolocation + init ----- */
+/* --- Geolocation & Init --- */
 async function init(){
  const locDisplay=document.getElementById("locationDisplay");
  const today=new Date();dateInput.value=today.toISOString().split("T")[0];
@@ -281,15 +275,15 @@ async function init(){
        const display=data.address.city||data.address.town||data.address.village||
                       data.address.state||"Your area";
        setLocation(lat,lon,display);
-     }catch(e){
-       setLocation(lat,lon,"Your area");
-     }
+     }catch(e){setLocation(lat,lon,"Your area");}
    },()=>{
      locDisplay.innerHTML="📍 Using default location: <span>Tampa, FL</span> (27.95° N, 82.46° W)";
+     createChart(userLat);
      syncFromDateInput();
    });
  }else{
    locDisplay.innerHTML="📍 Using default location: <span>Tampa, FL</span> (27.95° N, 82.46° W)";
+   createChart(userLat);
    syncFromDateInput();
  }
 }
