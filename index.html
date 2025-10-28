@@ -233,7 +233,6 @@ const dateInput=document.getElementById("dateInput"),equivEl=document.getElement
  slider=document.getElementById("dateSlider"),selectedLbl=document.getElementById("selectedLabel"),
  equivLbl=document.getElementById("equivLabel");
 let userLat=27.95,userLon=-82.46; // fallback Tampa
-createChart(userLat);
   function syncFromDateInput(){const d=new Date(dateInput.value);
  slider.value=String(dayOfYear(d));updateAll();}
 function syncFromSlider(){const d=new Date(dateInput.value);
@@ -265,6 +264,7 @@ async function init(){
  function setLocation(lat,lon,place){
    userLat=lat;userLon=lon;
    locDisplay.innerHTML=`📍 Current location: <span>${place}</span> (${lat.toFixed(2)}° N, ${lon.toFixed(2)}° W)`;
+   createChart(userLat);
    syncFromDateInput();
  }
  if(navigator.geolocation){
