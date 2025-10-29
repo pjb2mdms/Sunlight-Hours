@@ -8,9 +8,6 @@
 <!-- ✅ Chart.js v4 + annotation plugin -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.1.1"></script>
-<script>
-  Chart.register(window['chartjs-plugin-annotation']);
-</script>
 
 <style>
   :root{
@@ -141,52 +138,54 @@ function buildTable(lat,lon,refDay){
 /* ---------- Chart ---------- */
 let chart;
 function createChart(lat){
- const ctx=document.getElementById("daylightChart").getContext("2d");
- const dataset={
-   label:"Noon Elevation (°)",
-   data:days.map(d=>noonElevation(lat,d)),
-   borderColor:"#0b5fb3",borderWidth:2,fill:false,tension:.25,pointRadius:0
- };
- chart=new Chart(ctx,{
-   type:"line",
-   data:{labels:days,datasets:[dataset]},
-   options:{
-     responsive:true,
-     plugins:{legend:{display:false},annotation:{annotations:{}}},
-     scales:{
+  Chart.register(window['chartjs-plugin-annotation']); // ensure plugin registered
+  const ctx=document.getElementById("daylightChart").getContext("2d");
+  const dataset={
+    label:"Noon Elevation (°)",
+    data:days.map(d=>noonElevation(lat,d)),
+    borderColor:"#0b5fb3",borderWidth:2,fill:false,tension:.25,pointRadius:0
+  };
+  chart=new Chart(ctx,{
+    type:"line",
+    data:{labels:days.map(String),datasets:[dataset]},
+    options:{
+      responsive:true,
+      plugins:{
+        legend:{display:false},
+        annotation:{annotations:{}}
+      },
+      scales:{
         x:{
-           type:"category",        // ✅ NEW: treat days array as categorical
-           display:false           // keeps axis hidden but fixes plot order
-         },
-         y:{
-           title:{display:true,text:"Noon Sun Elevation (°)"},
-           min:0,
-           max:90,
-           grid:{color:"#f4f5f7"}
-         }
-       }
-   }
- });
+          type:"category",
+          labels:days.map(String),
+          offset:false,
+          display:false
+        },
+        y:{
+          title:{display:true,text:"Noon Sun Elevation (°)"},
+          min:0,
+          max:90,
+          grid:{color:"#f4f5f7"}
+        }
+      }
+    }
+  });
 }
 
 function updateAnnotations(refDay, eqDateObj) {
   if (!chart) return;
-
   const year = new Date(document.getElementById("dateInput").value).getFullYear();
   const selDate = dateFromDay(year, refDay);
-
-  // Find index of the selected and equivalent days within the labels array
   const labels = chart.data.labels.map(String);
-  const selIndex = labels.indexOf(String(refDay));
-
+  const selLabel = String(refDay);
   const annotations = {};
 
-  if (selIndex !== -1) {
+  if (labels.includes(selLabel)) {
     annotations.selected = {
       type: 'line',
       xScaleID: 'x',
-      xMin: selIndex,
-      xMax: selIndex,
+      xMin: selLabel,
+      xMax: selLabel,
       borderColor: '#000',
       borderWidth: 2,
       label: {
@@ -202,13 +201,13 @@ function updateAnnotations(refDay, eqDateObj) {
 
   if (eqDateObj) {
     const eqDay = dayOfYear(eqDateObj);
-    const eqIndex = labels.indexOf(String(eqDay));
-    if (eqIndex !== -1) {
+    const eqLabel = String(eqDay);
+    if (labels.includes(eqLabel)) {
       annotations.equivalent = {
         type: 'line',
         xScaleID: 'x',
-        xMin: eqIndex,
-        xMax: eqIndex,
+        xMin: eqLabel,
+        xMax: eqLabel,
         borderColor: '#e11d48',
         borderWidth: 2,
         label: {
