@@ -169,47 +169,57 @@ function createChart(lat){
  });
 }
 
-function updateAnnotations(refDay,eqDateObj){
- if(!chart)return;
- const year=new Date(document.getElementById("dateInput").value).getFullYear();
- const selDate=dateFromDay(year,refDay);
- const annotations={
-  selected:{
-    type:'line',
-    xMin: String(refDay),     // ✅ convert to string
-    xMax: String(refDay),
-    borderColor:'#000',
-    borderWidth:2,
-    label:{
-      enabled:true,
-      content:fmtMD(selDate),
-      position:'start',
-      yAdjust:-10,
-      backgroundColor:'rgba(255,255,255,.8)',
-      color:'#000'
-    }
-  }
-};
- if(eqDateObj){
-  const eqDay=dayOfYear(eqDateObj);
-  annotations.equivalent={
-    type:'line',
-    xMin:String(eqDay),       // ✅ convert to string
-    xMax:String(eqDay),
-    borderColor:'#e11d48',
-    borderWidth:2,
-    label:{
-      enabled:true,
-      content:fmtMD(eqDateObj),
-      position:'start',
-      yAdjust:-10,
-      backgroundColor:'rgba(255,255,255,.85)',
-      color:'#e11d48'
+function updateAnnotations(refDay, eqDateObj) {
+  if (!chart) return;
+
+  const year = new Date(document.getElementById("dateInput").value).getFullYear();
+  const selDate = dateFromDay(year, refDay);
+
+  // On a "category" x-scale, the positions must match label strings.
+  const xLabelSelected = String(refDay);
+
+  const annotations = {
+    selected: {
+      type: 'line',
+      xScaleID: 'x',                 // ensure we target the x scale
+      xMin: xLabelSelected,          // category label as string
+      xMax: xLabelSelected,          // same as xMin for a vertical line
+      borderColor: '#000',
+      borderWidth: 2,
+      label: {
+        enabled: true,
+        content: fmtMD(selDate),
+        position: 'start',
+        yAdjust: -10,
+        backgroundColor: 'rgba(255,255,255,.8)',
+        color: '#000'
+      }
     }
   };
-}
- chart.options.plugins.annotation.annotations=annotations;
- chart.update();
+
+  if (eqDateObj) {
+    const eqDay = dayOfYear(eqDateObj);
+    const xLabelEquivalent = String(eqDay); // category label as string
+    annotations.equivalent = {
+      type: 'line',
+      xScaleID: 'x',
+      xMin: xLabelEquivalent,
+      xMax: xLabelEquivalent,
+      borderColor: '#e11d48',
+      borderWidth: 2,
+      label: {
+        enabled: true,
+        content: fmtMD(eqDateObj),
+        position: 'start',
+        yAdjust: -10,
+        backgroundColor: 'rgba(255,255,255,.85)',
+        color: '#e11d48'
+      }
+    };
+  }
+
+  chart.options.plugins.annotation.annotations = annotations;
+  chart.update();
 }
 
 /* ---------- Slider + Updates ---------- */
