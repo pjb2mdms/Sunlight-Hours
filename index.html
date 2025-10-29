@@ -154,9 +154,17 @@ function createChart(lat){
      responsive:true,
      plugins:{legend:{display:false},annotation:{annotations:{}}},
      scales:{
-       x:{display:false,min:1,max:365},
-       y:{title:{display:true,text:"Noon Sun Elevation (°)"},min:0,max:90,grid:{color:"#f4f5f7"}}
-     }
+        x:{
+           type:"category",        // ✅ NEW: treat days array as categorical
+           display:false           // keeps axis hidden but fixes plot order
+         },
+         y:{
+           title:{display:true,text:"Noon Sun Elevation (°)"},
+           min:0,
+           max:90,
+           grid:{color:"#f4f5f7"}
+         }
+       }
    }
  });
 }
