@@ -174,25 +174,25 @@ function createChart(lat){
 
 function updateAnnotations(refDay, eqDateObj) {
   if (!chart) return;
+
   const year = new Date(document.getElementById("dateInput").value).getFullYear();
   const selDate = dateFromDay(year, refDay);
+
   const labels = chart.data.labels.map(String);
-  const selLabel = String(refDay);
+  const selIndex = labels.indexOf(String(refDay));
   const annotations = {};
 
-  if (labels.includes(selLabel)) {
+  if (selIndex !== -1) {
     annotations.selected = {
       type: 'line',
-      xScaleID: 'x',
-      xMin: selLabel,
-      xMax: selLabel,
+      scaleID: 'x',        // ✅ required in Chart.js v4
+      value: selIndex,     // ✅ use index, not label
       borderColor: '#000',
       borderWidth: 2,
       label: {
-        enabled: true,
+        display: true,
         content: fmtMD(selDate),
         position: 'start',
-        yAdjust: -10,
         backgroundColor: 'rgba(255,255,255,.8)',
         color: '#000'
       }
@@ -201,20 +201,18 @@ function updateAnnotations(refDay, eqDateObj) {
 
   if (eqDateObj) {
     const eqDay = dayOfYear(eqDateObj);
-    const eqLabel = String(eqDay);
-    if (labels.includes(eqLabel)) {
+    const eqIndex = labels.indexOf(String(eqDay));
+    if (eqIndex !== -1) {
       annotations.equivalent = {
         type: 'line',
-        xScaleID: 'x',
-        xMin: eqLabel,
-        xMax: eqLabel,
+        scaleID: 'x',
+        value: eqIndex,
         borderColor: '#e11d48',
         borderWidth: 2,
         label: {
-          enabled: true,
+          display: true,
           content: fmtMD(eqDateObj),
           position: 'start',
-          yAdjust: -10,
           backgroundColor: 'rgba(255,255,255,.85)',
           color: '#e11d48'
         }
