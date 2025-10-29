@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Sunlight Comparator</title>
 
-<!-- Chart.js and Annotation Plugin -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.1.1"></script>
+<!-- ✅ Load Chart.js and Annotation Plugin with defer to ensure correct order -->
+<script src="https://unpkg.com/chart.js@4.4.4/dist/chart.umd.js" defer></script>
+<script src="https://unpkg.com/chartjs-plugin-annotation@3.1.1/dist/chartjs-plugin-annotation.min.js" defer></script>
 
 <style>
   :root{--blue:#0b5fb3;--text:#222;}
@@ -73,11 +73,16 @@
   </div>
 </main>
 
-<script>
-window.addEventListener("load", () => {
+<!-- ✅ Main script runs only after Chart.js and plugin load -->
+<script defer>
+window.addEventListener("DOMContentLoaded", () => {
 
   /* --- Register Chart.js components and annotation plugin --- */
-  if (!window.Chart) { console.error("Chart.js failed to load"); return; }
+  if (!window.Chart) {
+    console.error("Chart.js failed to load");
+    return;
+  }
+
   Chart.register(
     Chart.LineController, Chart.LineElement, Chart.PointElement,
     Chart.LinearScale, Chart.CategoryScale, Chart.Title, Chart.Legend,
