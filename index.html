@@ -5,32 +5,23 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Sunlight Comparator</title>
 
-<!-- ✅ Chart.js v4 + annotation plugin -->
+<!-- Chart.js v4 + annotation plugin -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.1.1"></script>
 
 <style>
   :root{
     --blue:#0b5fb3;
-    --blue-dark:#084a8b;
     --text:#222;
   }
-  body{
-    font-family:"Helvetica Neue",Arial,sans-serif;
-    margin:0;color:var(--text);background:#fff;
-  }
+  body{font-family:"Helvetica Neue",Arial,sans-serif;margin:0;color:var(--text);background:#fff;}
   header{background:var(--blue);color:#fff;text-align:center;padding:1.25rem 0;}
-  header h1{margin:0;font-weight:700}
   main{max-width:980px;margin:1.25rem auto 3rem;padding:0 1rem}
   #locationDisplay{text-align:center;margin-bottom:0.75rem;font-size:1rem;color:#333;}
   #locationDisplay span{font-weight:600}
   .controls{display:flex;flex-wrap:wrap;gap:1rem;justify-content:center;align-items:center;margin:1rem 0 .5rem}
   label{font-weight:600;margin-right:.35rem}
-  input[type="date"],input[readonly]{
-    font:inherit;font-size:1rem;color:#333;
-    padding:.45rem .55rem;border:1px solid #cfd6e1;border-radius:.5rem;
-    background:#fff;min-width:12rem;
-  }
+  input[type="date"],input[readonly]{font:inherit;font-size:1rem;color:#333;padding:.45rem .55rem;border:1px solid #cfd6e1;border-radius:.5rem;background:#fff;min-width:12rem;}
   table{width:100%;border-collapse:collapse;margin:1.1rem 0 0;font-size:1rem}
   th,td{padding:.5rem .4rem;border-bottom:1px solid #e9eef5;text-align:center}
   th.label-col{text-align:left;width:180px}
@@ -40,18 +31,9 @@
   .slider-area{margin-top:1rem;text-align:center}
   .live-dates{font-weight:700;margin:.25rem 0 .6rem}
   .live-dates span{display:inline-block;min-width:9rem}
-  input[type="range"]{
-    -webkit-appearance:none;appearance:none;width:100%;max-width:720px;height:10px;
-    background:#e6eef8;border-radius:5px;outline:none;
-  }
-  input[type="range"]::-webkit-slider-thumb{
-    -webkit-appearance:none;width:24px;height:24px;border-radius:50%;
-    background:var(--blue);border:2px solid #fff;box-shadow:0 0 0 2px var(--blue);cursor:pointer;
-  }
-  input[type="range"]::-moz-range-thumb{
-    width:24px;height:24px;border-radius:50%;
-    background:var(--blue);border:2px solid #fff;box-shadow:0 0 0 2px var(--blue);cursor:pointer;
-  }
+  input[type="range"]{-webkit-appearance:none;appearance:none;width:100%;max-width:720px;height:10px;background:#e6eef8;border-radius:5px;outline:none;}
+  input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;background:var(--blue);border:2px solid #fff;box-shadow:0 0 0 2px var(--blue);cursor:pointer;}
+  input[type="range"]::-moz-range-thumb{width:24px;height:24px;border-radius:50%;background:var(--blue);border:2px solid #fff;box-shadow:0 0 0 2px var(--blue);cursor:pointer;}
   .note{font-size:.9rem;color:#555;text-align:center;margin-top:.35rem}
   .fade-in{opacity:0;transition:opacity .6s ease-in;}
   .fade-in.show{opacity:1;}
@@ -94,25 +76,16 @@
 
 <script>
 /* ---------- Utilities ---------- */
-const toRad=d=>d*Math.PI/180,toDeg=r=>r*180/Math.PI;
-const days=Array.from({length:365},(_,i)=>((i+354)%365)+1); // start Dec21
-
+const toRad = d => d*Math.PI/180, toDeg = r => r*180/Math.PI;
+const days = Array.from({length:365},(_,i)=>((i+354)%365)+1); // start Dec21
 function solarDeclination(day){return 23.44*Math.sin(toRad((360/365)*(day-81))); }
-function daylightHours(lat,day){const decR=toRad(solarDeclination(day)),latR=toRad(lat);
- const cosH=-Math.tan(latR)*Math.tan(decR);if(cosH>=1)return 0;if(cosH<=-1)return 24;
- const H=Math.acos(cosH);return(2*toDeg(H))/15;}
+function daylightHours(lat,day){const decR=toRad(solarDeclination(day)),latR=toRad(lat);const cosH=-Math.tan(latR)*Math.tan(decR);if(cosH>=1)return 0;if(cosH<=-1)return 24;const H=Math.acos(cosH);return(2*toDeg(H))/15;}
 function noonElevation(lat,day){const dec=solarDeclination(day);return 90-Math.abs(lat-dec);}
-function dayOfYear(date){const s=new Date(date.getFullYear(),0,0);
- const diff=date-s+(s.getTimezoneOffset()-date.getTimezoneOffset())*60000;
- return Math.floor(diff/86400000);}
+function dayOfYear(date){const s=new Date(date.getFullYear(),0,0);const diff=date-s+(s.getTimezoneOffset()-date.getTimezoneOffset())*60000;return Math.floor(diff/86400000);}
 function dateFromDay(y,d){return new Date(y,0,d);}
 function fmtMD(date){return date.toLocaleDateString("en-US",{month:"short",day:"numeric"});}
-function fmtMMDDYYYY(date){const mm=String(date.getMonth()+1).padStart(2,'0');
- const dd=String(date.getDate()).padStart(2,'0');return`${mm}/${dd}/${date.getFullYear()}`;}
-function findEquivalentDate(lat,targetHours,refDay,year){let best=null,bestDiff=1e9;
- for(let d=1;d<=365;d++){if(Math.abs(d-refDay)<5)continue;
- const diff=Math.abs(daylightHours(lat,d)-targetHours);
- if(diff<bestDiff){bestDiff=diff;best=d;}}return best?dateFromDay(year,best):null;}
+function fmtMMDDYYYY(date){const mm=String(date.getMonth()+1).padStart(2,'0');const dd=String(date.getDate()).padStart(2,'0');return`${mm}/${dd}/${date.getFullYear()}`;}
+function findEquivalentDate(lat,targetHours,refDay,year){let best=null,bestDiff=1e9;for(let d=1;d<=365;d++){if(Math.abs(d-refDay)<5)continue;const diff=Math.abs(daylightHours(lat,d)-targetHours);if(diff<bestDiff){bestDiff=diff;best=d;}}return best?dateFromDay(year,best):null;}
 function getCityColor(){return "#0b5fb3";}
 
 /* ---------- Table ---------- */
@@ -121,8 +94,7 @@ function buildTable(lat,lon,refDay){
  head.innerHTML="";body.innerHTML="";
  const headerRow=document.createElement("tr");
  headerRow.innerHTML="<th class='label-col'>Measure</th><th>Value</th>";head.appendChild(headerRow);
- const addRow=(label,val)=>{const tr=document.createElement("tr");
- tr.innerHTML=`<td class='label-col'>${label}</td><td>${val}</td>`;body.appendChild(tr);};
+ const addRow=(label,val)=>{const tr=document.createElement("tr");tr.innerHTML=`<td class='label-col'>${label}</td><td>${val}</td>`;body.appendChild(tr);};
  addRow("Latitude",lat.toFixed(2)); addRow("Longitude",lon.toFixed(2));
  const elev=noonElevation(lat,refDay);const R=32,a=Math.min(90,Math.max(0,elev))*Math.PI/180;
  const x=30+R*Math.cos(Math.PI-a),y=34-R*Math.sin(Math.PI-a);
@@ -138,7 +110,7 @@ function buildTable(lat,lon,refDay){
 /* ---------- Chart ---------- */
 let chart;
 function createChart(lat){
-  Chart.register(window['chartjs-plugin-annotation']); // ensure plugin registered
+  Chart.register(window['chartjs-plugin-annotation']);
   const ctx=document.getElementById("daylightChart").getContext("2d");
   const dataset={
     label:"Noon Elevation (°)",
@@ -158,7 +130,6 @@ function createChart(lat){
         x:{
           type:"category",
           labels:days.map(String),
-          offset:false,
           display:false
         },
         y:{
@@ -172,52 +143,45 @@ function createChart(lat){
   });
 }
 
-function updateAnnotations(refDay, eqDateObj) {
+/* ---------- Annotation Update ---------- */
+function updateAnnotations(refDay, eqDateObj){
   if (!chart) return;
-
   const year = new Date(document.getElementById("dateInput").value).getFullYear();
   const selDate = dateFromDay(year, refDay);
-
-  const labels = chart.data.labels.map(String);
-  const selIndex = labels.indexOf(String(refDay));
+  const selLabel = String(refDay);
   const annotations = {};
 
-  if (selIndex !== -1) {
-    annotations.selected = {
+  annotations.selected = {
+    type: 'line',
+    xMin: selLabel,
+    xMax: selLabel,
+    borderColor: '#000',
+    borderWidth: 2,
+    label: {
+      display: true,
+      content: fmtMD(selDate),
+      position: 'start',
+      backgroundColor: 'rgba(255,255,255,.8)',
+      color: '#000'
+    }
+  };
+
+  if (eqDateObj){
+    const eqLabel = String(dayOfYear(eqDateObj));
+    annotations.equivalent = {
       type: 'line',
-      scaleID: 'x',        // ✅ required in Chart.js v4
-      value: selIndex,     // ✅ use index, not label
-      borderColor: '#000',
+      xMin: eqLabel,
+      xMax: eqLabel,
+      borderColor: '#e11d48',
       borderWidth: 2,
       label: {
         display: true,
-        content: fmtMD(selDate),
+        content: fmtMD(eqDateObj),
         position: 'start',
-        backgroundColor: 'rgba(255,255,255,.8)',
-        color: '#000'
+        backgroundColor: 'rgba(255,255,255,.85)',
+        color: '#e11d48'
       }
     };
-  }
-
-  if (eqDateObj) {
-    const eqDay = dayOfYear(eqDateObj);
-    const eqIndex = labels.indexOf(String(eqDay));
-    if (eqIndex !== -1) {
-      annotations.equivalent = {
-        type: 'line',
-        scaleID: 'x',
-        value: eqIndex,
-        borderColor: '#e11d48',
-        borderWidth: 2,
-        label: {
-          display: true,
-          content: fmtMD(eqDateObj),
-          position: 'start',
-          backgroundColor: 'rgba(255,255,255,.85)',
-          color: '#e11d48'
-        }
-      };
-    }
   }
 
   chart.options.plugins.annotation.annotations = annotations;
@@ -230,13 +194,10 @@ const dateInput=document.getElementById("dateInput"),
  slider=document.getElementById("dateSlider"),
  selectedLbl=document.getElementById("selectedLabel"),
  equivLbl=document.getElementById("equivLabel");
-let userLat=27.95,userLon=-82.46; // fallback Tampa
+let userLat=27.95,userLon=-82.46;
 
-function syncFromDateInput(){const d=new Date(dateInput.value);
- slider.value=String(dayOfYear(d));updateAll();}
-function syncFromSlider(){const d=new Date(dateInput.value);
- const y=d.getFullYear(),newD=dateFromDay(y,Number(slider.value));
- dateInput.value=newD.toISOString().slice(0,10);updateAll();}
+function syncFromDateInput(){const d=new Date(dateInput.value);slider.value=String(dayOfYear(d));updateAll();}
+function syncFromSlider(){const d=new Date(dateInput.value);const y=d.getFullYear(),newD=dateFromDay(y,Number(slider.value));dateInput.value=newD.toISOString().slice(0,10);updateAll();}
 function updateAll(){
  const d=new Date(dateInput.value);
  const refDay=dayOfYear(d),year=d.getFullYear();
