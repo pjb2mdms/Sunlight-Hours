@@ -175,15 +175,18 @@ function updateAnnotations(refDay, eqDateObj) {
   const year = new Date(document.getElementById("dateInput").value).getFullYear();
   const selDate = dateFromDay(year, refDay);
 
-  // On a "category" x-scale, the positions must match label strings.
-  const xLabelSelected = String(refDay);
+  // Find index of the selected and equivalent days within the labels array
+  const labels = chart.data.labels.map(String);
+  const selIndex = labels.indexOf(String(refDay));
 
-  const annotations = {
-    selected: {
+  const annotations = {};
+
+  if (selIndex !== -1) {
+    annotations.selected = {
       type: 'line',
-      xScaleID: 'x',                 // ensure we target the x scale
-      xMin: xLabelSelected,          // category label as string
-      xMax: xLabelSelected,          // same as xMin for a vertical line
+      xScaleID: 'x',
+      xMin: selIndex,
+      xMax: selIndex,
       borderColor: '#000',
       borderWidth: 2,
       label: {
@@ -194,28 +197,30 @@ function updateAnnotations(refDay, eqDateObj) {
         backgroundColor: 'rgba(255,255,255,.8)',
         color: '#000'
       }
-    }
-  };
+    };
+  }
 
   if (eqDateObj) {
     const eqDay = dayOfYear(eqDateObj);
-    const xLabelEquivalent = String(eqDay); // category label as string
-    annotations.equivalent = {
-      type: 'line',
-      xScaleID: 'x',
-      xMin: xLabelEquivalent,
-      xMax: xLabelEquivalent,
-      borderColor: '#e11d48',
-      borderWidth: 2,
-      label: {
-        enabled: true,
-        content: fmtMD(eqDateObj),
-        position: 'start',
-        yAdjust: -10,
-        backgroundColor: 'rgba(255,255,255,.85)',
-        color: '#e11d48'
-      }
-    };
+    const eqIndex = labels.indexOf(String(eqDay));
+    if (eqIndex !== -1) {
+      annotations.equivalent = {
+        type: 'line',
+        xScaleID: 'x',
+        xMin: eqIndex,
+        xMax: eqIndex,
+        borderColor: '#e11d48',
+        borderWidth: 2,
+        label: {
+          enabled: true,
+          content: fmtMD(eqDateObj),
+          position: 'start',
+          yAdjust: -10,
+          backgroundColor: 'rgba(255,255,255,.85)',
+          color: '#e11d48'
+        }
+      };
+    }
   }
 
   chart.options.plugins.annotation.annotations = annotations;
