@@ -31,7 +31,7 @@
     }
 
     main {
-      max-width: 700px;
+      max-width: 900px;
       margin: 2rem auto;
       padding: 0 1rem;
     }
@@ -50,27 +50,33 @@
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
-      gap: 1.25rem;
-      margin-bottom: 1.5rem;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      align-items: end;
     }
+
+    .controls > div { min-width: 160px; }
 
     label {
       font-weight: 600;
       margin-right: 0.4rem;
+      display: block;
+      margin-bottom: 0.25rem;
     }
 
-    input[type="date"], input[readonly] {
+    input[type="date"], select, input[readonly] {
       padding: 0.45rem 0.6rem;
       font-size: 1rem;
       border: 1px solid var(--border);
       border-radius: 0.4rem;
-      min-width: 11rem;
+      width: 100%;
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
       font-size: 1rem;
+      margin-top: 0.5rem;
     }
 
     th, td {
@@ -81,7 +87,14 @@
 
     th.label-col {
       text-align: left;
-      width: 180px;
+      width: 220px;
+      font-weight: 700;
+    }
+
+    thead th {
+      background: #f6fbff;
+      position: sticky;
+      top: 0;
     }
 
     #status {
@@ -89,6 +102,12 @@
       color: #777;
       margin-top: 1rem;
       font-size: 0.9rem;
+    }
+
+    @media (max-width: 680px) {
+      main { padding: 0 0.6rem; }
+      th.label-col { width: 140px; }
+      .controls { gap: 0.6rem; }
     }
   </style>
 </head>
@@ -103,20 +122,35 @@
         <label for="dateInput">Selected Date</label>
         <input type="date" id="dateInput" />
       </div>
+
       <div>
         <label for="equivDate">Equivalent Date</label>
         <input type="text" id="equivDate" readonly />
       </div>
+
+      <div>
+        <label for="compareCity">Comparison City</label>
+        <select id="compareCity">
+          <option value="">(None)</option>
+        </select>
+      </div>
     </div>
 
-    <table>
+    <table aria-live="polite">
+      <thead>
+        <tr>
+          <th class="label-col" scope="col">Metric</th>
+          <th id="col0Header" scope="col">Location</th>
+          <th id="col1Header" scope="col" style="display:none">Comparison</th>
+        </tr>
+      </thead>
       <tbody>
-        <tr><th class="label-col">Latitude (°)</th><td id="latVal">—</td></tr>
-        <tr><th class="label-col">Longitude (°)</th><td id="lonVal">—</td></tr>
-        <tr><th class="label-col">Sunrise (local)</th><td id="sunrise">—</td></tr>
-        <tr><th class="label-col">Sunset (local)</th><td id="sunset">—</td></tr>
-        <tr><th class="label-col">Daylight Hours</th><td id="daylightHrs">—</td></tr>
-        <tr><th class="label-col">Noon Elevation (°)</th><td id="elevation">—</td></tr>
+        <tr><th class="label-col" scope="row">Latitude (°)</th><td id="lat0">—</td><td id="lat1" style="display:none">—</td></tr>
+        <tr><th class="label-col" scope="row">Longitude (°)</th><td id="lon0">—</td><td id="lon1" style="display:none">—</td></tr>
+        <tr><th class="label-col" scope="row">Sunrise (local)</th><td id="sunrise0">—</td><td id="sunrise1" style="display:none">—</td></tr>
+        <tr><th class="label-col" scope="row">Sunset (local)</th><td id="sunset0">—</td><td id="sunset1" style="display:none">—</td></tr>
+        <tr><th class="label-col" scope="row">Daylight Hours</th><td id="daylight0">—</td><td id="daylight1" style="display:none">—</td></tr>
+        <tr><th class="label-col" scope="row">Noon Elevation (°)</th><td id="elev0">—</td><td id="elev1" style="display:none">—</td></tr>
       </tbody>
     </table>
 
@@ -182,11 +216,11 @@
       return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     }
 
-    /* ---------- Sunrise / Sunset ---------- */
+    /* ---------- Sunrise / Sunset (improved, local times) ---------- */
     function sunriseSunset(lat, lon, day, dateForTZ) {
       const dec = toRad(solarDeclination(day));
       const latR = toRad(lat);
-      const solarDep = toRad(-0.83);
+      const solarDep = toRad(-0.83); // refraction + apparent radius
       const cosH = (Math.sin(solarDep) - Math.sin(latR) * Math.sin(dec)) / (Math.cos(latR) * Math.cos(dec));
 
       if (cosH > 1) return { sunrise: '—', sunset: '—', note: 'No sunrise (polar night)' };
@@ -194,82 +228,257 @@
 
       const H = Math.acos(cosH);
       const Hhours = toDeg(H) / 15;
+
+      // timezone offset (minutes east of UTC)
       const tzOffsetMin = -dateForTZ.getTimezoneOffset();
       const tzHours = tzOffsetMin / 60;
+      // pick nearest standard meridian for this timezone
       const tzMeridian = 15 * Math.round(tzHours);
-      const EoT = equationOfTime(day);
+
+      const EoT = equationOfTime(day); // minutes
+      // solar noon in local clock hours
       const solarNoon = 12 - (lon - tzMeridian) / 15 - EoT / 60;
       const sunriseLocalHours = solarNoon - Hhours;
       const sunsetLocalHours = solarNoon + Hhours;
       return {
-        sunrise: formatHours(sunriseLocalHours),
-        sunset: formatHours(sunsetLocalHours)
+        sunrise: formatHoursRounded(sunriseLocalHours),
+        sunset: formatHoursRounded(sunsetLocalHours),
+        note: null
       };
     }
 
-    function formatHours(hours) {
-      const hNorm = (hours + 24) % 24;
+    // safer rounding to avoid "7:60" artifacts
+    function formatHoursRounded(hours) {
+      let hNorm = (hours + 24) % 24;
       const h = Math.floor(hNorm);
-      const m = Math.round((hNorm - h) * 60);
-      const displayH = ((h + 11) % 12) + 1;
-      const ampm = h >= 12 ? 'PM' : 'AM';
+      let m = Math.round((hNorm - h) * 60);
+      let adjH = h;
+      if (m === 60) { m = 0; adjH = (h + 1) % 24; }
+      const displayH = ((adjH + 11) % 12) + 1;
+      const ampm = adjH >= 12 ? 'PM' : 'AM';
       return `${displayH}:${m.toString().padStart(2, '0')} ${ampm}`;
     }
+
+    /* ---------- City list (40-50 entries) ---------- */
+    // Format: { id: 'City, ST/Country', name: 'Display name', lat: number, lon: number }
+    const CITIES = [
+      { id: 'New York, NY, USA', name: 'New York, NY (USA)', lat: 40.7128, lon: -74.0060 },
+      { id: 'Los Angeles, CA, USA', name: 'Los Angeles, CA (USA)', lat: 34.0522, lon: -118.2437 },
+      { id: 'Chicago, IL, USA', name: 'Chicago, IL (USA)', lat: 41.8781, lon: -87.6298 },
+      { id: 'Houston, TX, USA', name: 'Houston, TX (USA)', lat: 29.7604, lon: -95.3698 },
+      { id: 'Phoenix, AZ, USA', name: 'Phoenix, AZ (USA)', lat: 33.4484, lon: -112.0740 },
+      { id: 'Philadelphia, PA, USA', name: 'Philadelphia, PA (USA)', lat: 39.9526, lon: -75.1652 },
+      { id: 'San Antonio, TX, USA', name: 'San Antonio, TX (USA)', lat: 29.4241, lon: -98.4936 },
+      { id: 'San Diego, CA, USA', name: 'San Diego, CA (USA)', lat: 32.7157, lon: -117.1611 },
+      { id: 'Dallas, TX, USA', name: 'Dallas, TX (USA)', lat: 32.7767, lon: -96.7970 },
+      { id: 'San Jose, CA, USA', name: 'San Jose, CA (USA)', lat: 37.3382, lon: -121.8863 },
+
+      { id: 'London, UK', name: 'London (UK)', lat: 51.5074, lon: -0.1278 },
+      { id: 'Paris, France', name: 'Paris (France)', lat: 48.8566, lon: 2.3522 },
+      { id: 'Berlin, Germany', name: 'Berlin (Germany)', lat: 52.5200, lon: 13.4050 },
+      { id: 'Madrid, Spain', name: 'Madrid (Spain)', lat: 40.4168, lon: -3.7038 },
+      { id: 'Rome, Italy', name: 'Rome (Italy)', lat: 41.9028, lon: 12.4964 },
+      { id: 'Moscow, Russia', name: 'Moscow (Russia)', lat: 55.7558, lon: 37.6173 },
+      { id: 'Tokyo, Japan', name: 'Tokyo (Japan)', lat: 35.6762, lon: 139.6503 },
+      { id: 'Beijing, China', name: 'Beijing (China)', lat: 39.9042, lon: 116.4074 },
+      { id: 'Seoul, South Korea', name: 'Seoul (South Korea)', lat: 37.5665, lon: 126.9780 },
+      { id: 'New Delhi, India', name: 'New Delhi (India)', lat: 28.6139, lon: 77.2090 },
+
+      { id: 'Canberra, Australia', name: 'Canberra (Australia)', lat: -35.2809, lon: 149.1300 },
+      { id: 'Sydney, Australia', name: 'Sydney (Australia)', lat: -33.8688, lon: 151.2093 },
+      { id: 'Auckland, NZ', name: 'Auckland (New Zealand)', lat: -36.8485, lon: 174.7633 },
+      { id: 'Cape Town, South Africa', name: 'Cape Town (South Africa)', lat: -33.9249, lon: 18.4241 },
+      { id: 'Cairo, Egypt', name: 'Cairo (Egypt)', lat: 30.0444, lon: 31.2357 },
+      { id: 'Nairobi, Kenya', name: 'Nairobi (Kenya)', lat: -1.2921, lon: 36.8219 },
+      { id: 'Rio de Janeiro, Brazil', name: 'Rio de Janeiro (Brazil)', lat: -22.9068, lon: -43.1729 },
+      { id: 'Buenos Aires, Argentina', name: 'Buenos Aires (Argentina)', lat: -34.6037, lon: -58.3816 },
+      { id: 'Mexico City, Mexico', name: 'Mexico City (Mexico)', lat: 19.4326, lon: -99.1332 },
+      { id: 'Toronto, Canada', name: 'Toronto (Canada)', lat: 43.6532, lon: -79.3832 },
+
+      { id: 'Vancouver, Canada', name: 'Vancouver (Canada)', lat: 49.2827, lon: -123.1207 },
+      { id: 'Montreal, Canada', name: 'Montreal (Canada)', lat: 45.5017, lon: -73.5673 },
+      { id: 'Lisbon, Portugal', name: 'Lisbon (Portugal)', lat: 38.7223, lon: -9.1393 },
+      { id: 'Athens, Greece', name: 'Athens (Greece)', lat: 37.9838, lon: 23.7275 },
+      { id: 'Bangkok, Thailand', name: 'Bangkok (Thailand)', lat: 13.7563, lon: 100.5018 },
+      { id: 'Singapore, Singapore', name: 'Singapore', lat: 1.3521, lon: 103.8198 },
+      { id: 'Dubai, UAE', name: 'Dubai (UAE)', lat: 25.2048, lon: 55.2708 },
+      { id: 'Istanbul, Turkey', name: 'Istanbul (Turkey)', lat: 41.0082, lon: 28.9784 },
+      { id: 'Helsinki, Finland', name: 'Helsinki (Finland)', lat: 60.1699, lon: 24.9384 },
+      { id: 'Stockholm, Sweden', name: 'Stockholm (Sweden)', lat: 59.3293, lon: 18.0686 },
+
+      { id: 'St Andrews, UK', name: 'St Andrews (UK)', lat: 56.3398, lon: -2.7966 },
+      { id: 'East Longmeadow, MA, USA', name: 'East Longmeadow, MA (USA)', lat: 42.0479, lon: -72.5478 },
+      { id: 'Charlottesville, VA, USA', name: 'Charlottesville, VA (USA)', lat: 38.0293, lon: -78.4767 },
+      { id: 'Anchorage, AK, USA', name: 'Anchorage, AK (USA)', lat: 61.2181, lon: -149.9003 },
+      { id: 'Honolulu, HI, USA', name: 'Honolulu, HI (USA)', lat: 21.3069, lon: -157.8583 },
+      { id: 'Buenos Aires (Prov)', name: 'Mar del Plata (Argentina)', lat: -38.0055, lon: -57.5426 },
+      { id: 'Kuala Lumpur, Malaysia', name: 'Kuala Lumpur (Malaysia)', lat: 3.1390, lon: 101.6869 },
+      { id: 'Lima, Peru', name: 'Lima (Peru)', lat: -12.0464, lon: -77.0428 },
+      { id: 'Santiago, Chile', name: 'Santiago (Chile)', lat: -33.4489, lon: -70.6693 },
+      { id: 'Prague, Czechia', name: 'Prague (Czechia)', lat: 50.0755, lon: 14.4378 },
+
+      { id: 'Warsaw, Poland', name: 'Warsaw (Poland)', lat: 52.2297, lon: 21.0122 }
+    ];
 
     /* ---------- DOM + logic ---------- */
     const dateInput = document.getElementById('dateInput');
     const equivField = document.getElementById('equivDate');
-    const daylightEl = document.getElementById('daylightHrs');
-    const elevEl = document.getElementById('elevation');
+    const compareSelect = document.getElementById('compareCity');
+    const daylight0 = document.getElementById('daylight0');
+    const daylight1 = document.getElementById('daylight1');
+    const elev0 = document.getElementById('elev0');
+    const elev1 = document.getElementById('elev1');
+
     const locationEl = document.getElementById('location');
     const statusEl = document.getElementById('status');
 
-    let userLat = 27.95;
-    let userLon = -82.46;
+    // header elements & column cells
+    const col0Header = document.getElementById('col0Header');
+    const col1Header = document.getElementById('col1Header');
 
-    function updateValues() {
-      const d = new Date(dateInput.value + "T00:00");
-      const year = d.getFullYear();
-      const dayNum = dayOfYear(d);
-      const elev = noonElevation(userLat, dayNum);
-      const hrs = daylightHours(userLat, dayNum);
-      const eqDate = findEquivalentDate(userLat, elev, dayNum, year);
-      const times = sunriseSunset(userLat, userLon, dayNum, d);
+    const lat0 = document.getElementById('lat0'), lat1 = document.getElementById('lat1');
+    const lon0 = document.getElementById('lon0'), lon1 = document.getElementById('lon1');
+    const sunr0 = document.getElementById('sunrise0'), sunr1 = document.getElementById('sunrise1');
+    const suns0 = document.getElementById('sunset0'), suns1 = document.getElementById('sunset1');
 
-      daylightEl.textContent = hrs.toFixed(2);
-      elevEl.textContent = elev.toFixed(2);
-      equivField.value = eqDate ? fmtDate(eqDate) : '—';
-      document.getElementById('latVal').textContent = userLat.toFixed(2);
-      document.getElementById('lonVal').textContent = userLon.toFixed(2);
-      document.getElementById('sunrise').textContent = times.sunrise;
-      document.getElementById('sunset').textContent = times.sunset;
+    // default/fallback location
+    let primaryLat = 27.95;
+    let primaryLon = -82.46;
+    let primaryName = 'Tampa, FL (fallback)';
+
+    // comparison city object (or null)
+    let compareCity = null;
+
+    // populate dropdown
+    function populateCityDropdown() {
+      CITIES.sort((a,b) => a.name.localeCompare(b.name));
+      for (const c of CITIES) {
+        const opt = document.createElement('option');
+        opt.value = c.id;
+        opt.textContent = c.name;
+        compareSelect.appendChild(opt);
+      }
     }
 
+    populateCityDropdown();
+
+    // find city by id
+    function findCityById(id) {
+      return CITIES.find(c => c.id === id) || null;
+    }
+
+    // compute stats for a given lat/lon & date (dateObj is Date at midnight local)
+    function computeFor(lat, lon, dateObj) {
+      const day = dayOfYear(dateObj);
+      const elev = noonElevation(lat, day);
+      const hrs = daylightHours(lat, day);
+      const times = sunriseSunset(lat, lon, day, dateObj);
+      return { elev, hrs, sunrise: times.sunrise, sunset: times.sunset };
+    }
+
+    // render columns (index 0 = primary, index 1 = comparison)
+    function renderColumns(primary, comparison, dateObj) {
+      // primary: { name, lat, lon }
+      // comparison: same or null
+      col0Header.textContent = primary.name;
+      lat0.textContent = primary.lat.toFixed(4);
+      lon0.textContent = primary.lon.toFixed(4);
+      const p = computeFor(primary.lat, primary.lon, dateObj);
+      sunr0.textContent = p.sunrise;
+      suns0.textContent = p.sunset;
+      daylight0.textContent = p.hrs.toFixed(2);
+      elev0.textContent = p.elev.toFixed(2);
+
+      if (comparison) {
+        col1Header.style.display = '';
+        lat1.style.display = ''; lon1.style.display = ''; sunr1.style.display = '';
+        suns1.style.display = ''; daylight1.style.display = ''; elev1.style.display = '';
+        col1Header.textContent = comparison.name;
+        lat1.textContent = comparison.lat.toFixed(4);
+        lon1.textContent = comparison.lon.toFixed(4);
+        const c = computeFor(comparison.lat, comparison.lon, dateObj);
+        sunr1.textContent = c.sunrise;
+        suns1.textContent = c.sunset;
+        daylight1.textContent = c.hrs.toFixed(2);
+        elev1.textContent = c.elev.toFixed(2);
+      } else {
+        // hide comparison column cells
+        col1Header.style.display = 'none';
+        lat1.style.display = 'none'; lon1.style.display = 'none'; sunr1.style.display = 'none';
+        suns1.style.display = 'none'; daylight1.style.display = 'none'; elev1.style.display = 'none';
+      }
+    }
+
+    // update values based on input date & cities
+    function updateValues() {
+      const d = new Date(dateInput.value + "T00:00"); // ensures local midnight
+      const year = d.getFullYear();
+      const dayNum = dayOfYear(d);
+
+      // Equivalent date based on primary's noon elevation and year
+      const primaryElev = noonElevation(primaryLat, dayNum);
+      const eqDate = findEquivalentDate(primaryLat, primaryElev, dayNum, year);
+      equivField.value = eqDate ? fmtDate(eqDate) : '—';
+
+      const primary = { name: primaryName, lat: primaryLat, lon: primaryLon };
+      const comparison = compareCity ? { name: compareCity.name, lat: compareCity.lat, lon: compareCity.lon } : null;
+
+      renderColumns(primary, comparison, d);
+    }
+
+    // when user chooses a comparison city
+    compareSelect.addEventListener('change', () => {
+      const val = compareSelect.value;
+      if (!val) {
+        compareCity = null;
+      } else {
+        compareCity = findCityById(val);
+      }
+      updateValues();
+    });
+
+    // date input change
     dateInput.addEventListener('change', updateValues);
 
+    // Initialization
     function init() {
+      // local date in YYYY-MM-DD
       const today = new Date();
-      dateInput.value = today.toLocaleDateString('en-CA'); // local date, not UTC
+      dateInput.value = today.toLocaleDateString('en-CA'); // local date format for input[type=date]
+
+      // set default header while geolocation resolves
+      col0Header.textContent = 'Current Location';
 
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(async pos => {
-          userLat = pos.coords.latitude;
-          userLon = pos.coords.longitude;
+          primaryLat = pos.coords.latitude;
+          primaryLon = pos.coords.longitude;
+
+          // Try to resolve a friendly name via Nominatim (nice-to-have)
           try {
-            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${userLat}&lon=${userLon}&format=json`);
+            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${primaryLat}&lon=${primaryLon}&format=json`);
             const data = await res.json();
-            const name = data.address.city || data.address.town || data.address.village || data.address.state || 'your area';
-            locationEl.innerHTML = `📍 Location: <span>${name}</span> (${userLat.toFixed(2)}° N, ${Math.abs(userLon).toFixed(2)}° ${userLon < 0 ? 'W' : 'E'})`;
-          } catch {
-            locationEl.innerHTML = `📍 Coordinates: ${userLat.toFixed(2)}°, ${userLon.toFixed(2)}°`;
+            // prefer city/town/village/state
+            const addr = data.address || {};
+            const name = addr.city || addr.town || addr.village || addr.county || addr.state || 'your area';
+            primaryName = `${name}`;
+            locationEl.innerHTML = `📍 Location: <span>${primaryName}</span> (${primaryLat.toFixed(4)}° N, ${Math.abs(primaryLon).toFixed(4)}° ${primaryLon < 0 ? 'W' : 'E'})`;
+          } catch (e) {
+            // fallback if reverse-geocode fails
+            primaryName = 'Your area';
+            locationEl.innerHTML = `📍 Coordinates: ${primaryLat.toFixed(4)}°, ${primaryLon.toFixed(4)}°`;
           }
+
           updateValues();
         }, () => {
+          // geolocation error or denied
+          primaryLat = 27.95; primaryLon = -82.46; primaryName = 'Tampa, FL';
           locationEl.innerHTML = "📍 Using default location: <span>Tampa, FL</span> (27.95° N, 82.46° W)";
           updateValues();
-        });
+        }, { timeout: 10000 });
       } else {
-        locationEl.innerHTML = "📍 Using default location: <span>Tampa, FL</span> (27.95° N, 82.46° W)";
+        primaryLat = 27.95; primaryLon = -82.46; primaryName = 'Tampa, FL';
+        locationEl.innerHTML = "📍 Geolocation not supported — using default location: <span>Tampa, FL</span> (27.95° N, 82.46° W)";
         updateValues();
       }
     }
