@@ -111,8 +111,12 @@
 
     <table>
       <tbody>
+        <tr><th class="label-col">Latitude (°)</th><td id="latVal">—</td></tr>
+        <tr><th class="label-col">Longitude (°)</th><td id="lonVal">—</td></tr>
         <tr><th class="label-col">Daylight Hours</th><td id="daylightHrs">—</td></tr>
         <tr><th class="label-col">Noon Elevation (°)</th><td id="elevation">—</td></tr>
+        <tr><th class="label-col">Sunrise (local)</th><td id="sunrise">—</td></tr>
+        <tr><th class="label-col">Sunset (local)</th><td id="sunset">—</td></tr>
       </tbody>
     </table>
 
@@ -125,8 +129,12 @@
     const toDeg = r => r * 180 / Math.PI;
 
     function solarDeclination(day) {
-      // Declination of the sun (degrees)
       return 23.44 * Math.sin(toRad((360 / 365) * (day - 81)));
+    }
+
+    function equationOfTime(day) {
+      const B = toRad((360 / 365) * (day - 81));
+      return 9.87 * Math.sin(2 * B) - 7.53 * Math.cos(B) - 1.5 * Math.sin(B);
     }
 
     function daylightHours(lat, day) {
@@ -136,7 +144,7 @@
       if (cosH >= 1) return 0;
       if (cosH <= -1) return 24;
       const H = Math.acos(cosH);
-      return (2 * toDeg(H)) / 15; // convert degrees to hours
+      return (2 * toDeg(H)) / 15;
     }
 
     function noonElevation(lat, day) {
@@ -161,7 +169,7 @@
       for (let d = 1; d <= 365; d++) {
         const elev = noonElevation(lat, d);
         const diff = Math.abs(elev - targetElev);
-        if (Math.abs(d - refDay) < 30) continue; // skip same-season dates
+        if (Math.abs(d - refDay) < 30) continue;
         if (diff < smallestDiff) {
           smallestDiff = diff;
           best = d;
@@ -174,6 +182,40 @@
       return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     }
 
+    /* ---------- Sunrise / Sunset ---------- */
+    function sunriseSunset(lat, lon, day, dateForTZ) {
+      const dec = toRad(solarDeclination(day));
+      const latR = toRad(lat);
+      const solarDep = toRad(-0.83);
+      const cosH = (Math.sin(solarDep) - Math.sin(latR) * Math.sin(dec)) / (Math.cos(latR) * Math.cos(dec));
+
+      if (cosH > 1) return { sunrise: '—', sunset: '—', note: 'No sunrise (polar night)' };
+      if (cosH < -1) return { sunrise: '—', sunset: '—', note: 'Sun above horizon all day' };
+
+      const H = Math.acos(cosH);
+      const Hhours = toDeg(H) / 15;
+      const tzOffsetMin = -dateForTZ.getTimezoneOffset();
+      const tzHours = tzOffsetMin / 60;
+      const tzMeridian = 15 * Math.round(tzHours);
+      const EoT = equationOfTime(day);
+      const solarNoon = 12 - (lon - tzMeridian) / 15 - EoT / 60;
+      const sunriseLocalHours = solarNoon - Hhours;
+      const sunsetLocalHours = solarNoon + Hhours;
+      return {
+        sunrise: formatHours(sunriseLocalHours),
+        sunset: formatHours(sunsetLocalHours)
+      };
+    }
+
+    function formatHours(hours) {
+      const hNorm = (hours + 24) % 24;
+      const h = Math.floor(hNorm);
+      const m = Math.round((hNorm - h) * 60);
+      const displayH = ((h + 11) % 12) + 1;
+      const ampm = h >= 12 ? 'PM' : 'AM';
+      return `${displayH}:${m.toString().padStart(2, '0')} ${ampm}`;
+    }
+
     /* ---------- DOM + logic ---------- */
     const dateInput = document.getElementById('dateInput');
     const equivField = document.getElementById('equivDate');
@@ -182,50 +224,55 @@
     const locationEl = document.getElementById('location');
     const statusEl = document.getElementById('status');
 
-    let userLat = 27.95;  // fallback (Tampa, FL)
+    let userLat = 27.95;
     let userLon = -82.46;
 
     function updateValues() {
-      const d = new Date(dateInput.value);
+      const d = new Date(dateInput.value + "T00:00");
       const year = d.getFullYear();
       const dayNum = dayOfYear(d);
       const elev = noonElevation(userLat, dayNum);
       const hrs = daylightHours(userLat, dayNum);
       const eqDate = findEquivalentDate(userLat, elev, dayNum, year);
+      const times = sunriseSunset(userLat, userLon, dayNum, d);
 
       daylightEl.textContent = hrs.toFixed(2);
       elevEl.textContent = elev.toFixed(2);
       equivField.value = eqDate ? fmtDate(eqDate) : '—';
+      document.getElementById('latVal').textContent = userLat.toFixed(2);
+      document.getElementById('lonVal').textContent = userLon.toFixed(2);
+      document.getElementById('sunrise').textContent = times.sunrise;
+      document.getElementById('sunset').textContent = times.sunset;
     }
 
     dateInput.addEventListener('change', updateValues);
 
     function init() {
-  const today = new Date();
-  dateInput.value = today.toLocaleDateString('en-CA'); // local date
+      const today = new Date();
+      dateInput.value = today.toLocaleDateString('en-CA'); // local date, not UTC
 
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(async pos => {
-      userLat = pos.coords.latitude;
-      userLon = pos.coords.longitude;
-      try {
-        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${userLat}&lon=${userLon}&format=json`);
-        const data = await res.json();
-        const name = data.address.city || data.address.town || data.address.village || data.address.state || 'your area';
-        locationEl.innerHTML = `📍 Location: <span>${name}</span> (${userLat.toFixed(2)}° N, ${Math.abs(userLon).toFixed(2)}° ${userLon < 0 ? 'W' : 'E'})`;
-      } catch {
-        locationEl.innerHTML = `📍 Coordinates: ${userLat.toFixed(2)}°, ${userLon.toFixed(2)}°`;
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(async pos => {
+          userLat = pos.coords.latitude;
+          userLon = pos.coords.longitude;
+          try {
+            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${userLat}&lon=${userLon}&format=json`);
+            const data = await res.json();
+            const name = data.address.city || data.address.town || data.address.village || data.address.state || 'your area';
+            locationEl.innerHTML = `📍 Location: <span>${name}</span> (${userLat.toFixed(2)}° N, ${Math.abs(userLon).toFixed(2)}° ${userLon < 0 ? 'W' : 'E'})`;
+          } catch {
+            locationEl.innerHTML = `📍 Coordinates: ${userLat.toFixed(2)}°, ${userLon.toFixed(2)}°`;
+          }
+          updateValues();
+        }, () => {
+          locationEl.innerHTML = "📍 Using default location: <span>Tampa, FL</span> (27.95° N, 82.46° W)";
+          updateValues();
+        });
+      } else {
+        locationEl.innerHTML = "📍 Using default location: <span>Tampa, FL</span> (27.95° N, 82.46° W)";
+        updateValues();
       }
-      updateValues();
-    }, () => {
-      locationEl.innerHTML = "📍 Using default location: <span>Tampa, FL</span> (27.95° N, 82.46° W)";
-      updateValues();
-    });
-  } else {
-    locationEl.innerHTML = "📍 Using default location: <span>Tampa, FL</span> (27.95° N, 82.46° W)";
-    updateValues();
-  }
-}
+    }
 
     init();
   </script>
