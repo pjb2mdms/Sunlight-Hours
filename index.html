@@ -1,388 +1,540 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Sunlight Comparator</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.2.1"></script>
+<style>
+  :root{
+    --blue:#0b5fb3; /* friendlier blue */
+    --blue-dark:#084a8b;
+    --orange:#f28e2b;
+    --text:#222;
+    --grid:#eee;
+  }
+  *{box-sizing:border-box}
+  body{
+    font-family: "Helvetica Neue", Arial, sans-serif;
+    margin:0; color:var(--text); background:#fff;
+  }
+  header{
+    background:var(--blue);
+    color:#fff; text-align:center; padding:1.25rem 0;
+  }
+  header h1{margin:0; font-weight:700; letter-spacing:.2px}
+  main{max-width:980px; margin:1.25rem auto 3rem; padding:0 1rem}
+  .controls{
+    display:flex; flex-wrap:wrap; gap:1rem; justify-content:center; align-items:center;
+    margin:1rem 0 0.5rem;
+  }
+  label{font-weight:600; margin-right:.35rem}
+  input[type="date"], input[readonly]{
+    font: inherit; font-size:1rem; color:#333;
+    padding:.45rem .55rem; border:1px solid #cfd6e1; border-radius:.5rem;
+    background:#fff; min-width:12rem;
+  }
+  .city-list{
+    display:flex; flex-wrap:wrap; gap:.6rem 1rem; justify-content:center; margin:.75rem 0 1rem;
+  }
+  .city-list label{font-weight:500}
+  .btn{
+    display:inline-block; background:var(--blue); color:#fff; border:none; border-radius:.6rem;
+    padding:.6rem 1.1rem; font-size:1rem; cursor:pointer;
+  }
+  .btn:hover{background:var(--blue-dark)}
+  table{width:100%; border-collapse:collapse; margin:1.1rem 0 0; font-size:1rem}
+  th,td{padding:.5rem .4rem; border-bottom:1px solid #e9eef5; text-align:center}
+  th.label-col{text-align:left; width:180px}
+  td svg{width:80px; height:46px; vertical-align:middle}
+  .chart-wrap{margin-top:1.25rem}
+  canvas{width:100% !important; height:420px !important}
+  .slider-area{margin-top:1rem; text-align:center}
+  .live-dates{font-weight:700; margin:.25rem 0 .6rem}
+  .live-dates span{display:inline-block; min-width:9rem}
+  /* Pretty slider */
+  input[type="range"]{
+    -webkit-appearance:none; appearance:none; width:100%; max-width:720px; height:10px;
+    background:#e6eef8; border-radius:5px; outline:none;
+  }
+  input[type="range"]::-webkit-slider-thumb{
+    -webkit-appearance:none; appearance:none; width:24px; height:24px; border-radius:50%;
+    background:var(--blue); border:2px solid #fff; box-shadow:0 0 0 2px var(--blue);
+    cursor:pointer;
+  }
+  input[type="range"]::-moz-range-thumb{
+    width:24px; height:24px; border-radius:50%; background:var(--blue);
+    border:2px solid #fff; box-shadow:0 0 0 2px var(--blue); cursor:pointer;
+  }
+  .note{font-size:.9rem; color:#555; text-align:center; margin-top:.35rem}
+</style>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sunlight Comparator</title>
-
-  <!-- ✅ Chart.js v4 + annotation plugin -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.1.1"></script>
-  <script>
-    Chart.register(window['chartjs-plugin-annotation']);
-  </script>
-
   <style>
-    :root {
-      --blue: #0b5fb3;
-      --orange: #f28e2b;
-      --text: #222;
-      --grid: #eee;
-      --red: #e11d48;
+    body {
+      font-family: Arial, sans-serif;
+      background: #f8f9fa;
+      color: #222;
+      text-align: center;
+      margin: 0;
+      padding: 0;
     }
-
-    * { box-sizing: border-box; }
-    body { font-family: "Helvetica Neue", Arial, sans-serif; margin: 0; color: var(--text); background: #fff; }
 
     header {
-      background: var(--blue);
-      color: #fff;
-      text-align: center;
-      padding: 1.25rem 0;
+      padding: 1rem;
+      background: #fff;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
     }
 
-    header h1 { margin: 0; font-weight: 700; }
-
-    main {
-      max-width: 980px;
-      margin: 1.25rem auto 3rem;
-      padding: 0 1rem;
+    h1 {
+      margin-bottom: 0.2rem;
+      font-size: 1.8rem;
     }
 
-    #locationDisplay {
-      text-align: center;
-      margin-bottom: 0.75rem;
-      color: #333;
+    #controls {
+      margin-top: 0.5rem;
+    }
+
+    select, input[type="date"] {
       font-size: 1rem;
+      padding: 0.4rem;
+      margin: 0.3rem;
+      border-radius: 6px;
+      border: 1px solid #ccc;
     }
 
-    #locationDisplay span { font-weight: 600; }
-
-    .controls {
+    #chartContainer {
       display: flex;
-      flex-wrap: wrap;
-      gap: 1rem;
-      justify-content: center;
+      flex-direction: row;
       align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 1.5rem;
     }
 
-    input[type="date"], input[readonly] {
-      font: inherit;
-      padding: 0.45rem 0.55rem;
-      border: 1px solid #cfd6e1;
-      border-radius: 0.5rem;
-      min-width: 12rem;
+    #chart {
+      width: 600px;
+      height: 400px;
+      margin: 1rem;
     }
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 1.1rem 0;
-      font-size: 1rem;
+    #tiltVisual {
+      width: 300px;
+      margin: 1rem;
     }
 
-    th, td {
-      padding: 0.5rem;
-      border-bottom: 1px solid #e9eef5;
-      text-align: center;
+    @media (max-width: 800px) {
+      #chartContainer {
+        flex-direction: column;
+      }
+      #chart {
+        width: 90%;
+        height: 300px;
+      }
     }
-
-    th.label-col { text-align: left; width: 180px; }
-
-    /* Arc visualization */
-    .arc-display {
-      text-align: center;
-      margin: 1rem auto;
-    }
-
-    svg.sun-arc {
-      width: 200px;
-      height: 120px;
-    }
-
-    .arc-path {
-      fill: none;
-      stroke: var(--blue);
-      stroke-width: 4;
-      stroke-linecap: round;
-    }
-
-    .sun-dot {
-      fill: var(--orange);
-      stroke: #fff;
-      stroke-width: 2;
-    }
-
-    .chart-wrap { margin-top: 1.25rem; }
-    canvas { width: 100% !important; height: 420px !important; }
-
-    .slider-area { text-align: center; margin-top: 1rem; }
-    input[type="range"] {
-      width: 100%;
-      max-width: 720px;
-    }
-
-    .note { font-size: 0.9rem; color: #555; text-align: center; margin-top: 0.35rem; }
-
-    .fade-in { opacity: 0; transition: opacity 0.6s ease-in; }
-    .fade-in.show { opacity: 1; }
   </style>
 </head>
-
 <body>
-  <header><h1>Sunlight Comparator</h1></header>
+<header><h1>Sunlight Comparator</h1></header>
 
-  <main>
-    <div id="locationDisplay">📍 Detecting current location...</div>
-
-    <div class="controls">
-      <div>
-        <label for="dateInput">Selected Date</label>
-        <input type="date" id="dateInput" />
-      </div>
-      <div>
-        <label for="equivDate">Equivalent Date</label>
-        <input type="text" id="equivDate" readonly />
-      </div>
+<main>
+  <!-- Date controls -->
+  <div class="controls">
+    <div>
+      <label for="dateInput">Selected Date</label>
+      <input type="date" id="dateInput" value="2025-06-21">
+  <header>
+    <h1>Sunlight Comparator</h1>
+    <div id="controls">
+      <select id="citySelect">
+        <option value="current">Current Location</option>
+        <option value="St Andrews, Scotland">St Andrews, Scotland</option>
+        <option value="Houston, TX">Houston, TX</option>
+        <option value="Tampa, FL">Tampa, FL</option>
+        <option value="Seattle, WA">Seattle, WA</option>
+      </select>
+      <input type="date" id="datePicker" />
     </div>
+    <div>
+      <label for="equivDate">Equivalent Date</label>
+      <input type="text" id="equivDate" readonly value="—">
+  </header>
 
-    <div class="live-dates">
-      <span id="selectedLabel">Selected: —</span>
-      <span id="equivLabel">Equivalent: —</span>
+  <div id="chartContainer">
+    <canvas id="chart"></canvas>
+    <div id="tiltVisual">
+      <img src="earth-tilt-placeholder.png" alt="Earth’s Tilt Illustration" style="width:100%; border-radius:12px;">
+      <p style="font-size:0.9rem; color:#555;">
+        Earth’s axial tilt (23.5°) causes seasonal daylight differences between hemispheres.
+      </p>
     </div>
+  </div>
 
-    <table id="resultsTable" class="fade-in">
-      <thead id="tableHead"></thead>
-      <tbody id="tableBody"></tbody>
-    </table>
+  <!-- City selection -->
+  <div class="city-list" id="cityList"></div>
+  <div style="text-align:center;"><button class="btn" id="compareBtn">Compare</button></div>
 
-    <!-- 🌞 Arc display -->
-    <div class="arc-display fade-in" id="arcDisplay">
-      <svg class="sun-arc" viewBox="0 0 200 120">
-        <path class="arc-path" id="arcPath" d="" />
-        <circle class="sun-dot" id="sunDot" r="6" cx="100" cy="100" />
+  <!-- Results table -->
+  <table id="resultsTable">
+    <thead id="tableHead"></thead>
+    <tbody id="tableBody"></tbody>
+  </table>
+
+  <!-- Chart + slider -->
+  <div class="chart-wrap">
+    <canvas id="daylightChart"></canvas>
+
+    <div class="slider-area">
+      <div class="live-dates">
+        <span id="selectedLabel">Selected: —</span>
+        <span id="equivLabel">Equivalent: —</span>
+      </div>
+      <input type="range" id="dateSlider" min="1" max="365" step="1" value="172" />
+      <div class="note">Slide to change the date and see how daylight and noon sun angles change</div>
+    </div>
+  </div>
+</main>
+
+<script>
+/* --------------------- Data & utilities --------------------- */
+const cityData = {
+  "Fairbanks, AK":         { abbr:"FAI", lat:64.84, lon:-147.72 },
+  "St Andrews, Scotland":  { abbr:"STA", lat:56.34, lon: -2.80 },
+  "Hanover, NH":           { abbr:"HAN", lat:43.70, lon: -72.29 },
+  "East Longmeadow, MA":   { abbr:"ELM", lat:42.06, lon: -72.51 },
+  "Crozet, VA":            { abbr:"CRZ", lat:38.07, lon: -78.70 },
+  "Nashville, TN":         { abbr:"BNA", lat:36.16, lon: -86.78 },
+  "Asheville, NC":         { abbr:"AVL", lat:35.60, lon: -82.55 },
+  "Houston, TX":           { abbr:"HOU", lat:29.76, lon: -95.37 },
+  "Tampa, FL":             { abbr:"TPA", lat:27.95, lon: -82.46 }
+};
+// build checkbox list (north → south)
+const cityListEl = document.getElementById("cityList");
+Object.entries(cityData).sort((a,b)=>b[1].lat - a[1].lat).forEach(([name])=>{
+  const label = document.createElement("label");
+  label.innerHTML = `<input type="checkbox" value="${name}"> ${name}`;
+  cityListEl.appendChild(label);
+});
+
+const toRad = d => d * Math.PI/180;
+const toDeg = r => r * 180/Math.PI;
+const days = Array.from({length:365},(_,i)=>i+1);
+
+function solarDeclination(day){ return 23.44 * Math.sin(toRad((360/365)*(day-81))); }
+function daylightHours(lat, day){
+  const decR = toRad(solarDeclination(day));
+  const latR = toRad(lat);
+  const cosH = -Math.tan(latR)*Math.tan(decR);
+  if (cosH >= 1) return 0;
+  if (cosH <= -1) return 24;
+  const H = Math.acos(cosH);
+  return (2*toDeg(H))/15;
+}
+function noonElevation(lat, day){ const dec = solarDeclination(day); return 90 - Math.abs(lat - dec); }
+function dayOfYear(date){
+  const start = new Date(date.getFullYear(),0,0);
+  const diff = date - start + (start.getTimezoneOffset()-date.getTimezoneOffset())*60000;
+  return Math.floor(diff/86400000);
+}
+function dateFromDay(year, doy){ return new Date(year,0,doy); }
+function fmtMD(date){ return date.toLocaleDateString("en-US",{month:"short", day:"numeric"}); }
+function fmtMMDDYYYY(date){
+  const mm = String(date.getMonth()+1).padStart(2,'0');
+  const dd = String(date.getDate()).padStart(2,'0');
+  return `${mm}/${dd}/${date.getFullYear()}`;
+}
+function findEquivalentDate(lat, targetHours, refDay, year){
+  let bestDay=null, bestDiff=1e9;
+  for(let d=1; d<=365; d++){
+    if (Math.abs(d-refDay) < 5) continue;
+    const diff = Math.abs(daylightHours(lat,d)-targetHours);
+    if (diff < bestDiff){ bestDiff=diff; bestDay=d; }
+  }
+  return bestDay ? dateFromDay(year, bestDay) : null;
+}
+
+/* --------------------- Table builder --------------------- */
+function buildTable(selected, refDay){
+  const head = document.getElementById("tableHead");
+  const body = document.getElementById("tableBody");
+  head.innerHTML = ""; body.innerHTML = "";
+
+  const headRow = document.createElement("tr");
+  headRow.innerHTML = `<th class="label-col">Measure</th>` +
+    selected.map(c=>`<th>${cityData[c].abbr}</th>`).join("");
+  head.appendChild(headRow);
+
+  const addRow = (label, fn) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td class="label-col">${label}</td>` +
+      selected.map(c=>`<td>${fn(c)}</td>`).join("");
+    body.appendChild(tr);
+  };
+
+  addRow("Latitude",   c => cityData[c].lat.toFixed(2));
+  addRow("Longitude",  c => cityData[c].lon.toFixed(2));
+
+  // Noon sun arcs (larger, clearer)
+  addRow("Noon Elevation", c => {
+    const elev = noonElevation(cityData[c].lat, refDay);
+    const R = 32; // radius
+    const a = Math.min(90, Math.max(0, elev)) * Math.PI/180;
+    const x = 30 + R * Math.cos(Math.PI - a);
+    const y = 34 - R * Math.sin(Math.PI - a);
+    return `
+      <svg viewBox="0 0 70 40" aria-label="Noon sun elevation">
+        <path d="M4 34 A32 32 0 0 1 64 34" stroke="#c9d3e3" stroke-width="1.2" fill="none"/>
+        <line x1="30" y1="34" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="${getCityColor(c)}" stroke-width="3"/>
+        <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="4.2" fill="${getCityColor(c)}"/>
       </svg>
-      <div id="arcLabel"></div>
-    </div>
+      <div>${elev.toFixed(1)}°</div>`;
+  });
 
-    <!-- Chart + slider -->
-    <div class="chart-wrap fade-in" id="chartContainer">
-      <canvas id="daylightChart"></canvas>
-      <div class="slider-area">
-        <input type="range" id="dateSlider" min="1" max="365" />
-        <div class="note">Move the slider to adjust the date.</div>
-      </div>
-    </div>
-  </main>
+  addRow("Daylight (hrs)", c => daylightHours(cityData[c].lat, refDay).toFixed(2));
+}
 
+/* --------------------- Chart --------------------- */
+let chart;
+function getCityColor(cityName){
+  // deterministic but varied palette
+  const idx = Object.keys(cityData).indexOf(cityName);
+  const colors = ["#0b5fb3","#f28e2b","#59a14f","#e15759","#4e79a7","#edc948","#b07aa1","#76b7b2","#ff9da7"];
+  return colors[idx % colors.length];
+}
+
+function plotChart(selected, eqDateObj, refDay){
+  const ctx = document.getElementById("daylightChart").getContext("2d");
+  const year = new Date(document.getElementById("dateInput").value).getFullYear();
+
+  const datasets = selected.map((city)=>({
+    label: cityData[city].abbr,
+    data: days.map(d=>daylightHours(cityData[city].lat, d)),
+    borderColor: getCityColor(city),
+    borderWidth: 2,
+    fill:false,
+    tension:.25,
+    pointRadius:0
+  }));
+
+  if (chart) chart.destroy();
+
+  const annotations = {};
+  const selDate = dateFromDay(year, refDay);
+  annotations.selected = {
+    type: 'line', xMin: refDay, xMax: refDay,
+    borderColor: '#000', borderWidth: 2,
+    label: { enabled:true, content: fmtMD(selDate), position:'start', yAdjust:-10, backgroundColor:'rgba(255,255,255,.8)', color:'#000' }
+  };
+  if (eqDateObj){
+    const eqDay = dayOfYear(eqDateObj);
+    annotations.equivalent = {
+      type: 'line', xMin: eqDay, xMax: eqDay,
+      borderColor: '#e11d48', borderWidth: 2,
+      label: { enabled:true, content: fmtMD(eqDateObj), position:'start', yAdjust:-10, backgroundColor:'rgba(255,255,255,.85)', color:'#e11d48' }
+    };
+  }
+
+  chart = new Chart(ctx, {
+    type: 'line',
+    data: { labels: days, datasets },
+    options: {
+      responsive:true,
+      plugins:{
+        legend:{ position:'bottom' },
+        annotation:{ annotations }
+      },
+      scales:{
+        x:{
+          display:false,  /* hide messy x-axis entirely */
+          min:1, max:365
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
-    const toRad = d => d * Math.PI / 180;
-    const toDeg = r => r * 180 / Math.PI;
-    const days = Array.from({ length: 365 }, (_, i) => ((i + 354) % 365) + 1);
-
-    function solarDeclination(day) {
-      return 23.44 * Math.sin(toRad((360 / 365) * (day - 81)));
-    }
-
-    function daylightHours(lat, day) {
-      const decR = toRad(solarDeclination(day)), latR = toRad(lat);
-      const cosH = -Math.tan(latR) * Math.tan(decR);
-      if (cosH >= 1) return 0;
-      if (cosH <= -1) return 24;
-      const H = Math.acos(cosH);
-      return (2 * toDeg(H)) / 15;
-    }
-
-    function noonElevation(lat, day) {
-      const dec = solarDeclination(day);
-      return 90 - Math.abs(lat - dec);
-    }
-
-    function dayOfYear(date) {
-      const s = new Date(date.getFullYear(), 0, 0);
-      return Math.floor((date - s) / 86400000);
-    }
-
-    function dateFromDay(year, day) {
-      const d = new Date(year, 0);
-      d.setDate(day);
-      return d;
-    }
-
-    function fmtMD(d) {
-      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    }
-
-    function fmtMMDDYYYY(d) {
-      return d.toLocaleDateString('en-US');
-    }
-
-    function findEquivalentDate(lat, refHrs, refDay, year) {
-      let best = null, bestDiff = Infinity;
-      for (let d = 1; d <= 365; d++) {
-        const diff = Math.abs(daylightHours(lat, d) - refHrs);
-        if (Math.abs(d - refDay) < 30) continue;
-        if (diff < bestDiff) { bestDiff = diff; best = d; }
-      }
-      return best ? dateFromDay(year, best) : null;
-    }
-
-    /* ---------- Table ---------- */
-    function buildTable(lat, lon, refDay) {
-      const head = document.getElementById("tableHead"),
-            body = document.getElementById("tableBody");
-      head.innerHTML = "";
-      body.innerHTML = "";
-      const addRow = (label, val) => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `<td class='label-col'>${label}</td><td>${val}</td>`;
-        body.appendChild(tr);
-      };
-      addRow("Latitude", lat.toFixed(2));
-      addRow("Longitude", lon.toFixed(2));
-      const elev = noonElevation(lat, refDay);
-      addRow("Noon Elevation (°)", elev.toFixed(1));
-      addRow("Daylight (hrs)", daylightHours(lat, refDay).toFixed(2));
-    }
-
-    /* ---------- Arc Display ---------- */
-    function updateArcDisplay(elev) {
-      const r = 80;
-      const startX = 100 - r, endX = 100 + r, baseY = 100;
-      const elevRad = toRad(elev);
-      const h = Math.sin(elevRad) * r;
-      const sunX = 100, sunY = baseY - h;
-
-      // semicircle arc
-      const path = `M ${startX} ${baseY} A ${r} ${r} 0 0 1 ${endX} ${baseY}`;
-      document.getElementById("arcPath").setAttribute("d", path);
-      document.getElementById("sunDot").setAttribute("cx", sunX);
-      document.getElementById("sunDot").setAttribute("cy", sunY);
-      document.getElementById("arcLabel").textContent = `Noon Elevation: ${elev.toFixed(1)}°`;
-      document.getElementById("arcDisplay").classList.add("show");
-    }
-
-    /* ---------- Chart ---------- */
+    const ctx = document.getElementById('chart').getContext('2d');
     let chart;
-    function createChart(lat) {
-      const ctx = document.getElementById("daylightChart").getContext("2d");
+
+    function getEquivalentDate(selectedDate) {
+      // Approximation: 182 days apart (same daylight length)
+      const date = new Date(selectedDate);
+      const eqDate = new Date(date);
+      eqDate.setDate(date.getDate() + 182);
+      if (eqDate.getFullYear() > date.getFullYear()) eqDate.setFullYear(date.getFullYear());
+      return eqDate;
+    }
+
+    function formatDate(date) {
+      return date.toISOString().split('T')[0];
+    }
+
+    function updateChart(city, selectedDate, equivalentDate) {
+      const labels = Array.from({ length: 12 }, (_, i) => `Month ${i + 1}`);
+      const sunlightData = Array.from({ length: 12 }, () => Math.random() * 14 + 8); // placeholder values
+
+      if (chart) chart.destroy();
+
       chart = new Chart(ctx, {
-        type: "line",
+        type: 'line',
         data: {
-          labels: days,
+          labels,
           datasets: [{
-            label: "Noon Elevation (°)",
-            data: days.map(d => noonElevation(lat, d)),
-            borderColor: "#0b5fb3",
-            borderWidth: 2,
+            label: `${city} - Sunlight Hours`,
+            data: sunlightData,
+            borderColor: '#0077cc',
             fill: false,
-            tension: 0.25,
-            pointRadius: 0
+            tension: 0.3
           }]
         },
+        y:{
+          title:{ display:true, text:'Daylight Hours' },
+          min:5, max:20,
+          grid:{ color: '#f4f5f7' }
         options: {
-          responsive: true,
           plugins: {
-            legend: { display: false },
-            annotation: { annotations: {} }
+            title: {
+              display: true,
+              text: `Sunlight Comparison for ${city}`
+            }
           },
           scales: {
-            x: { display: false, min: 1, max: 365 },
-            y: { title: { display: true, text: "Noon Sun Elevation (°)" }, min: 0, max: 90 }
+            x: {
+              grid: { display: false },
+              title: { display: true, text: 'Month' }
+            },
+            y: {
+              title: { display: true, text: 'Hours of Daylight' }
+            }
+          },
+          elements: {
+            point: { radius: 0 }
           }
+        }
+      }
+    },
+    plugins:[Chart.registry.getPlugin('annotation')]
+  });
+}
+      });
+    }
+
+    async function getCurrentCity() {
+      return new Promise((resolve) => {
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(async (pos) => {
+            const lat = pos.coords.latitude;
+            const lon = pos.coords.longitude;
+            try {
+              const response = await fetch(
+                `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`
+              );
+              const data = await response.json();
+              resolve(data.city || "Your Location");
+            } catch {
+              resolve("Your Location");
+            }
+          }, () => resolve("Your Location"));
+        } else {
+          resolve("Your Location");
         }
       });
     }
 
-    function updateAnnotations(refDay, eqDateObj) {
-      if (!chart) return;
-      const year = new Date(document.getElementById("dateInput").value).getFullYear();
-      const selDate = dateFromDay(year, refDay);
-      const annotations = {
-        selected: {
-          type: "line",
-          xMin: refDay,
-          xMax: refDay,
-          borderColor: "#000",
-          borderWidth: 2,
-          label: { enabled: true, content: fmtMD(selDate), position: "start", backgroundColor: "rgba(255,255,255,.8)", color: "#000" }
-        }
-      };
-      if (eqDateObj) {
-        const eqDay = dayOfYear(eqDateObj);
-        annotations.equivalent = {
-          type: "line",
-          xMin: eqDay,
-          xMax: eqDay,
-          borderColor: "#e11d48",
-          borderWidth: 2,
-          label: { enabled: true, content: fmtMD(eqDateObj), position: "start", backgroundColor: "rgba(255,255,255,.85)", color: "#e11d48" }
-        };
-      }
-      chart.options.plugins.annotation.annotations = annotations;
-      chart.update();
+/* --------------------- Slider + interactions --------------------- */
+const dateInput  = document.getElementById("dateInput");
+const equivEl    = document.getElementById("equivDate");
+const slider     = document.getElementById("dateSlider");
+const selectedLbl= document.getElementById("selectedLabel");
+const equivLbl   = document.getElementById("equivLabel");
+const compareBtn = document.getElementById("compareBtn");
+    async function initialize() {
+      const today = new Date();
+      const formattedToday = formatDate(today);
+      document.getElementById('datePicker').value = formattedToday;
+
+function currentSelectedCities(){
+  return Array.from(document.querySelectorAll('#cityList input:checked')).map(cb=>cb.value);
+}
+      const equivalent = getEquivalentDate(today);
+      const eqText = formatDate(equivalent);
+
+function syncFromDateInput(){
+  // Set slider to match date input (Jan 1 = 1 ... Dec 31 = 365)
+  const d = new Date(dateInput.value);
+  slider.value = String(dayOfYear(d));
+  updateAll();
+}
+      let city = "Current Location";
+      const currentCity = await getCurrentCity();
+      if (currentCity) city = currentCity;
+
+function syncFromSlider(){
+  // Map slider day → date (in current year) → reflect in date input
+  const d = new Date(dateInput.value);
+  const year = d.getFullYear();
+  const newDate = dateFromDay(year, Number(slider.value));
+  dateInput.value = newDate.toISOString().slice(0,10);
+  updateAll();
+}
+      updateChart(city, formattedToday, eqText);
     }
 
-    /* ---------- Interaction ---------- */
-    const dateInput = document.getElementById("dateInput"),
-          equivEl = document.getElementById("equivDate"),
-          slider = document.getElementById("dateSlider"),
-          selectedLbl = document.getElementById("selectedLabel"),
-          equivLbl = document.getElementById("equivLabel");
+function updateAll(){
+  const selected = currentSelectedCities();
+  if (selected.length === 0){
+    // If nothing chosen, pick two sensible defaults for demo
+    const defaults = ["Tampa, FL","St Andrews, Scotland"];
+    defaults.forEach(name => {
+      const cb = Array.from(document.querySelectorAll('#cityList input')).find(x=>x.value===name);
+      if (cb) cb.checked = true;
+    document.getElementById('citySelect').addEventListener('change', () => {
+      const city = document.getElementById('citySelect').value;
+      const selectedDate = document.getElementById('datePicker').value;
+      const equivalent = getEquivalentDate(selectedDate);
+      updateChart(city, selectedDate, equivalent);
+    });
+    selected.push(...defaults);
+  }
+  const d = new Date(dateInput.value);
+  const refDay = dayOfYear(d);
+  const year = d.getFullYear();
 
-    let userLat = 27.95, userLon = -82.46; // fallback
+  // Equivalent date is based on FIRST selected city
+  const refCity = selected[0];
+  const refLat  = cityData[refCity].lat;
+  const refHrs  = daylightHours(refLat, refDay);
+  const eqDate  = findEquivalentDate(refLat, refHrs, refDay, year);
+  equivEl.value = eqDate ? fmtMMDDYYYY(eqDate) : "—";
 
-    function updateAll() {
-      const d = new Date(dateInput.value);
-      const refDay = dayOfYear(d);
-      const year = d.getFullYear();
-      const refHrs = daylightHours(userLat, refDay);
-      const eqDate = findEquivalentDate(userLat, refHrs, refDay, year);
-      const elev = noonElevation(userLat, refDay);
+  // Live labels above the slider
+  selectedLbl.textContent = `Selected: ${fmtMD(d)}`;
+  equivLbl.textContent    = `Equivalent: ${eqDate ? fmtMD(eqDate) : "—"}`;
 
-      equivEl.value = eqDate ? fmtMMDDYYYY(eqDate) : "—";
-      selectedLbl.textContent = `Selected: ${fmtMD(d)}`;
-      equivLbl.textContent = `Equivalent: ${eqDate ? fmtMD(eqDate) : "—"}`;
-      buildTable(userLat, userLon, refDay);
-      updateAnnotations(refDay, eqDate);
-      updateArcDisplay(elev);
+  // Table + chart
+  buildTable(selected, refDay);
+  plotChart(selected, eqDate, refDay);
+}
 
-      document.getElementById("resultsTable").classList.add("show");
-      document.getElementById("chartContainer").classList.add("show");
-    }
-
-    slider.addEventListener("input", () => {
-      const d = new Date(dateInput.value);
-      const y = d.getFullYear();
-      const newD = dateFromDay(y, Number(slider.value));
-      dateInput.value = newD.toISOString().slice(0, 10);
-      updateAll();
+/* --------------------- Wire up events --------------------- */
+compareBtn.addEventListener("click", updateAll);
+dateInput.addEventListener("change", syncFromDateInput);
+slider.addEventListener("input", syncFromSlider);
+    document.getElementById('datePicker').addEventListener('change', () => {
+      const city = document.getElementById('citySelect').value;
+      const selectedDate = document.getElementById('datePicker').value;
+      const equivalent = getEquivalentDate(selectedDate);
+      updateChart(city, selectedDate, equivalent);
     });
 
-    dateInput.addEventListener("change", updateAll);
-
-    /* ---------- Init ---------- */
-    async function init() {
-      const locDisplay = document.getElementById("locationDisplay");
-      const today = new Date();
-      dateInput.value = today.toISOString().split("T")[0];
-
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(async pos => {
-          userLat = pos.coords.latitude; userLon = pos.coords.longitude;
-          try {
-            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${userLat}&lon=${userLon}&format=json`);
-            const data = await res.json();
-            const display = data.address.city || data.address.town || data.address.state || "Your area";
-            locDisplay.innerHTML = `📍 Location: <span>${display}</span> (${userLat.toFixed(2)}° N, ${Math.abs(userLon).toFixed(2)}° ${userLon < 0 ? 'W' : 'E'})`;
-          } catch {
-            locDisplay.innerHTML = "📍 Location detected";
-          }
-          createChart(userLat);
-          updateAll();
-        }, () => {
-          locDisplay.innerHTML = "📍 Using default location: <span>Tampa, FL</span> (27.95° N, 82.46° W)";
-          createChart(userLat);
-          updateAll();
-        });
-      } else {
-        locDisplay.innerHTML = "📍 Using default location: <span>Tampa, FL</span> (27.95° N, 82.46° W)";
-        createChart(userLat);
-        updateAll();
-      }
-    }
-
-    init();
+// Initial state: pick two default cities & render once
+(function init(){
+  ["Tampa, FL","St Andrews, Scotland"].forEach(name=>{
+    const cb = Array.from(document.querySelectorAll('#cityList input')).find(x=>x.value===name);
+    if (cb) cb.checked = true;
+  });
+  syncFromDateInput();
+})();
+</script>
+    initialize();
   </script>
 </body>
 </html>
