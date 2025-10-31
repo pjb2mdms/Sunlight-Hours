@@ -201,31 +201,31 @@
     dateInput.addEventListener('change', updateValues);
 
     function init() {
-      const today = new Date();
-      dateInput.value = today.toISOString().split('T')[0];
+  const today = new Date();
+  dateInput.value = today.toLocaleDateString('en-CA'); // local date
 
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(async pos => {
-          userLat = pos.coords.latitude;
-          userLon = pos.coords.longitude;
-          try {
-            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${userLat}&lon=${userLon}&format=json`);
-            const data = await res.json();
-            const name = data.address.city || data.address.town || data.address.village || data.address.state || 'your area';
-            locationEl.innerHTML = `📍 Location: <span>${name}</span> (${userLat.toFixed(2)}° N, ${Math.abs(userLon).toFixed(2)}° ${userLon < 0 ? 'W' : 'E'})`;
-          } catch {
-            locationEl.innerHTML = `📍 Coordinates: ${userLat.toFixed(2)}°, ${userLon.toFixed(2)}°`;
-          }
-          updateValues();
-        }, () => {
-          locationEl.innerHTML = "📍 Using default location: <span>Tampa, FL</span> (27.95° N, 82.46° W)";
-          updateValues();
-        });
-      } else {
-        locationEl.innerHTML = "📍 Using default location: <span>Tampa, FL</span> (27.95° N, 82.46° W)";
-        updateValues();
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(async pos => {
+      userLat = pos.coords.latitude;
+      userLon = pos.coords.longitude;
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${userLat}&lon=${userLon}&format=json`);
+        const data = await res.json();
+        const name = data.address.city || data.address.town || data.address.village || data.address.state || 'your area';
+        locationEl.innerHTML = `📍 Location: <span>${name}</span> (${userLat.toFixed(2)}° N, ${Math.abs(userLon).toFixed(2)}° ${userLon < 0 ? 'W' : 'E'})`;
+      } catch {
+        locationEl.innerHTML = `📍 Coordinates: ${userLat.toFixed(2)}°, ${userLon.toFixed(2)}°`;
       }
-    }
+      updateValues();
+    }, () => {
+      locationEl.innerHTML = "📍 Using default location: <span>Tampa, FL</span> (27.95° N, 82.46° W)";
+      updateValues();
+    });
+  } else {
+    locationEl.innerHTML = "📍 Using default location: <span>Tampa, FL</span> (27.95° N, 82.46° W)";
+    updateValues();
+  }
+}
 
     init();
   </script>
