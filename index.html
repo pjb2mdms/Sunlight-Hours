@@ -15,20 +15,14 @@
   <style>
     :root {
       --blue: #0b5fb3;
-      --blue-dark: #084a8b;
       --orange: #f28e2b;
       --text: #222;
       --grid: #eee;
+      --red: #e11d48;
     }
 
     * { box-sizing: border-box; }
-
-    body {
-      font-family: "Helvetica Neue", Arial, sans-serif;
-      margin: 0;
-      color: var(--text);
-      background: #fff;
-    }
+    body { font-family: "Helvetica Neue", Arial, sans-serif; margin: 0; color: var(--text); background: #fff; }
 
     header {
       background: var(--blue);
@@ -37,11 +31,7 @@
       padding: 1.25rem 0;
     }
 
-    header h1 {
-      margin: 0;
-      font-weight: 700;
-      letter-spacing: 0.2px;
-    }
+    header h1 { margin: 0; font-weight: 700; }
 
     main {
       max-width: 980px;
@@ -51,9 +41,9 @@
 
     #locationDisplay {
       text-align: center;
-      font-size: 1rem;
       margin-bottom: 0.75rem;
       color: #333;
+      font-size: 1rem;
     }
 
     #locationDisplay span { font-weight: 600; }
@@ -64,99 +54,67 @@
       gap: 1rem;
       justify-content: center;
       align-items: center;
-      margin: 1rem 0 0.5rem;
     }
-
-    label { font-weight: 600; margin-right: 0.35rem; }
 
     input[type="date"], input[readonly] {
       font: inherit;
-      font-size: 1rem;
-      color: #333;
       padding: 0.45rem 0.55rem;
       border: 1px solid #cfd6e1;
       border-radius: 0.5rem;
-      background: #fff;
       min-width: 12rem;
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      margin: 1.1rem 0 0;
+      margin: 1.1rem 0;
       font-size: 1rem;
     }
 
     th, td {
-      padding: 0.5rem 0.4rem;
+      padding: 0.5rem;
       border-bottom: 1px solid #e9eef5;
       text-align: center;
     }
 
     th.label-col { text-align: left; width: 180px; }
 
-    td svg {
-      width: 80px;
-      height: 46px;
-      vertical-align: middle;
+    /* Arc visualization */
+    .arc-display {
+      text-align: center;
+      margin: 1rem auto;
+    }
+
+    svg.sun-arc {
+      width: 200px;
+      height: 120px;
+    }
+
+    .arc-path {
+      fill: none;
+      stroke: var(--blue);
+      stroke-width: 4;
+      stroke-linecap: round;
+    }
+
+    .sun-dot {
+      fill: var(--orange);
+      stroke: #fff;
+      stroke-width: 2;
     }
 
     .chart-wrap { margin-top: 1.25rem; }
+    canvas { width: 100% !important; height: 420px !important; }
 
-    canvas {
-      width: 100% !important;
-      height: 420px !important;
-    }
-
-    .slider-area {
-      margin-top: 1rem;
-      text-align: center;
-    }
-
-    .live-dates {
-      font-weight: 700;
-      margin: 0.25rem 0 0.6rem;
-    }
-
-    .live-dates span {
-      display: inline-block;
-      min-width: 9rem;
-    }
-
+    .slider-area { text-align: center; margin-top: 1rem; }
     input[type="range"] {
-      -webkit-appearance: none;
-      appearance: none;
       width: 100%;
       max-width: 720px;
-      height: 10px;
-      background: #e6eef8;
-      border-radius: 5px;
-      outline: none;
     }
 
-    input[type="range"]::-webkit-slider-thumb,
-    input[type="range"]::-moz-range-thumb {
-      width: 24px;
-      height: 24px;
-      border-radius: 50%;
-      background: var(--blue);
-      border: 2px solid #fff;
-      box-shadow: 0 0 0 2px var(--blue);
-      cursor: pointer;
-    }
+    .note { font-size: 0.9rem; color: #555; text-align: center; margin-top: 0.35rem; }
 
-    .note {
-      font-size: 0.9rem;
-      color: #555;
-      text-align: center;
-      margin-top: 0.35rem;
-    }
-
-    .fade-in {
-      opacity: 0;
-      transition: opacity 0.6s ease-in;
-    }
-
+    .fade-in { opacity: 0; transition: opacity 0.6s ease-in; }
     .fade-in.show { opacity: 1; }
   </style>
 </head>
@@ -165,10 +123,8 @@
   <header><h1>Sunlight Comparator</h1></header>
 
   <main>
-    <!-- Location display -->
     <div id="locationDisplay">📍 Detecting current location...</div>
 
-    <!-- Date controls -->
     <div class="controls">
       <div>
         <label for="dateInput">Selected Date</label>
@@ -185,11 +141,19 @@
       <span id="equivLabel">Equivalent: —</span>
     </div>
 
-    <!-- Results table -->
     <table id="resultsTable" class="fade-in">
       <thead id="tableHead"></thead>
       <tbody id="tableBody"></tbody>
     </table>
+
+    <!-- 🌞 Arc display -->
+    <div class="arc-display fade-in" id="arcDisplay">
+      <svg class="sun-arc" viewBox="0 0 200 120">
+        <path class="arc-path" id="arcPath" d="" />
+        <circle class="sun-dot" id="sunDot" r="6" cx="100" cy="100" />
+      </svg>
+      <div id="arcLabel"></div>
+    </div>
 
     <!-- Chart + slider -->
     <div class="chart-wrap fade-in" id="chartContainer">
@@ -202,7 +166,6 @@
   </main>
 
   <script>
-    /* ---------- Utilities ---------- */
     const toRad = d => d * Math.PI / 180;
     const toDeg = r => r * 180 / Math.PI;
     const days = Array.from({ length: 365 }, (_, i) => ((i + 354) % 365) + 1);
@@ -268,8 +231,25 @@
       addRow("Latitude", lat.toFixed(2));
       addRow("Longitude", lon.toFixed(2));
       const elev = noonElevation(lat, refDay);
-      addRow("Noon Elevation (°)", elev.toFixed(2));
+      addRow("Noon Elevation (°)", elev.toFixed(1));
       addRow("Daylight (hrs)", daylightHours(lat, refDay).toFixed(2));
+    }
+
+    /* ---------- Arc Display ---------- */
+    function updateArcDisplay(elev) {
+      const r = 80;
+      const startX = 100 - r, endX = 100 + r, baseY = 100;
+      const elevRad = toRad(elev);
+      const h = Math.sin(elevRad) * r;
+      const sunX = 100, sunY = baseY - h;
+
+      // semicircle arc
+      const path = `M ${startX} ${baseY} A ${r} ${r} 0 0 1 ${endX} ${baseY}`;
+      document.getElementById("arcPath").setAttribute("d", path);
+      document.getElementById("sunDot").setAttribute("cx", sunX);
+      document.getElementById("sunDot").setAttribute("cy", sunY);
+      document.getElementById("arcLabel").textContent = `Noon Elevation: ${elev.toFixed(1)}°`;
+      document.getElementById("arcDisplay").classList.add("show");
     }
 
     /* ---------- Chart ---------- */
@@ -298,11 +278,7 @@
           },
           scales: {
             x: { display: false, min: 1, max: 365 },
-            y: {
-              title: { display: true, text: "Noon Sun Elevation (°)" },
-              min: 0, max: 90,
-              grid: { color: "#f4f5f7" }
-            }
+            y: { title: { display: true, text: "Noon Sun Elevation (°)" }, min: 0, max: 90 }
           }
         }
       });
@@ -319,14 +295,7 @@
           xMax: refDay,
           borderColor: "#000",
           borderWidth: 2,
-          label: {
-            enabled: true,
-            content: fmtMD(selDate),
-            position: "start",
-            yAdjust: -10,
-            backgroundColor: "rgba(255,255,255,.8)",
-            color: "#000"
-          }
+          label: { enabled: true, content: fmtMD(selDate), position: "start", backgroundColor: "rgba(255,255,255,.8)", color: "#000" }
         }
       };
       if (eqDateObj) {
@@ -337,14 +306,7 @@
           xMax: eqDay,
           borderColor: "#e11d48",
           borderWidth: 2,
-          label: {
-            enabled: true,
-            content: fmtMD(eqDateObj),
-            position: "start",
-            yAdjust: -10,
-            backgroundColor: "rgba(255,255,255,.85)",
-            color: "#e11d48"
-          }
+          label: { enabled: true, content: fmtMD(eqDateObj), position: "start", backgroundColor: "rgba(255,255,255,.85)", color: "#e11d48" }
         };
       }
       chart.options.plugins.annotation.annotations = annotations;
@@ -358,7 +320,7 @@
           selectedLbl = document.getElementById("selectedLabel"),
           equivLbl = document.getElementById("equivLabel");
 
-    let userLat = 27.95, userLon = -82.46; // fallback: Tampa, FL
+    let userLat = 27.95, userLon = -82.46; // fallback
 
     function updateAll() {
       const d = new Date(dateInput.value);
@@ -366,12 +328,14 @@
       const year = d.getFullYear();
       const refHrs = daylightHours(userLat, refDay);
       const eqDate = findEquivalentDate(userLat, refHrs, refDay, year);
+      const elev = noonElevation(userLat, refDay);
 
       equivEl.value = eqDate ? fmtMMDDYYYY(eqDate) : "—";
       selectedLbl.textContent = `Selected: ${fmtMD(d)}`;
       equivLbl.textContent = `Equivalent: ${eqDate ? fmtMD(eqDate) : "—"}`;
       buildTable(userLat, userLon, refDay);
       updateAnnotations(refDay, eqDate);
+      updateArcDisplay(elev);
 
       document.getElementById("resultsTable").classList.add("show");
       document.getElementById("chartContainer").classList.add("show");
@@ -387,7 +351,7 @@
 
     dateInput.addEventListener("change", updateAll);
 
-    /* ---------- Geolocation & Init ---------- */
+    /* ---------- Init ---------- */
     async function init() {
       const locDisplay = document.getElementById("locationDisplay");
       const today = new Date();
@@ -395,13 +359,12 @@
 
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(async pos => {
-          const lat = pos.coords.latitude, lon = pos.coords.longitude;
-          userLat = lat; userLon = lon;
+          userLat = pos.coords.latitude; userLon = pos.coords.longitude;
           try {
-            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`);
+            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${userLat}&lon=${userLon}&format=json`);
             const data = await res.json();
-            const display = data.address.city || data.address.town || data.address.village || data.address.state || "Your area";
-            locDisplay.innerHTML = `📍 Location: <span>${display}</span> (${lat.toFixed(2)}° N, ${Math.abs(lon).toFixed(2)}° ${lon < 0 ? 'W' : 'E'})`;
+            const display = data.address.city || data.address.town || data.address.state || "Your area";
+            locDisplay.innerHTML = `📍 Location: <span>${display}</span> (${userLat.toFixed(2)}° N, ${Math.abs(userLon).toFixed(2)}° ${userLon < 0 ? 'W' : 'E'})`;
           } catch {
             locDisplay.innerHTML = "📍 Location detected";
           }
