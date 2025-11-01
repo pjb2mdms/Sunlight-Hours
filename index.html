@@ -11,35 +11,29 @@
     --bg: #fff;
     --border: #d9e2ef;
   }
-
   * { box-sizing: border-box; }
-
   body {
     font-family: "Helvetica Neue", Arial, sans-serif;
     background: var(--bg);
     color: var(--text);
     margin: 0;
   }
-
   header {
     background: var(--blue);
     color: #fff;
     text-align: center;
     padding: 1.25rem 0;
   }
-
   main {
     max-width: 900px;
     margin: 2rem auto;
     padding: 0 1rem;
   }
-
   #location {
     text-align: center;
     font-size: 1.1rem;
     margin-bottom: 1.2rem;
   }
-
   .controls {
     display: flex;
     flex-wrap: wrap;
@@ -48,23 +42,20 @@
     margin-bottom: 1rem;
     align-items: end;
   }
-
   .controls > div { min-width: 160px; }
-
   label {
     font-weight: 600;
     display: block;
     margin-bottom: 0.25rem;
   }
-
-  input[type="date"], select, input[readonly] {
+  input, select {
     padding: 0.45rem 0.6rem;
     font-size: 1rem;
     border: 1px solid var(--border);
     border-radius: 0.4rem;
     width: 100%;
   }
-
+  input[readonly] { background: #f9f9f9; }
   table {
     width: 100%;
     border-collapse: collapse;
@@ -72,37 +63,16 @@
     margin-top: 0.5rem;
     table-layout: fixed;
   }
-
   th, td {
     border-bottom: 1px solid var(--border);
     padding: 0.6rem 0.4rem;
     text-align: center;
     word-wrap: break-word;
   }
-
-  th.label-col {
-    text-align: left;
-    width: 220px;
-    font-weight: 700;
-  }
-
-  th.city-col {
-    width: 300px;
-  }
-
-  thead th {
-    background: #f6fbff;
-    position: sticky;
-    top: 0;
-  }
-
-  #status {
-    text-align: center;
-    color: #777;
-    margin-top: 1rem;
-    font-size: 0.9rem;
-  }
-
+  th.label-col { text-align: left; width: 220px; font-weight: 700; }
+  th.city-col { width: 300px; }
+  thead th { background: #f6fbff; position: sticky; top: 0; }
+  #status { text-align: center; color: #777; margin-top: 1rem; font-size: 0.9rem; }
   @media (max-width: 680px) {
     main { padding: 0 0.6rem; }
     th.label-col { width: 140px; }
@@ -119,7 +89,7 @@
   <div class="controls">
     <div>
       <label for="dateInput">Selected Date</label>
-      <input type="date" id="dateInput" />
+      <input type="text" id="dateInput" readonly />
     </div>
     <div>
       <label for="equivDate">Equivalent Date</label>
@@ -207,16 +177,16 @@ function hoursToHM(h){const hr=Math.floor(h),m=Math.round((h-hr)*60);return `${h
 
 /* ---------- City list (20 entries) ---------- */
 const CITIES=[
-  {id:'East Longmeadow, MA, USA',name:'East Longmeadow, MA (USA)',lat:42.05,lon:-72.55,tz:'America/New_York'},
-  {id:'Crozet, VA, USA',name:'Crozet, VA (USA)',lat:38.07,lon:-78.70,tz:'America/New_York'},
-  {id:'Asheville, NC, USA',name:'Asheville, NC (USA)',lat:35.60,lon:-82.55,tz:'America/New_York'},
-  {id:'Nashville, TN, USA',name:'Nashville, TN (USA)',lat:36.16,lon:-86.78,tz:'America/Chicago'},
-  {id:'Tampa, FL, USA',name:'Tampa, FL (USA)',lat:27.95,lon:-82.46,tz:'America/New_York'},
-  {id:'Houston, TX, USA',name:'Houston, TX (USA)',lat:29.76,lon:-95.37,tz:'America/Chicago'},
-  {id:'Denver, CO, USA',name:'Denver, CO (USA)',lat:39.74,lon:-104.99,tz:'America/Denver'},
-  {id:'Seattle, WA, USA',name:'Seattle, WA (USA)',lat:47.61,lon:-122.33,tz:'America/Los_Angeles'},
-  {id:'Anchorage, AK, USA',name:'Anchorage, AK (USA)',lat:61.22,lon:-149.90,tz:'America/Anchorage'},
-  {id:'Honolulu, HI, USA',name:'Honolulu, HI (USA)',lat:21.31,lon:-157.86,tz:'Pacific/Honolulu'},
+  {id:'East Longmeadow, MA',name:'East Longmeadow, MA',lat:42.05,lon:-72.55,tz:'America/New_York'},
+  {id:'Crozet, VA',name:'Crozet, VA',lat:38.07,lon:-78.70,tz:'America/New_York'},
+  {id:'Asheville, NC',name:'Asheville, NC',lat:35.60,lon:-82.55,tz:'America/New_York'},
+  {id:'Nashville, TN',name:'Nashville, TN',lat:36.16,lon:-86.78,tz:'America/Chicago'},
+  {id:'Tampa, FL',name:'Tampa, FL',lat:27.95,lon:-82.46,tz:'America/New_York'},
+  {id:'Houston, TX',name:'Houston, TX',lat:29.76,lon:-95.37,tz:'America/Chicago'},
+  {id:'Denver, CO',name:'Denver, CO',lat:39.74,lon:-104.99,tz:'America/Denver'},
+  {id:'Seattle, WA',name:'Seattle, WA',lat:47.61,lon:-122.33,tz:'America/Los_Angeles'},
+  {id:'Anchorage, AK',name:'Anchorage, AK',lat:61.22,lon:-149.90,tz:'America/Anchorage'},
+  {id:'Honolulu, HI',name:'Honolulu, HI',lat:21.31,lon:-157.86,tz:'Pacific/Honolulu'},
   {id:'St Andrews, UK',name:'St Andrews (UK)',lat:56.34,lon:-2.80,tz:'Europe/London'},
   {id:'London, UK',name:'London (UK)',lat:51.51,lon:-0.13,tz:'Europe/London'},
   {id:'Paris, France',name:'Paris (France)',lat:48.86,lon:2.35,tz:'Europe/Paris'},
@@ -245,7 +215,15 @@ const locationEl=document.getElementById('location'),mainHeader=document.getElem
 let primaryLat=27.95,primaryLon=-82.46,primaryName='Tampa, FL',primaryTZ='America/New_York';
 let compareCity=null;
 
-function populateCities(){CITIES.sort((a,b)=>a.name.localeCompare(b.name));for(const c of CITIES){const o=document.createElement('option');o.value=c.id;o.textContent=c.name;compareSelect.appendChild(o);}}
+function populateCities(){
+  CITIES.sort((a,b)=>a.name.localeCompare(b.name));
+  for(const c of CITIES){
+    const o=document.createElement('option');
+    o.value=c.id;
+    o.textContent=c.name;
+    compareSelect.appendChild(o);
+  }
+}
 populateCities();
 
 function findCityById(id){return CITIES.find(c=>c.id===id)||null;}
@@ -285,8 +263,8 @@ function renderColumns(primary,comparison,dateObj){
 }
 
 function updateValues(){
-  if(!dateInput.value)return;
-  const d=new Date(dateInput.value+"T00:00");
+  const d=new Date();
+  dateInput.value=fmtDate(d);
   const year=d.getFullYear(),dayNum=dayOfYear(d);
   const elev=noonElevation(primaryLat,dayNum);
   const eq=findEquivalentDate(primaryLat,elev,dayNum,year);
@@ -297,22 +275,23 @@ function updateValues(){
 }
 
 compareSelect.addEventListener('change',()=>{compareCity=compareSelect.value?findCityById(compareSelect.value):null;updateValues();});
-dateInput.addEventListener('change',updateValues);
 
 function init(){
-  const today=new Date();
-  dateInput.value=today.toLocaleDateString('en-CA');
   if(navigator.geolocation){
     navigator.geolocation.getCurrentPosition(async pos=>{
       primaryLat=pos.coords.latitude;primaryLon=pos.coords.longitude;
       try{
         const r=await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${primaryLat}&lon=${primaryLon}&format=json`);
         const data=await r.json();const a=data.address||{};
-        const name=a.city||a.town||a.village||a.county||a.state||'Your Location';
-        primaryName=name;
+        const city=a.city||a.town||a.village||a.hamlet||'Your area';
+        const state=a.state||'';
+        const country=a.country_code? a.country_code.toUpperCase() : '';
+        primaryName = country==='US'||country==='' ? `${city}, ${state}` : `${city}, ${state} (${country})`;
         mainHeader.textContent=`Sunlight Comparator — ${primaryName}`;
         locationEl.innerHTML=`📍 Location: <span>${primaryName}</span> (${primaryLat.toFixed(2)}°, ${Math.abs(primaryLon).toFixed(2)}° ${primaryLon<0?'W':'E'})`;
-      }catch{locationEl.innerHTML=`📍 Coordinates: ${primaryLat.toFixed(2)}, ${primaryLon.toFixed(2)}`;}
+      }catch{
+        locationEl.innerHTML=`📍 Coordinates: ${primaryLat.toFixed(2)}, ${primaryLon.toFixed(2)}`;
+      }
       updateValues();
     },()=>{
       primaryName='Tampa, FL';
