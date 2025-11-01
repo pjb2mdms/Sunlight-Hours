@@ -11,29 +11,35 @@
     --bg: #fff;
     --border: #d9e2ef;
   }
+
   * { box-sizing: border-box; }
+
   body {
     font-family: "Helvetica Neue", Arial, sans-serif;
     background: var(--bg);
     color: var(--text);
     margin: 0;
   }
+
   header {
     background: var(--blue);
     color: #fff;
     text-align: center;
     padding: 1.25rem 0;
   }
+
   main {
     max-width: 900px;
     margin: 2rem auto;
     padding: 0 1rem;
   }
+
   #location {
     text-align: center;
     font-size: 1.1rem;
     margin-bottom: 1.2rem;
   }
+
   .controls {
     display: flex;
     flex-wrap: wrap;
@@ -42,12 +48,15 @@
     margin-bottom: 1rem;
     align-items: end;
   }
+
   .controls > div { min-width: 160px; }
+
   label {
     font-weight: 600;
     display: block;
     margin-bottom: 0.25rem;
   }
+
   input[type="date"], select, input[readonly] {
     padding: 0.45rem 0.6rem;
     font-size: 1rem;
@@ -55,6 +64,7 @@
     border-radius: 0.4rem;
     width: 100%;
   }
+
   table {
     width: 100%;
     border-collapse: collapse;
@@ -62,31 +72,37 @@
     margin-top: 0.5rem;
     table-layout: fixed;
   }
+
   th, td {
     border-bottom: 1px solid var(--border);
     padding: 0.6rem 0.4rem;
     text-align: center;
     word-wrap: break-word;
   }
+
   th.label-col {
     text-align: left;
     width: 220px;
     font-weight: 700;
   }
+
   th.city-col {
     width: 300px;
   }
+
   thead th {
     background: #f6fbff;
     position: sticky;
     top: 0;
   }
+
   #status {
     text-align: center;
     color: #777;
     margin-top: 1rem;
     font-size: 0.9rem;
   }
+
   @media (max-width: 680px) {
     main { padding: 0 0.6rem; }
     th.label-col { width: 140px; }
@@ -139,6 +155,7 @@
 </main>
 
 <script>
+/* ---------- Math utilities ---------- */
 const toRad = d => d * Math.PI / 180;
 const toDeg = r => r * 180 / Math.PI;
 
@@ -151,20 +168,44 @@ function dateFromDay(y,day){const d=new Date(y,0);d.setDate(day);return d;}
 function findEquivalentDate(lat,targetElev,refDay,y){let best=null,diffMin=1e9;for(let d=1;d<=365;d++){const e=noonElevation(lat,d);const diff=Math.abs(e-targetElev);if(Math.abs(d-refDay)<30)continue;if(diff<diffMin){diffMin=diff;best=d;}}return best?dateFromDay(y,best):null;}
 function fmtDate(d){return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}
 
-function sunriseSunset(lat,lon,day,offsetMin=0){
-  const dec=toRad(solarDeclination(day)),latR=toRad(lat),solarDep=toRad(-0.83);
-  const cosH=(Math.sin(solarDep)-Math.sin(latR)*Math.sin(dec))/(Math.cos(latR)*Math.cos(dec));
-  if(cosH>1||cosH<-1) return {sunrise:'—',sunset:'—'};
-  const H=Math.acos(cosH),Hh=toDeg(H)/15,EoT=equationOfTime(day);
-  const tzH=offsetMin/60,mer=15*Math.round(tzH);
-  const solarNoon=12-(lon-mer)/15-EoT/60;
-  const r=solarNoon-Hh,s=solarNoon+Hh;
-  return {sunrise:formatH(r),sunset:formatH(s)};
+/* ---------- Time zone offset & abbreviation ---------- */
+function getTimeZoneData(date, timeZone) {
+  const fmt = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    timeZoneName: 'short',
+    year:'numeric',month:'2-digit',day:'2-digit',
+    hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false
+  });
+  const parts = fmt.formatToParts(date);
+  const vals = Object.fromEntries(parts.map(p=>[p.type,p.value]));
+  const abbr = vals.timeZoneName || '';
+  const iso = `${vals.year}-${vals.month}-${vals.day}T${vals.hour}:${vals.minute}:${vals.second}Z`;
+  const utcDate = new Date(date.toISOString());
+  const tzDate = new Date(iso);
+  const offsetMin = (tzDate - utcDate)/60000;
+  return { offsetMin, abbr };
+}
+
+/* ---------- Sunrise/Sunset ---------- */
+function sunriseSunset(lat, lon, day, offsetMin = 0) {
+  const dec = toRad(solarDeclination(day));
+  const latR = toRad(lat);
+  const solarDep = toRad(-0.83);
+  const cosH = (Math.sin(solarDep) - Math.sin(latR)*Math.sin(dec)) / (Math.cos(latR)*Math.cos(dec));
+  if (cosH > 1 || cosH < -1) return { sunrise:'—', sunset:'—' };
+  const H = Math.acos(cosH);
+  const Hh = toDeg(H)/15;
+  const EoT = equationOfTime(day);
+  const tzH = offsetMin/60;
+  const tzMeridian = 15 * Math.round(tzH);
+  const solarNoon = 12 - (lon - tzMeridian)/15 - EoT/60;
+  const r = solarNoon - Hh, s = solarNoon + Hh;
+  return { sunrise:formatH(r), sunset:formatH(s) };
 }
 function formatH(h){let n=(h+24)%24;const hr=Math.floor(n);let m=Math.round((n-hr)*60);if(m===60){m=0;n=(n+1)%24;}const disp=((hr+11)%12)+1;return `${disp}:${m.toString().padStart(2,'0')} ${hr>=12?'PM':'AM'}`;}
 function hoursToHM(h){const hr=Math.floor(h),m=Math.round((h-hr)*60);return `${hr} h ${m.toString().padStart(2,'0')} m`;}
 
-/* --- Cities (20 entries) --- */
+/* ---------- City list (20 entries) ---------- */
 const CITIES=[
   {id:'East Longmeadow, MA, USA',name:'East Longmeadow, MA (USA)',lat:42.05,lon:-72.55,tz:'America/New_York'},
   {id:'Crozet, VA, USA',name:'Crozet, VA (USA)',lat:38.07,lon:-78.70,tz:'America/New_York'},
@@ -188,6 +229,7 @@ const CITIES=[
   {id:'Cape Town, South Africa',name:'Cape Town (South Africa)',lat:-33.92,lon:18.42,tz:'Africa/Johannesburg'}
 ];
 
+/* ---------- DOM and logic ---------- */
 const dateInput=document.getElementById('dateInput');
 const equivField=document.getElementById('equivDate');
 const compareSelect=document.getElementById('compareCity');
@@ -200,7 +242,7 @@ const elev0=document.getElementById('elev0'),elev1=document.getElementById('elev
 const col0Header=document.getElementById('col0Header'),col1Header=document.getElementById('col1Header');
 const locationEl=document.getElementById('location'),mainHeader=document.getElementById('mainHeader');
 
-let primaryLat=27.95,primaryLon=-82.46,primaryName='Tampa, FL';
+let primaryLat=27.95,primaryLon=-82.46,primaryName='Tampa, FL',primaryTZ='America/New_York';
 let compareCity=null;
 
 function populateCities(){CITIES.sort((a,b)=>a.name.localeCompare(b.name));for(const c of CITIES){const o=document.createElement('option');o.value=c.id;o.textContent=c.name;compareSelect.appendChild(o);}}
@@ -209,11 +251,12 @@ populateCities();
 function findCityById(id){return CITIES.find(c=>c.id===id)||null;}
 
 function computeFor(lat,lon,dateObj,tz){
-  const day=dayOfYear(dateObj),elev=noonElevation(lat,day),hrs=daylightHours(lat,day);
-  const tzDate=new Date(dateObj.toLocaleString('en-US',{timeZone:tz}));
-  const offset=-tzDate.getTimezoneOffset();
-  const times=sunriseSunset(lat,lon,day,offset);
-  return {elev,hrs,...times};
+  const day=dayOfYear(dateObj);
+  const elev=noonElevation(lat,day);
+  const hrs=daylightHours(lat,day);
+  const {offsetMin,abbr}=getTimeZoneData(dateObj,tz);
+  const times=sunriseSunset(lat,lon,day,offsetMin);
+  return {elev,hrs,sunrise:`${times.sunrise} ${abbr}`,sunset:`${times.sunset} ${abbr}`};
 }
 
 function renderColumns(primary,comparison,dateObj){
@@ -225,6 +268,7 @@ function renderColumns(primary,comparison,dateObj){
   suns0.textContent=p.sunset;
   daylight0.textContent=hoursToHM(p.hrs);
   elev0.textContent=p.elev.toFixed(2);
+
   if(comparison){
     col1Header.textContent=comparison.name;
     lat1.textContent=comparison.lat.toFixed(2);
@@ -254,8 +298,6 @@ function updateValues(){
 
 compareSelect.addEventListener('change',()=>{compareCity=compareSelect.value?findCityById(compareSelect.value):null;updateValues();});
 dateInput.addEventListener('change',updateValues);
-
-let primaryTZ='America/New_York';
 
 function init(){
   const today=new Date();
