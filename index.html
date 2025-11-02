@@ -4,36 +4,49 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Sunlight Comparator</title>
+
+<!-- Load Chart.js and the annotation plugin -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.2.1"></script>
+
 <style>
+  /* ---------- Core theme ---------- */
   :root {
     --blue: #0b5fb3;
+    --orange: #f28e2b;
     --text: #222;
     --bg: #fff;
     --border: #d9e2ef;
   }
   * { box-sizing: border-box; }
+
   body {
     font-family: "Helvetica Neue", Arial, sans-serif;
     background: var(--bg);
     color: var(--text);
     margin: 0;
   }
+
   header {
     background: var(--blue);
     color: #fff;
     text-align: center;
     padding: 1.25rem 0;
   }
+
   main {
-    max-width: 900px;
+    max-width: 960px;
     margin: 2rem auto;
     padding: 0 1rem;
   }
+
   #location {
     text-align: center;
     font-size: 1.1rem;
     margin-bottom: 1.2rem;
   }
+
+  /* ---------- Controls ---------- */
   .controls {
     display: flex;
     flex-wrap: wrap;
@@ -56,6 +69,8 @@
     width: 100%;
   }
   input[readonly] { background: #f9f9f9; }
+
+  /* ---------- Table ---------- */
   table {
     width: 100%;
     border-collapse: collapse;
@@ -69,23 +84,39 @@
     text-align: center;
     word-wrap: break-word;
   }
-  th.label-col { text-align: left; width: 220px; font-weight: 700; }
-  th.city-col { width: 300px; }
+  th.label-col { text-align: left; width: 200px; font-weight: 700; }
   thead th { background: #f6fbff; position: sticky; top: 0; }
+
+  /* ---------- Chart & slider ---------- */
+  .chart-wrap { margin-top: 2rem; }
+  canvas { width: 100% !important; height: 420px !important; }
+  .slider-area { margin-top: 1rem; text-align: center; }
+  input[type="range"] {
+    -webkit-appearance: none; width: 100%; max-width: 720px; height: 10px;
+    background: #e6eef8; border-radius: 5px; outline: none;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%;
+    background: var(--blue); border: 2px solid #fff;
+    box-shadow: 0 0 0 2px var(--blue); cursor: pointer;
+  }
+
   #status { text-align: center; color: #777; margin-top: 1rem; font-size: 0.9rem; }
+
   @media (max-width: 680px) {
-    main { padding: 0 0.6rem; }
     th.label-col { width: 140px; }
-    th.city-col { width: 220px; }
   }
 </style>
 </head>
 <body>
+
 <header><h1 id="mainHeader">Sunlight Comparator</h1></header>
 
 <main>
+  <!-- Location and city detection -->
   <div id="location">📍 Detecting location...</div>
 
+  <!-- User controls -->
   <div class="controls">
     <div>
       <label for="dateInput">Selected Date</label>
@@ -103,12 +134,13 @@
     </div>
   </div>
 
+  <!-- Results table -->
   <table aria-live="polite">
     <thead>
       <tr>
         <th class="label-col">Metric</th>
-        <th id="col0Header" class="city-col">Location</th>
-        <th id="col1Header" class="city-col">Comparison</th>
+        <th id="col0Header">Location</th>
+        <th id="col1Header">Comparison</th>
       </tr>
     </thead>
     <tbody>
@@ -117,35 +149,46 @@
       <tr><th class="label-col">Sunrise (local)</th><td id="sunrise0">—</td><td id="sunrise1">—</td></tr>
       <tr><th class="label-col">Sunset (local)</th><td id="sunset0">—</td><td id="sunset1">—</td></tr>
       <tr><th class="label-col">Daylight Hours</th><td id="daylight0">—</td><td id="daylight1">—</td></tr>
-      <tr><th class="label-col">Noon Elevation (°)</th><td id="elev0">—</td><td id="elev1">—</td></tr>
+      <tr><th class="label-col">Noon Elevation</th><td id="elev0">—</td><td id="elev1">—</td></tr>
     </tbody>
   </table>
+
+  <!-- Chart and slider section -->
+  <div class="chart-wrap">
+    <canvas id="daylightChart"></canvas>
+    <div class="slider-area">
+      <div class="live-dates">
+        <span id="selectedLabel">Selected: —</span>
+        <span id="equivLabel">Equivalent: —</span>
+      </div>
+      <input type="range" id="dateSlider" min="1" max="365" step="1" value="172" />
+    </div>
+  </div>
 
   <div id="status"></div>
 </main>
 
 <script>
-/* ---------- Math utilities ---------- */
+/* =========================================================
+   =============== CALCULATIONS & UTILITIES ================
+   ========================================================= */
 const toRad = d => d * Math.PI / 180;
 const toDeg = r => r * 180 / Math.PI;
-
 function solarDeclination(day){return 23.44*Math.sin(toRad((360/365)*(day-81)));}
 function equationOfTime(day){const B=toRad((360/365)*(day-81));return 9.87*Math.sin(2*B)-7.53*Math.cos(B)-1.5*Math.sin(B);}
 function daylightHours(lat,day){const dec=toRad(solarDeclination(day)),latR=toRad(lat),cosH=-Math.tan(latR)*Math.tan(dec);if(cosH>=1)return 0;if(cosH<=-1)return 24;const H=Math.acos(cosH);return (2*toDeg(H))/15;}
 function noonElevation(lat,day){const dec=solarDeclination(day);return 90-Math.abs(lat-dec);}
 function dayOfYear(d){const start=new Date(d.getFullYear(),0,0);return Math.floor((d-start)/86400000);}
 function dateFromDay(y,day){const d=new Date(y,0);d.setDate(day);return d;}
-function findEquivalentDate(lat,targetElev,refDay,y){let best=null,diffMin=1e9;for(let d=1;d<=365;d++){const e=noonElevation(lat,d);const diff=Math.abs(e-targetElev);if(Math.abs(d-refDay)<30)continue;if(diff<diffMin){diffMin=diff;best=d;}}return best?dateFromDay(y,best):null;}
 function fmtDate(d){return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}
+function fmtMD(date){return date.toLocaleDateString("en-US",{month:"short", day:"numeric"});}
+function hoursToHM(h){const hr=Math.floor(h),m=Math.round((h-hr)*60);return `${hr}h ${m.toString().padStart(2,'0')}m`;}
 
-/* ---------- Time zone offset & abbreviation ---------- */
+/* ---------- Time zone and sunrise/sunset ---------- */
 function getTimeZoneData(date, timeZone) {
-  const fmt = new Intl.DateTimeFormat('en-US', {
-    timeZone,
-    timeZoneName: 'short',
-    year:'numeric',month:'2-digit',day:'2-digit',
-    hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false
-  });
+  const fmt = new Intl.DateTimeFormat('en-US', { timeZone, timeZoneName: 'short',
+    year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',
+    second:'2-digit',hour12:false });
   const parts = fmt.formatToParts(date);
   const vals = Object.fromEntries(parts.map(p=>[p.type,p.value]));
   const abbr = vals.timeZoneName || '';
@@ -156,7 +199,6 @@ function getTimeZoneData(date, timeZone) {
   return { offsetMin, abbr };
 }
 
-/* ---------- Sunrise/Sunset ---------- */
 function sunriseSunset(lat, lon, day, offsetMin = 0) {
   const dec = toRad(solarDeclination(day));
   const latR = toRad(lat);
@@ -172,110 +214,187 @@ function sunriseSunset(lat, lon, day, offsetMin = 0) {
   const r = solarNoon - Hh, s = solarNoon + Hh;
   return { sunrise:formatH(r), sunset:formatH(s) };
 }
-function formatH(h){let n=(h+24)%24;const hr=Math.floor(n);let m=Math.round((n-hr)*60);if(m===60){m=0;n=(n+1)%24;}const disp=((hr+11)%12)+1;return `${disp}:${m.toString().padStart(2,'0')} ${hr>=12?'PM':'AM'}`;}
-function hoursToHM(h){const hr=Math.floor(h),m=Math.round((h-hr)*60);return `${hr} h ${m.toString().padStart(2,'0')} m`;}
+function formatH(h){let n=(h+24)%24;const hr=Math.floor(n);let m=Math.round((n-hr)*60);
+  if(m===60){m=0;n=(n+1)%24;}const disp=((hr+11)%12)+1;return `${disp}:${m.toString().padStart(2,'0')} ${hr>=12?'PM':'AM'}`;}
 
-/* ---------- City list (20 entries) ---------- */
+/* =========================================================
+   ===================== CITY DATA =========================
+   ========================================================= */
 const CITIES=[
-  {id:'East Longmeadow, MA',name:'East Longmeadow, MA',lat:42.05,lon:-72.55,tz:'America/New_York'},
-  {id:'Crozet, VA',name:'Crozet, VA',lat:38.07,lon:-78.70,tz:'America/New_York'},
-  {id:'Asheville, NC',name:'Asheville, NC',lat:35.60,lon:-82.55,tz:'America/New_York'},
-  {id:'Nashville, TN',name:'Nashville, TN',lat:36.16,lon:-86.78,tz:'America/Chicago'},
   {id:'Tampa, FL',name:'Tampa, FL',lat:27.95,lon:-82.46,tz:'America/New_York'},
-  {id:'Houston, TX',name:'Houston, TX',lat:29.76,lon:-95.37,tz:'America/Chicago'},
-  {id:'Denver, CO',name:'Denver, CO',lat:39.74,lon:-104.99,tz:'America/Denver'},
-  {id:'Seattle, WA',name:'Seattle, WA',lat:47.61,lon:-122.33,tz:'America/Los_Angeles'},
-  {id:'Anchorage, AK',name:'Anchorage, AK',lat:61.22,lon:-149.90,tz:'America/Anchorage'},
-  {id:'Honolulu, HI',name:'Honolulu, HI',lat:21.31,lon:-157.86,tz:'Pacific/Honolulu'},
   {id:'St Andrews, UK',name:'St Andrews (UK)',lat:56.34,lon:-2.80,tz:'Europe/London'},
-  {id:'London, UK',name:'London (UK)',lat:51.51,lon:-0.13,tz:'Europe/London'},
-  {id:'Paris, France',name:'Paris (France)',lat:48.86,lon:2.35,tz:'Europe/Paris'},
-  {id:'Berlin, Germany',name:'Berlin (Germany)',lat:52.52,lon:13.41,tz:'Europe/Berlin'},
-  {id:'Athens, Greece',name:'Athens (Greece)',lat:37.98,lon:23.73,tz:'Europe/Athens'},
-  {id:'Tokyo, Japan',name:'Tokyo (Japan)',lat:35.68,lon:139.65,tz:'Asia/Tokyo'},
-  {id:'Seoul, South Korea',name:'Seoul (South Korea)',lat:37.57,lon:126.98,tz:'Asia/Seoul'},
-  {id:'Sydney, Australia',name:'Sydney (Australia)',lat:-33.87,lon:151.21,tz:'Australia/Sydney'},
-  {id:'Auckland, NZ',name:'Auckland (New Zealand)',lat:-36.85,lon:174.76,tz:'Pacific/Auckland'},
-  {id:'Cape Town, South Africa',name:'Cape Town (South Africa)',lat:-33.92,lon:18.42,tz:'Africa/Johannesburg'}
+  {id:'Crozet, VA',name:'Crozet, VA',lat:38.07,lon:-78.70,tz:'America/New_York'},
+  {id:'Houston, TX',name:'Houston, TX',lat:29.76,lon:-95.37,tz:'America/Chicago'},
+  {id:'Asheville, NC',name:'Asheville, NC',lat:35.60,lon:-82.55,tz:'America/New_York'}
 ];
 
-/* ---------- DOM and logic ---------- */
+/* =========================================================
+   ==================== DOM REFERENCES =====================
+   ========================================================= */
 const dateInput=document.getElementById('dateInput');
 const equivField=document.getElementById('equivDate');
 const compareSelect=document.getElementById('compareCity');
+const col0Header=document.getElementById('col0Header'),col1Header=document.getElementById('col1Header');
 const lat0=document.getElementById('lat0'),lat1=document.getElementById('lat1');
 const lon0=document.getElementById('lon0'),lon1=document.getElementById('lon1');
 const sunr0=document.getElementById('sunrise0'),sunr1=document.getElementById('sunrise1');
 const suns0=document.getElementById('sunset0'),suns1=document.getElementById('sunset1');
 const daylight0=document.getElementById('daylight0'),daylight1=document.getElementById('daylight1');
 const elev0=document.getElementById('elev0'),elev1=document.getElementById('elev1');
-const col0Header=document.getElementById('col0Header'),col1Header=document.getElementById('col1Header');
 const locationEl=document.getElementById('location'),mainHeader=document.getElementById('mainHeader');
+const slider=document.getElementById('dateSlider');
+const selectedLbl=document.getElementById('selectedLabel'),equivLbl=document.getElementById('equivLabel');
 
 let primaryLat=27.95,primaryLon=-82.46,primaryName='Tampa, FL',primaryTZ='America/New_York';
 let compareCity=null;
+let chart;
 
-function populateCities(){
-  CITIES.sort((a,b)=>a.name.localeCompare(b.name));
-  for(const c of CITIES){
-    const o=document.createElement('option');
-    o.value=c.id;
-    o.textContent=c.name;
-    compareSelect.appendChild(o);
-  }
-}
-populateCities();
+/* Populate dropdown */
+CITIES.sort((a,b)=>a.name.localeCompare(b.name));
+for(const c of CITIES){const o=document.createElement('option');o.value=c.id;o.textContent=c.name;compareSelect.appendChild(o);}
 
-function findCityById(id){return CITIES.find(c=>c.id===id)||null;}
-
+/* =========================================================
+   ===================== CORE FUNCTIONS ====================
+   ========================================================= */
 function computeFor(lat,lon,dateObj,tz){
   const day=dayOfYear(dateObj);
   const elev=noonElevation(lat,day);
   const hrs=daylightHours(lat,day);
   const {offsetMin,abbr}=getTimeZoneData(dateObj,tz);
   const times=sunriseSunset(lat,lon,day,offsetMin);
-  return {elev,hrs,sunrise:`${times.sunrise} ${abbr}`,sunset:`${times.sunset} ${abbr}`};
+  return { elev, hrs, sunrise:`${times.sunrise} ${abbr}`, sunset:`${times.sunset} ${abbr}` };
 }
 
+/* Render one city’s column into table */
 function renderColumns(primary,comparison,dateObj){
+  const p=computeFor(primary.lat,primary.lon,dateObj,primary.tz);
+  const c=comparison?computeFor(comparison.lat,comparison.lon,dateObj,comparison.tz):null;
+
+  // Update headers
   col0Header.textContent=primary.name;
+  col1Header.textContent=comparison?comparison.name:'—';
+
+  // Fill in values
   lat0.textContent=primary.lat.toFixed(2);
   lon0.textContent=primary.lon.toFixed(2);
-  const p=computeFor(primary.lat,primary.lon,dateObj,primary.tz);
-  sunr0.textContent=p.sunrise;
-  suns0.textContent=p.sunset;
+  sunr0.textContent=p.sunrise; suns0.textContent=p.sunset;
   daylight0.textContent=hoursToHM(p.hrs);
-  elev0.textContent=p.elev.toFixed(2);
 
-  if(comparison){
-    col1Header.textContent=comparison.name;
+  // Noon elevation arc
+  elev0.innerHTML=arcSVG(p.elev,'#0b5fb3');
+
+  if(c){
     lat1.textContent=comparison.lat.toFixed(2);
     lon1.textContent=comparison.lon.toFixed(2);
-    const c=computeFor(comparison.lat,comparison.lon,dateObj,comparison.tz);
-    sunr1.textContent=c.sunrise;
-    suns1.textContent=c.sunset;
+    sunr1.textContent=c.sunrise; suns1.textContent=c.sunset;
     daylight1.textContent=hoursToHM(c.hrs);
-    elev1.textContent=c.elev.toFixed(2);
-  }else{
-    col1Header.textContent='—';
+    elev1.innerHTML=arcSVG(c.elev,'#f28e2b');
+  } else {
     [lat1,lon1,sunr1,suns1,daylight1,elev1].forEach(td=>td.textContent='—');
   }
 }
 
-function updateValues(){
-  const d=new Date();
-  dateInput.value=fmtDate(d);
-  const year=d.getFullYear(),dayNum=dayOfYear(d);
-  const elev=noonElevation(primaryLat,dayNum);
-  const eq=findEquivalentDate(primaryLat,elev,dayNum,year);
-  equivField.value=eq?fmtDate(eq):'—';
-  const primary={name:primaryName,lat:primaryLat,lon:primaryLon,tz:primaryTZ};
-  const comp=compareCity?{...compareCity}:null;
-  renderColumns(primary,comp,d);
+/* Small SVG arc graphic for noon elevation */
+function arcSVG(elev,color){
+  const R=30; const a=Math.min(90,Math.max(0,elev))*Math.PI/180;
+  const x=30+R*Math.cos(Math.PI - a);
+  const y=34-R*Math.sin(Math.PI - a);
+  return `
+    <svg viewBox="0 0 70 40" width="70" height="40">
+      <path d="M4 34 A32 32 0 0 1 64 34" stroke="#c9d3e3" stroke-width="1.2" fill="none"/>
+      <line x1="30" y1="34" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}"
+            stroke="${color}" stroke-width="3"/>
+      <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="4.2" fill="${color}"/>
+    </svg>
+    <div>${elev.toFixed(1)}°</div>`;
 }
 
-compareSelect.addEventListener('change',()=>{compareCity=compareSelect.value?findCityById(compareSelect.value):null;updateValues();});
+/* Daylight-hours chart */
+function plotChart(primary,comparison,refDay,eqDateObj){
+  const ctx=document.getElementById("daylightChart").getContext("2d");
+  const year=new Date().getFullYear();
+  const days=Array.from({length:365},(_,i)=>i+1);
+  if(chart) chart.destroy();
 
+  const datasets=[
+    { label: primary.name, data: days.map(d=>daylightHours(primary.lat,d)), borderColor:"#0b5fb3",
+      borderWidth:2, fill:false, tension:0.25, pointRadius:0 },
+  ];
+  if(comparison){
+    datasets.push({ label: comparison.name, data: days.map(d=>daylightHours(comparison.lat,d)),
+      borderColor:"#f28e2b", borderWidth:2, fill:false, tension:0.25, pointRadius:0 });
+  }
+
+  // Annotation lines for selected & equivalent dates
+  const annotations={
+    selected:{ type:'line', xMin:refDay, xMax:refDay, borderColor:'#000', borderWidth:2,
+      label:{enabled:true,content:fmtMD(dateFromDay(year,refDay)),backgroundColor:'#fff',yAdjust:-10}},
+  };
+  if(eqDateObj){
+    const eqDay=dayOfYear(eqDateObj);
+    annotations.equivalent={ type:'line', xMin:eqDay, xMax:eqDay, borderColor:'#e11d48', borderWidth:2,
+      label:{enabled:true,content:fmtMD(eqDateObj),backgroundColor:'#fff',color:'#e11d48',yAdjust:-10}};
+  }
+
+  chart=new Chart(ctx,{
+    type:'line',
+    data:{labels:days,datasets},
+    options:{
+      responsive:true,
+      plugins:{ legend:{position:'bottom'}, annotation:{annotations} },
+      scales:{
+        x:{display:false,min:1,max:365},
+        y:{title:{display:true,text:'Daylight Hours'},min:5,max:20,grid:{color:'#f2f4f6'}}
+      }
+    },
+    plugins:[Chart.registry.getPlugin('annotation')]
+  });
+}
+
+/* =========================================================
+   ===================== INTERACTION =======================
+   ========================================================= */
+function updateAll(){
+  const d=dateFromDay(new Date().getFullYear(),Number(slider.value));
+  dateInput.value=fmtDate(d);
+  const year=d.getFullYear(),dayNum=dayOfYear(d);
+
+  const primary={name:primaryName,lat:primaryLat,lon:primaryLon,tz:primaryTZ};
+  const comp=compareCity?CITIES.find(c=>c.id===compareCity.id):null;
+
+  const elev=noonElevation(primary.lat,dayNum);
+  const eq=findEquivalentDate(primary.lat,elev,dayNum,year);
+  equivField.value=eq?fmtDate(eq):'—';
+
+  selectedLbl.textContent=`Selected: ${fmtMD(d)}`;
+  equivLbl.textContent=`Equivalent: ${eq?fmtMD(eq):'—'}`;
+
+  renderColumns(primary,comp,d);
+  plotChart(primary,comp,dayNum,eq);
+}
+
+function findEquivalentDate(lat,targetElev,refDay,y){
+  let best=null,diffMin=1e9;
+  for(let d=1;d<=365;d++){
+    if(Math.abs(d-refDay)<30) continue;
+    const diff=Math.abs(noonElevation(lat,d)-targetElev);
+    if(diff<diffMin){diffMin=diff;best=d;}
+  }
+  return best?dateFromDay(y,best):null;
+}
+
+/* City selection change */
+compareSelect.addEventListener('change',()=>{
+  compareCity = compareSelect.value ? CITIES.find(c=>c.id===compareSelect.value):null;
+  updateAll();
+});
+
+/* Slider movement */
+slider.addEventListener('input',updateAll);
+
+/* =========================================================
+   ====================== INITIALIZE =======================
+   ========================================================= */
 function init(){
   if(navigator.geolocation){
     navigator.geolocation.getCurrentPosition(async pos=>{
@@ -284,22 +403,21 @@ function init(){
         const r=await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${primaryLat}&lon=${primaryLon}&format=json`);
         const data=await r.json();const a=data.address||{};
         const city=a.city||a.town||a.village||a.hamlet||'Your area';
-        const state=a.state||'';
-        const country=a.country_code? a.country_code.toUpperCase() : '';
+        const state=a.state||'';const country=a.country_code? a.country_code.toUpperCase() : '';
         primaryName = country==='US'||country==='' ? `${city}, ${state}` : `${city}, ${state} (${country})`;
         mainHeader.textContent=`Sunlight Comparator — ${primaryName}`;
         locationEl.innerHTML=`📍 Location: <span>${primaryName}</span> (${primaryLat.toFixed(2)}°, ${Math.abs(primaryLon).toFixed(2)}° ${primaryLon<0?'W':'E'})`;
       }catch{
         locationEl.innerHTML=`📍 Coordinates: ${primaryLat.toFixed(2)}, ${primaryLon.toFixed(2)}`;
       }
-      updateValues();
+      updateAll();
     },()=>{
       primaryName='Tampa, FL';
       mainHeader.textContent='Sunlight Comparator — Tampa, FL';
       locationEl.innerHTML="📍 Using default location: <span>Tampa, FL</span> (27.95° N, 82.46° W)";
-      updateValues();
+      updateAll();
     });
-  }else updateValues();
+  } else { updateAll(); }
 }
 init();
 </script>
