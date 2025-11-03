@@ -109,6 +109,7 @@
 </main>
 
 <script>
+/* ---------- Math utilities ---------- */
 const toRad = d=>d*Math.PI/180, toDeg=r=>r*180/Math.PI;
 const days = Array.from({length:365},(_,i)=>i+1);
 function solarDeclination(day){return 23.44*Math.sin(toRad((360/365)*(day-81))); }
@@ -128,7 +129,8 @@ function findEquivalentDate(lat,targetHours,refDay,year){let best=null,bestDiff=
  const diff=Math.abs(daylightHours(lat,d)-targetHours);
  if(diff<bestDiff){bestDiff=diff;best=d;}}return best?dateFromDay(year,best):null;}
 function getCityColor(){return "#0b5fb3";}
-/* --- Get timezone offset and abbreviation --- */
+
+/* ---------- Timezone helper ---------- */
 function getTimeZoneData(date, timeZone) {
   const fmt = new Intl.DateTimeFormat('en-US', {
     timeZone,
@@ -137,33 +139,35 @@ function getTimeZoneData(date, timeZone) {
     hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false
   });
   const parts = fmt.formatToParts(date);
-  const vals = Object.fromEntries(parts.map(p => [p.type, p.value]));
+  const vals = Object.fromEntries(parts.map(p=>[p.type,p.value]));
   const abbr = vals.timeZoneName || '';
   const iso = `${vals.year}-${vals.month}-${vals.day}T${vals.hour}:${vals.minute}:${vals.second}Z`;
   const utcDate = new Date(date.toISOString());
   const tzDate = new Date(iso);
-  const offsetMin = (tzDate - utcDate) / 60000;
+  const offsetMin = (tzDate - utcDate)/60000;
   return { offsetMin, abbr };
 }
-     /* --- Compute sunrise and sunset in local time --- */
+
+/* ---------- Sunrise/Sunset ---------- */
 function sunriseSunset(lat, lon, day, offsetMin = 0) {
   const dec = toRad(solarDeclination(day));
   const latR = toRad(lat);
-  const solarDep = toRad(-0.83); // refraction + solar radius
-  const cosH = (Math.sin(solarDep) - Math.sin(latR) * Math.sin(dec)) /
-               (Math.cos(latR) * Math.cos(dec));
-  if (cosH > 1 || cosH < -1) return { sunrise: '—', sunset: '—' };
+  const solarDep = toRad(-0.83);
+  const cosH = (Math.sin(solarDep) - Math.sin(latR)*Math.sin(dec)) / (Math.cos(latR)*Math.cos(dec));
+  if (cosH > 1 || cosH < -1) return { sunrise:'—', sunset:'—' };
   const H = Math.acos(cosH);
-  const Hh = toDeg(H) / 15;
-  const EoT = 9.87*Math.sin(2*toRad((360/365)*(day-81))) -
-              7.53*Math.cos(toRad((360/365)*(day-81))) -
-              1.5*Math.sin(toRad((360/365)*(day-81)));
-  const tzH = offsetMin / 60;
+  const Hh = toDeg(H)/15;
+  const B = toRad((360/365)*(day-81));
+  const EoT = 9.87*Math.sin(2*B)-7.53*Math.cos(B)-1.5*Math.sin(B);
+  const tzH = offsetMin/60;
   const tzMeridian = 15 * Math.round(tzH);
-  const solarNoon = 12 - (lon - tzMeridian) / 15 - EoT / 60;
+  const solarNoon = 12 - (lon - tzMeridian)/15 - EoT/60;
   const r = solarNoon - Hh, s = solarNoon + Hh;
   return { sunrise: formatH(r), sunset: formatH(s) };
 }
+function formatH(h){let n=(h+24)%24;const hr=Math.floor(n);let m=Math.round((n-hr)*60);
+ if(m===60){m=0;n=(n+1)%24;}const disp=((hr+11)%12)+1;return`${disp}:${m.toString().padStart(2,'0')} ${hr>=12?'PM':'AM'}`;}
+
 /* ----- Build table ----- */
 function buildTable(lat,lon,refDay){
  const head=document.getElementById("tableHead"),body=document.getElementById("tableBody");
@@ -172,11 +176,7 @@ function buildTable(lat,lon,refDay){
  headerRow.innerHTML="<th class='label-col'>Measure</th><th>Value</th>";head.appendChild(headerRow);
  const addRow=(label,val)=>{const tr=document.createElement("tr");
  tr.innerHTML=`<td class='label-col'>${label}</td><td>${val}</td>`;body.appendChild(tr);};
-const { offsetMin, abbr } = getTimeZoneData(new Date(), Intl.DateTimeFormat().resolvedOptions().timeZone);
- const times = sunriseSunset(lat, lon, refDay, offsetMin);
- addRow("Sunrise (local)", `${times.sunrise} ${abbr}`);
- addRow("Sunset (local)", `${times.sunset} ${abbr}`);
- addRow("Daylight (hrs)", daylightHours(lat, refDay).toFixed(2));
+ addRow("Latitude",lat.toFixed(2)); addRow("Longitude",lon.toFixed(2));
  const elev=noonElevation(lat,refDay); const R=32,a=Math.min(90,Math.max(0,elev))*Math.PI/180;
  const x=30+R*Math.cos(Math.PI-a),y=34-R*Math.sin(Math.PI-a);
  addRow("Noon Elevation",
@@ -185,12 +185,17 @@ const { offsetMin, abbr } = getTimeZoneData(new Date(), Intl.DateTimeFormat().re
    <line x1='30' y1='34' x2='${x.toFixed(1)}' y2='${y.toFixed(1)}' stroke='${getCityColor()}' stroke-width='3'/>
    <circle cx='${x.toFixed(1)}' cy='${y.toFixed(1)}' r='4.2' fill='${getCityColor()}'/>
   </svg><div>${elev.toFixed(1)}°</div>`);
- addRow("Daylight (hrs)",daylightHours(lat,refDay).toFixed(2));
+
+ // new sunrise/sunset + daylight section
+ const { offsetMin, abbr } = getTimeZoneData(new Date(), Intl.DateTimeFormat().resolvedOptions().timeZone);
+ const times = sunriseSunset(lat, lon, refDay, offsetMin);
+ addRow("Sunrise (local)", `${times.sunrise} ${abbr}`);
+ addRow("Sunset (local)", `${times.sunset} ${abbr}`);
+ addRow("Daylight (hrs)", daylightHours(lat,refDay).toFixed(2));
 }
 
 /* ----- Chart ----- */
 let chart;
-
 function createChart(lat) {
   const ctx = document.getElementById("daylightChart").getContext("2d");
   const dataset = {
@@ -202,65 +207,40 @@ function createChart(lat) {
     tension: 0.25,
     pointRadius: 0
   };
-
   chart = new Chart(ctx, {
     type: 'line',
     data: { labels: days, datasets: [dataset] },
     options: {
       responsive: true,
-      plugins: {
-        legend: { display: false },
-        annotation: {
-          annotations: {}
-        }
-      },
+      plugins: { legend: { display: false }, annotation: { annotations: {} } },
       scales: {
         x: { display: false, min: 1, max: 365 },
-        y: {
-          title: { display: true, text: 'Daylight Hours' },
-          min: 5,
-          max: 20,
-          grid: { color: '#f4f5f7' }
-        }
+        y: { title: { display: true, text: 'Daylight Hours' },
+             min: 5, max: 20, grid: { color: '#f4f5f7' } }
       }
     },
     plugins: [Chart.registry.getPlugin('annotation')]
   });
 }
-
 function updateAnnotations(refDay, eqDateObj) {
   if (!chart) return;
   const year = new Date(document.getElementById("dateInput").value).getFullYear();
   const selDate = dateFromDay(year, refDay);
   const annotations = {
-    selected: {
-      type: 'line',
-      xMin: refDay, xMax: refDay,
-      borderColor: '#000', borderWidth: 2,
-      label: {
-        enabled: true,
-        content: fmtMD(selDate),
-        position: 'start',
-        yAdjust: -10,
-        backgroundColor: 'rgba(255,255,255,.8)',
-        color: '#000'
-      }
-    }
+    selected: { type:'line', xMin:refDay, xMax:refDay,
+      borderColor:'#000', borderWidth:2,
+      label:{enabled:true, content:fmtMD(selDate),
+             position:'start', yAdjust:-10,
+             backgroundColor:'rgba(255,255,255,.8)', color:'#000'} }
   };
   if (eqDateObj) {
     const eqDay = dayOfYear(eqDateObj);
     annotations.equivalent = {
-      type: 'line',
-      xMin: eqDay, xMax: eqDay,
-      borderColor: '#e11d48', borderWidth: 2,
-      label: {
-        enabled: true,
-        content: fmtMD(eqDateObj),
-        position: 'start',
-        yAdjust: -10,
-        backgroundColor: 'rgba(255,255,255,.85)',
-        color: '#e11d48'
-      }
+      type:'line', xMin:eqDay, xMax:eqDay,
+      borderColor:'#e11d48', borderWidth:2,
+      label:{enabled:true, content:fmtMD(eqDateObj),
+             position:'start', yAdjust:-10,
+             backgroundColor:'rgba(255,255,255,.85)', color:'#e11d48'}
     };
   }
   chart.options.plugins.annotation.annotations = annotations;
@@ -268,30 +248,29 @@ function updateAnnotations(refDay, eqDateObj) {
 }
 
 /* ----- Slider + updates ----- */
-const dateInput=document.getElementById("dateInput"),equivEl=document.getElementById("equivDate"),
- slider=document.getElementById("dateSlider"),selectedLbl=document.getElementById("selectedLabel"),
- equivLbl=document.getElementById("equivLabel");
+const dateInput=document.getElementById("dateInput"),
+      equivEl=document.getElementById("equivDate"),
+      slider=document.getElementById("dateSlider"),
+      selectedLbl=document.getElementById("selectedLabel"),
+      equivLbl=document.getElementById("equivLabel");
 let userLat=27.95,userLon=-82.46; // fallback Tampa
-  function syncFromDateInput(){const d=new Date(dateInput.value);
- slider.value=String(dayOfYear(d));updateAll();}
+
+function syncFromDateInput(){const d=new Date(dateInput.value);
+  slider.value=String(dayOfYear(d));updateAll();}
 function syncFromSlider(){const d=new Date(dateInput.value);
- const y=d.getFullYear(),newD=dateFromDay(y,Number(slider.value));
- dateInput.value=newD.toISOString().slice(0,10);updateAll();}
+  const y=d.getFullYear(),newD=dateFromDay(y,Number(slider.value));
+  dateInput.value=newD.toISOString().slice(0,10);updateAll();}
 function updateAll() {
   const d = new Date(dateInput.value);
   const refDay = dayOfYear(d);
   const year = d.getFullYear();
   const refHrs = daylightHours(userLat, refDay);
   const eqDate = findEquivalentDate(userLat, refHrs, refDay, year);
-
   equivEl.value = eqDate ? fmtMMDDYYYY(eqDate) : "—";
   selectedLbl.textContent = `Selected: ${fmtMD(d)}`;
   equivLbl.textContent = `Equivalent: ${eqDate ? fmtMD(eqDate) : "—"}`;
   buildTable(userLat, userLon, refDay);
-
-  // update only annotation lines
   updateAnnotations(refDay, eqDate);
-
   document.getElementById("resultsTable").classList.add("show");
   document.getElementById("chartContainer").classList.add("show");
 }
@@ -315,15 +294,15 @@ async function init(){
        const display=data.address.city||data.address.town||data.address.village||
                       data.address.state||"Your area";
        setLocation(lat,lon,display);
-     }catch(e){
-       setLocation(lat,lon,"Your area");
-     }
+     }catch(e){ setLocation(lat,lon,"Your area"); }
    },()=>{
      locDisplay.innerHTML="📍 Using default location: <span>Tampa, FL</span> (27.95° N, 82.46° W)";
+     createChart(userLat);
      syncFromDateInput();
    });
  }else{
    locDisplay.innerHTML="📍 Using default location: <span>Tampa, FL</span> (27.95° N, 82.46° W)";
+   createChart(userLat);
    syncFromDateInput();
  }
 }
