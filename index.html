@@ -7,9 +7,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.2.1"></script>
 <style>
-:root{
-  --blue:#0b5fb3;--orange:#f28e2b;--text:#222;
-}
+:root{--blue:#0b5fb3;--orange:#f28e2b;--text:#222;}
 body{font-family:"Helvetica Neue",Arial,sans-serif;margin:0;color:var(--text);}
 header{background:var(--blue);color:#fff;text-align:center;padding:1.1rem 0;}
 main{max-width:980px;margin:1rem auto 3rem;padding:0 1rem;}
@@ -59,30 +57,32 @@ canvas{width:100%!important;height:420px!important}
   </table>
 
   <canvas id="chartCanvas"></canvas>
-  <div class="note">Slide date later (not yet interactive)</div>
 </main>
 
 <script>
-/* --- Math helpers --- */
+/* ---------- Math utilities ---------- */
 const toRad=d=>d*Math.PI/180,toDeg=r=>r*180/Math.PI;
-const solarDeclination=d=>23.44*Math.sin(toRad((360/365)*(d-81)));
-const daylightHours=(lat,day)=>{
-  const decR=toRad(solarDeclination(day)),latR=toRad(lat);
-  const cosH=-Math.tan(latR)*Math.tan(decR);
-  if(cosH>=1)return 0;if(cosH<=-1)return 24;
-  const H=Math.acos(cosH);return(2*toDeg(H))/15;
-};
-const noonElevation=(lat,day)=>90-Math.abs(lat-solarDeclination(day));
-const dayOfYear=dt=>Math.floor((dt-new Date(dt.getFullYear(),0,0))/86400000);
+function solarDeclination(day){return 23.44*Math.sin(toRad((360/365)*(day-81))); }
+function daylightHours(lat,day){const decR=toRad(solarDeclination(day)),latR=toRad(lat);
+ const cosH=-Math.tan(latR)*Math.tan(decR); if(cosH>=1)return 0;if(cosH<=-1)return 24;
+ const H=Math.acos(cosH);return(2*toDeg(H))/15;}
+function noonElevation(lat,day){const dec=solarDeclination(day);return 90-Math.abs(lat-dec);}
+function dayOfYear(dt){return Math.floor((dt-new Date(dt.getFullYear(),0,0))/86400000);}
+function dateFromDay(y,d){return new Date(y,0,d);}
+function fmtMMDDYYYY(date){const mm=String(date.getMonth()+1).padStart(2,'0');const dd=String(date.getDate()).padStart(2,'0');return`${mm}/${dd}/${date.getFullYear()}`;}
+function findEquivalentDate(lat,targetHours,refDay,year){let best=null,bestDiff=1e9;
+ for(let d=1;d<=365;d++){if(Math.abs(d-refDay)<5)continue;
+ const diff=Math.abs(daylightHours(lat,d)-targetHours);
+ if(diff<bestDiff){bestDiff=diff;best=d;}}return best?dateFromDay(year,best):null;}
+function fmtHoursMin(h){const hrs=Math.floor(h);const mins=Math.round((h-hrs)*60);
+ return `${hrs} hr ${mins.toString().padStart(2,'0')} min`;}
 
-/* --- Time and format --- */
+/* ---------- Local time utilities ---------- */
 function getTimeZoneAbbr(tz){
   try{const fmt=new Intl.DateTimeFormat('en-US',{timeZone:tz,timeZoneName:'short'});
   return fmt.formatToParts(new Date()).find(p=>p.type==='timeZoneName').value;}
   catch{return'';}
 }
-function fmtHoursMin(h){const hrs=Math.floor(h);const mins=Math.round((h-hrs)*60);
- return `${hrs} hr ${mins.toString().padStart(2,'0')} min`;}
 function getTimes(lat,lon,day,tz){
  const dec=toRad(solarDeclination(day)),latR=toRad(lat),solarDep=toRad(-0.83);
  const cosH=(Math.sin(solarDep)-Math.sin(latR)*Math.sin(dec))/(Math.cos(latR)*Math.cos(dec));
@@ -94,18 +94,31 @@ function getTimes(lat,lon,day,tz){
  return{sunrise,sunset,hrs:daylight};
 }
 
-/* --- Table build --- */
+/* ---------- Elevation arc ---------- */
+function arcSVG(lat,day,color){
+ const elev=noonElevation(lat,day);
+ const R=32,a=Math.min(90,Math.max(0,elev))*Math.PI/180;
+ const x=30+R*Math.cos(Math.PI-a),y=34-R*Math.sin(Math.PI-a);
+ return `<svg viewBox='0 0 70 40'>
+   <path d='M4 34 A32 32 0 0 1 64 34' stroke='#c9d3e3' stroke-width='1.2' fill='none'/>
+   <line x1='30' y1='34' x2='${x.toFixed(1)}' y2='${y.toFixed(1)}' stroke='${color}' stroke-width='3'/>
+   <circle cx='${x.toFixed(1)}' cy='${y.toFixed(1)}' r='4.2' fill='${color}'/>
+  </svg><div>${elev.toFixed(1)}°</div>`;
+}
+
+/* ---------- Table build ---------- */
 function buildTable(base,comp,day){
  const body=document.getElementById('tableBody');body.innerHTML='';
+ const tb1=getTimes(base.lat,base.lon,day,base.tz),tb2=getTimes(comp.lat,comp.lon,day,comp.tz);
+ const ab1=getTimeZoneAbbr(base.tz),ab2=getTimeZoneAbbr(comp.tz);
  const rows=[
    ['Latitude',base.lat.toFixed(2),comp.lat.toFixed(2)],
    ['Longitude',base.lon.toFixed(2),comp.lon.toFixed(2)],
-   ['Noon Elevation',`${noonElevation(base.lat,day).toFixed(1)}°`,`${noonElevation(comp.lat,day).toFixed(1)}°`],
+   ['Noon Elevation',arcSVG(base.lat,day,'#0b5fb3'),arcSVG(comp.lat,day,'#f28e2b')],
+   ['Sunrise',`${tb1.sunrise} ${ab1}`,`${tb2.sunrise} ${ab2}`],
+   ['Sunset',`${tb1.sunset} ${ab1}`,`${tb2.sunset} ${ab2}`],
+   ['Daylight',fmtHoursMin(tb1.hrs),fmtHoursMin(tb2.hrs)]
  ];
- const tb1=getTimes(base.lat,base.lon,day,base.tz),tb2=getTimes(comp.lat,comp.lon,day,comp.tz);
- rows.push(['Sunrise',`${tb1.sunrise} ${getTimeZoneAbbr(base.tz)}`,`${tb2.sunrise} ${getTimeZoneAbbr(comp.tz)}`]);
- rows.push(['Sunset',`${tb1.sunset} ${getTimeZoneAbbr(base.tz)}`,`${tb2.sunset} ${getTimeZoneAbbr(comp.tz)}`]);
- rows.push(['Daylight',fmtHoursMin(tb1.hrs),fmtHoursMin(tb2.hrs)]);
  rows.forEach(r=>{
    const tr=document.createElement('tr');
    tr.innerHTML=`<td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td>`;
@@ -115,7 +128,7 @@ function buildTable(base,comp,day){
  document.getElementById('rightHead').textContent=`${comp.name}`;
 }
 
-/* --- Chart --- */
+/* ---------- Chart ---------- */
 let chart,mode='hours';
 function drawChart(base,comp){
  const ctx=document.getElementById('chartCanvas').getContext('2d');
@@ -131,24 +144,28 @@ function drawChart(base,comp){
   scales:{x:{display:false},y:{title:{display:true,text:lbl},...yCfg}}}});
 }
 
-/* --- Core update --- */
+/* ---------- Core update ---------- */
 function updateAll(){
  const base={lat:userLat,lon:userLon,tz:userTZ,name:userName};
  const sel=document.getElementById('compareCity').value.split(',');
  const comp={lat:+sel[0],lon:+sel[1],tz:sel[2],name:`${sel[3]}, ${sel[4]}`};
- const day=dayOfYear(new Date(document.getElementById('dateInput').value));
+ const date=new Date(document.getElementById('dateInput').value);
+ const day=dayOfYear(date);
+ // Equivalent date based on base city daylight
+ const eqDate=findEquivalentDate(base.lat,daylightHours(base.lat,day),day,date.getFullYear());
+ document.getElementById('equivDate').value=eqDate?fmtMMDDYYYY(eqDate):'—';
  buildTable(base,comp,day);
  drawChart(base,comp);
 }
 
-/* --- Location defaults --- */
+/* ---------- Location defaults ---------- */
 let userLat=27.95,userLon=-82.46,userTZ='America/New_York',userName='Tampa, FL';
 function init(){
  const today=new Date();document.getElementById('dateInput').value=today.toISOString().slice(0,10);
  updateAll();
 }
 
-/* --- Event wiring --- */
+/* ---------- Event wiring ---------- */
 document.getElementById('dateInput').addEventListener('change',updateAll);
 document.getElementById('compareCity').addEventListener('change',updateAll);
 document.getElementById('hoursBtn').addEventListener('click',()=>{
