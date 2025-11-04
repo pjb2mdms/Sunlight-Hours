@@ -145,115 +145,125 @@ function buildTable(base,comp,day){
  document.getElementById('rightHead').textContent=`${comp.name}`;
 }
 
-/* ---------- Chart + Annotations + Duration-Below-Threshold Band ---------- */
+/* ---------- Chart + Annotations + Duration-Below-Threshold Band (stable) ---------- */
 function drawChart(base, comp, refDay, eqDate) {
-  const ctx = document.getElementById('chartCanvas').getContext('2d');
+  const ctx = document.getElementById("chartCanvas").getContext("2d");
   const days = Array.from({ length: 365 }, (_, i) => i + 1);
-  const fn = mode === 'hours' ? daylightHours : noonElevation;
-  const lbl = mode === 'hours' ? 'Daylight Hours' : 'Noon Elevation (°)';
-  const yCfg = mode === 'hours' ? { min: 5, max: 20 } : { min: 0, max: 90 };
+  const fn = mode === "hours" ? daylightHours : noonElevation;
+  const lbl = mode === "hours" ? "Daylight Hours" : "Noon Elevation (°)";
+  const yCfg = mode === "hours" ? { min: 5, max: 20 } : { min: 0, max: 90 };
 
-  // --- datasets for both cities ---
-  const ds1 = {
+  // Base & comparison datasets
+  const dsBase = {
     label: base.name,
-    data: days.map(d => fn(base.lat, d)),
-    borderColor: '#0b5fb3',
+    data: days.map((d) => fn(base.lat, d)),
+    borderColor: "#0b5fb3",
     borderWidth: 2,
     tension: 0.25,
     fill: false,
-    pointRadius: 0
+    pointRadius: 0,
   };
-  const ds2 = {
+  const dsComp = {
     label: comp.name,
-    data: days.map(d => fn(comp.lat, d)),
-    borderColor: '#f28e2b',
+    data: days.map((d) => fn(comp.lat, d)),
+    borderColor: "#f28e2b",
     borderWidth: 2,
     tension: 0.25,
     fill: false,
-    pointRadius: 0
+    pointRadius: 0,
   };
 
-  // --- compute Tampa Dec 21 elevation threshold (day = 355) ---
-  const threshold = noonElevation(base.lat, 355);
-
-  // --- shaded band under comparison curve where below threshold ---
-  const belowBand = days.map(d => {
-    const val = noonElevation(comp.lat, d);
-    return val < threshold ? threshold - val : 0;
-  });
-
-  // --- add a filled area dataset to visualize the region ---
-  const bandDataset = {
-    label: 'Below Tampa Dec 21 elevation',
-    data: belowBand.map((v, i) =>
-      noonElevation(comp.lat, i + 1) < threshold ? threshold : null
-    ),
-    backgroundColor: 'rgba(11,95,179,0.15)',
-    borderWidth: 0,
-    fill: '+1', // fill down to the comp curve
-    pointRadius: 0
-  };
-
-  // Chart cleanup / rebuild
-  if (chart) chart.destroy();
-
+  // --- Only used in elevation mode ---
+  const datasets = [dsBase, dsComp];
   const annotations = {};
+
+  if (mode === "elev") {
+    // Threshold = Tampa's Dec 21 noon elevation
+    const threshold = noonElevation(base.lat, 355);
+
+    // Add constant horizontal line annotation
+    annotations.threshold = {
+      type: "line",
+      yMin: threshold,
+      yMax: threshold,
+      borderColor: "rgba(11,95,179,0.5)",
+      borderWidth: 2,
+      label: {
+        enabled: true,
+        content: `${base.name} Dec 21 = ${threshold.toFixed(1)}°`,
+        position: "end",
+        backgroundColor: "rgba(255,255,255,.8)",
+        color: "#0b5fb3",
+      },
+    };
+
+    // Build a separate translucent dataset to shade below threshold
+    const below = days.map((d) =>
+      noonElevation(comp.lat, d) < threshold ? threshold : null
+    );
+    const shade = {
+      label: "Below Tampa Dec 21 elevation",
+      data: below,
+      backgroundColor: "rgba(11,95,179,0.15)",
+      borderWidth: 0,
+      type: "line",
+      pointRadius: 0,
+      fill: true,
+    };
+    datasets.splice(1, 0, shade); // insert shade between base & comp
+  }
+
+  // Selected & equivalent vertical lines
   annotations.selected = {
-    type: 'line',
+    type: "line",
     xMin: refDay,
     xMax: refDay,
-    borderColor: '#000',
+    borderColor: "#000",
     borderWidth: 2,
     label: {
       enabled: true,
       content: fmtMD(dateFromDay(new Date().getFullYear(), refDay)),
-      position: 'start',
-      backgroundColor: 'rgba(255,255,255,.8)',
-      color: '#000'
-    }
+      position: "start",
+      backgroundColor: "rgba(255,255,255,.8)",
+      color: "#000",
+    },
   };
   if (eqDate) {
     const eqD = dayOfYear(eqDate);
     annotations.equiv = {
-      type: 'line',
+      type: "line",
       xMin: eqD,
       xMax: eqD,
-      borderColor: '#e11d48',
+      borderColor: "#e11d48",
       borderWidth: 2,
       label: {
         enabled: true,
         content: fmtMD(eqDate),
-        position: 'start',
-        backgroundColor: 'rgba(255,255,255,.85)',
-        color: '#e11d48'
-      }
+        position: "start",
+        backgroundColor: "rgba(255,255,255,.85)",
+        color: "#e11d48",
+      },
     };
   }
 
+  if (chart) chart.destroy();
   chart = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: days,
-      datasets:
-        mode === 'hours'
-          ? [ds1, ds2]
-          : [ds1, bandDataset, ds2] // add shading only in elevation mode
-    },
+    type: "line",
+    data: { labels: days, datasets },
     options: {
       responsive: true,
       plugins: {
-        legend: { display: true, position: 'bottom' },
-        annotation: { annotations }
+        legend: { display: true, position: "bottom" },
+        annotation: { annotations },
       },
       scales: {
         x: { display: false },
-        y: { title: { display: true, text: lbl }, ...yCfg }
-      }
+        y: { title: { display: true, text: lbl }, ...yCfg },
+      },
     },
-    plugins: [Chart.registry.getPlugin('annotation')]
+    plugins: [Chart.registry.getPlugin("annotation")],
   });
 }
-
 /* ---------- Core update ---------- */
 function updateAll(){
  const base={lat:userLat,lon:userLon,tz:userTZ,name:userName};
