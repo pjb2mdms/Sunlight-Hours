@@ -1,284 +1,161 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>Sunlight Comparator</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.2.1"></script>
 <style>
-  :root{
-    --blue:#0b5fb3; --orange:#f28e2b; --text:#222; --grid:#eee;
-  }
-  *{box-sizing:border-box}
-  body{font-family:"Helvetica Neue",Arial,sans-serif;margin:0;color:var(--text);background:#fff;}
-  header{background:var(--blue);color:#fff;text-align:center;padding:1.25rem 0;}
-  header h1{margin:0;font-weight:700;letter-spacing:.2px}
-  main{max-width:980px;margin:1.25rem auto 3rem;padding:0 1rem}
-  #locationDisplay{text-align:center;font-size:1rem;margin-bottom:0.75rem;color:#333;}
-  #locationDisplay span{font-weight:600}
-  .controls{display:flex;flex-wrap:wrap;gap:1rem;justify-content:center;align-items:center;margin:1rem 0 0.5rem;}
-  label{font-weight:600;margin-right:.35rem}
-  input[type="date"],input[readonly]{font:inherit;font-size:1rem;color:#333;padding:.45rem .55rem;
-    border:1px solid #cfd6e1;border-radius:.5rem;background:#fff;min-width:12rem;}
-  table{width:100%;border-collapse:collapse;margin:1.1rem 0 0;font-size:1rem}
-  th,td{padding:.5rem .4rem;border-bottom:1px solid #e9eef5;text-align:center}
-  th.label-col{text-align:left;width:180px}
-  td svg{width:80px;height:46px;vertical-align:middle}
-  .chart-wrap{margin-top:1.25rem}
-  canvas{width:100%!important;height:420px!important}
-  .slider-area{margin-top:1rem;text-align:center}
-  .live-dates{font-weight:700;margin:.25rem 0 .6rem}
-  .live-dates span{display:inline-block;min-width:9rem}
-  input[type="range"]{-webkit-appearance:none;appearance:none;width:100%;max-width:720px;height:10px;
-    background:#e6eef8;border-radius:5px;outline:none;}
-  input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;
-    background:var(--blue);border:2px solid #fff;box-shadow:0 0 0 2px var(--blue);cursor:pointer;}
-  input[type="range"]::-moz-range-thumb{width:24px;height:24px;border-radius:50%;
-    background:var(--blue);border:2px solid #fff;box-shadow:0 0 0 2px var(--blue);cursor:pointer;}
-  .note{font-size:.9rem;color:#555;text-align:center;margin-top:.35rem}
-  .fade-in{opacity:0;transition:opacity 0.6s ease-in;}
-  .fade-in.show{opacity:1;}
-  .toggle-buttons{text-align:center;margin-top:1rem;}
-  .toggle-buttons button{
-    font:inherit;font-weight:600;margin:0 .3rem;padding:.5rem 1rem;border-radius:.5rem;border:1px solid #cfd6e1;
-    cursor:pointer;background:#f7f9fb;color:#333;transition:all .2s;
-  }
-  .toggle-buttons button.active{background:var(--blue);color:#fff;border-color:var(--blue);}
+:root{
+  --blue:#0b5fb3;--orange:#f28e2b;--text:#222;
+}
+body{font-family:"Helvetica Neue",Arial,sans-serif;margin:0;color:var(--text);}
+header{background:var(--blue);color:#fff;text-align:center;padding:1.1rem 0;}
+main{max-width:980px;margin:1rem auto 3rem;padding:0 1rem;}
+.controls,.toggle-buttons{display:flex;flex-wrap:wrap;gap:1rem;justify-content:center;align-items:center;margin:1rem 0;}
+label{font-weight:600;margin-right:.3rem}
+input,select{font:inherit;font-size:1rem;padding:.4rem .55rem;border:1px solid #cfd6e1;border-radius:.5rem;}
+table{width:100%;border-collapse:collapse;margin:1rem 0;font-size:1rem;table-layout:fixed;}
+th,td{padding:.5rem;border-bottom:1px solid #e9eef5;text-align:center;word-wrap:break-word;}
+th:first-child,td:first-child{width:180px;text-align:left;}
+th:nth-child(2),td:nth-child(2),th:nth-child(3),td:nth-child(3){width:calc((100% - 180px)/2);}
+td svg{width:80px;height:46px;vertical-align:middle}
+canvas{width:100%!important;height:420px!important}
+.toggle-buttons button{
+  font:inherit;font-weight:600;margin:0 .3rem;padding:.5rem 1rem;border-radius:.5rem;border:1px solid #cfd6e1;
+  cursor:pointer;background:#f7f9fb;color:#333;
+}
+.toggle-buttons button.active{background:var(--blue);color:#fff;border-color:var(--blue);}
+.note{font-size:.9rem;color:#555;text-align:center;margin-top:.3rem;}
 </style>
 </head>
 <body>
 <header><h1>Sunlight Comparator</h1></header>
 
 <main>
-  <div id="locationDisplay">📍 Detecting current location...</div>
-
   <div class="controls">
-    <div>
-      <label for="dateInput">Selected Date</label>
-      <input type="date" id="dateInput">
-    </div>
-    <div>
-      <label for="equivDate">Equivalent Date</label>
-      <input type="text" id="equivDate" readonly value="—">
+    <div><label for="dateInput">Date</label><input type="date" id="dateInput"></div>
+    <div><label for="equivDate">Equivalent Date</label><input type="text" id="equivDate" readonly></div>
+    <div><label for="compareCity">Comparison City</label>
+      <select id="compareCity">
+        <option value="56.34,-2.80,Europe/London,St Andrews,Scotland">St Andrews, Scotland</option>
+        <option value="29.76,-95.37,America/Chicago,Houston,TX">Houston, TX</option>
+        <option value="38.03,-78.48,America/New_York,Charlottesville,VA">Charlottesville, VA</option>
+        <option value="43.65,-70.26,America/New_York,Portland,ME">Portland, ME</option>
+        <option value="34.05,-118.25,America/Los_Angeles,Los Angeles,CA">Los Angeles, CA</option>
+      </select>
     </div>
   </div>
 
-  <table id="resultsTable" class="fade-in">
-    <thead id="tableHead"></thead>
+  <div class="toggle-buttons">
+    <button id="hoursBtn" class="active">Daylight Hours</button>
+    <button id="elevBtn">Noon Elevation</button>
+  </div>
+
+  <table id="resultsTable">
+    <thead><tr><th>Measure</th><th id="leftHead">Default City</th><th id="rightHead">Comparison City</th></tr></thead>
     <tbody id="tableBody"></tbody>
   </table>
 
-  <div class="chart-wrap fade-in" id="chartContainer">
-    <div class="toggle-buttons">
-      <button id="hoursBtn" class="active">Daylight Hours</button>
-      <button id="elevBtn">Noon Elevation</button>
-    </div>
-    <canvas id="daylightChart"></canvas>
-    <div class="slider-area">
-      <div class="live-dates">
-        <span id="selectedLabel">Selected: —</span>
-        <span id="equivLabel">Equivalent: —</span>
-      </div>
-      <input type="range" id="dateSlider" min="1" max="365" step="1" value="172" />
-      <div class="note">Slide to change the date and see how daylight and noon sun angles change</div>
-    </div>
-  </div>
+  <canvas id="chartCanvas"></canvas>
+  <div class="note">Slide date later (not yet interactive)</div>
 </main>
 
 <script>
-/* ---------- Math utilities ---------- */
-const toRad = d=>d*Math.PI/180, toDeg=r=>r*180/Math.PI;
-function solarDeclination(day){return 23.44*Math.sin(toRad((360/365)*(day-81))); }
-function daylightHours(lat,day){const decR=toRad(solarDeclination(day)),latR=toRad(lat);
- const cosH=-Math.tan(latR)*Math.tan(decR); if(cosH>=1)return 0;if(cosH<=-1)return 24;
- const H=Math.acos(cosH);return(2*toDeg(H))/15;}
-function noonElevation(lat,day){const dec=solarDeclination(day);return 90-Math.abs(lat-dec);}
-function dayOfYear(date){const s=new Date(date.getFullYear(),0,0);
- const diff=date-s+(s.getTimezoneOffset()-date.getTimezoneOffset())*60000;
- return Math.floor(diff/86400000);}
-function dateFromDay(y,d){return new Date(y,0,d);}
-function fmtMD(date){return date.toLocaleDateString("en-US",{month:"short",day:"numeric"});}
-function fmtMMDDYYYY(date){const mm=String(date.getMonth()+1).padStart(2,'0');
- const dd=String(date.getDate()).padStart(2,'0');return`${mm}/${dd}/${date.getFullYear()}`;}
-function findEquivalentDate(lat,targetHours,refDay,year){let best=null,bestDiff=1e9;
- for(let d=1;d<=365;d++){if(Math.abs(d-refDay)<5)continue;
- const diff=Math.abs(daylightHours(lat,d)-targetHours);
- if(diff<bestDiff){bestDiff=diff;best=d;}}return best?dateFromDay(year,best):null;}
-function formatH(h){let n=(h+24)%24;const hr=Math.floor(n);let m=Math.round((n-hr)*60);
- if(m===60){m=0;n=(n+1)%24;}const disp=((hr+11)%12)+1;return`${disp}:${m.toString().padStart(2,'0')} ${hr>=12?'PM':'AM'}`;}
-function getCityColor(){return "#0b5fb3";}
+/* --- Math helpers --- */
+const toRad=d=>d*Math.PI/180,toDeg=r=>r*180/Math.PI;
+const solarDeclination=d=>23.44*Math.sin(toRad((360/365)*(d-81)));
+const daylightHours=(lat,day)=>{
+  const decR=toRad(solarDeclination(day)),latR=toRad(lat);
+  const cosH=-Math.tan(latR)*Math.tan(decR);
+  if(cosH>=1)return 0;if(cosH<=-1)return 24;
+  const H=Math.acos(cosH);return(2*toDeg(H))/15;
+};
+const noonElevation=(lat,day)=>90-Math.abs(lat-solarDeclination(day));
+const dayOfYear=dt=>Math.floor((dt-new Date(dt.getFullYear(),0,0))/86400000);
 
-/* ---------- Timezone + Sunrise/Sunset ---------- */
-function getTimeZoneData(date, timeZone) {
-  try {
-    const fmt = new Intl.DateTimeFormat('en-US',{
-      timeZone,timeZoneName:'short',
-      year:'numeric',month:'2-digit',day:'2-digit',
-      hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false
-    });
-    const parts = fmt.formatToParts(date);
-    const vals = Object.fromEntries(parts.map(p=>[p.type,p.value]));
-    const abbr = vals.timeZoneName || '';
-    const iso = `${vals.year}-${vals.month}-${vals.day}T${vals.hour}:${vals.minute}:${vals.second}Z`;
-    const utcDate = new Date(date.toISOString());
-    const tzDate = new Date(iso);
-    const offsetMin = (tzDate - utcDate)/60000;
-    return {offsetMin,abbr};
-  } catch { return {offsetMin:0,abbr:''}; }
+/* --- Time and format --- */
+function getTimeZoneAbbr(tz){
+  try{const fmt=new Intl.DateTimeFormat('en-US',{timeZone:tz,timeZoneName:'short'});
+  return fmt.formatToParts(new Date()).find(p=>p.type==='timeZoneName').value;}
+  catch{return'';}
+}
+function fmtHoursMin(h){const hrs=Math.floor(h);const mins=Math.round((h-hrs)*60);
+ return `${hrs} hr ${mins.toString().padStart(2,'0')} min`;}
+function getTimes(lat,lon,day,tz){
+ const dec=toRad(solarDeclination(day)),latR=toRad(lat),solarDep=toRad(-0.83);
+ const cosH=(Math.sin(solarDep)-Math.sin(latR)*Math.sin(dec))/(Math.cos(latR)*Math.cos(dec));
+ if(cosH>1||cosH<-1)return{sunrise:'—',sunset:'—',hrs:0};
+ const H=Math.acos(cosH);const Hh=toDeg(H)/15;const daylight=2*Hh;
+ const hr=(deg)=>{const d=new Date(Date.UTC(2024,0,day,deg,0,0));
+  return d.toLocaleTimeString('en-US',{timeZone:tz,hour:'2-digit',minute:'2-digit'});}
+ const sunrise=hr(12-Hh),sunset=hr(12+Hh);
+ return{sunrise,sunset,hrs:daylight};
 }
 
-function sunriseSunset(lat, lon, day, offsetMin = 0) {
-  const dec = toRad(solarDeclination(day));
-  const latR = toRad(lat);
-  const solarDep = toRad(-0.83);
-  const cosH = (Math.sin(solarDep)-Math.sin(latR)*Math.sin(dec))/(Math.cos(latR)*Math.cos(dec));
-  if(cosH>1||cosH<-1) return {sunrise:'—',sunset:'—'};
-  const H=Math.acos(cosH);
-  const Hh=toDeg(H)/15;
-  const B=toRad((360/365)*(day-81));
-  const EoT=9.87*Math.sin(2*B)-7.53*Math.cos(B)-1.5*Math.sin(B);
-  const tzH=offsetMin/60;
-  const tzMeridian=15*Math.round(tzH);
-  const solarNoon=12-(lon-tzMeridian)/15-EoT/60;
-  const r=solarNoon-Hh,s=solarNoon+Hh;
-  return {sunrise:formatH(r),sunset:formatH(s)};
-}
-
-/* ---------- Build table ---------- */
-function buildTable(lat,lon,refDay){
- const head=document.getElementById("tableHead"),body=document.getElementById("tableBody");
- head.innerHTML="";body.innerHTML="";
- const headerRow=document.createElement("tr");
- headerRow.innerHTML="<th class='label-col'>Measure</th><th>Value</th>";head.appendChild(headerRow);
- const addRow=(label,val)=>{const tr=document.createElement("tr");
- tr.innerHTML=`<td class='label-col'>${label}</td><td>${val}</td>`;body.appendChild(tr);};
- addRow("Latitude",lat.toFixed(2)); addRow("Longitude",lon.toFixed(2));
- const elev=noonElevation(lat,refDay);
- const R=32,a=Math.min(90,Math.max(0,elev))*Math.PI/180;
- const x=30+R*Math.cos(Math.PI-a),y=34-R*Math.sin(Math.PI-a);
- addRow("Noon Elevation",
- `<svg viewBox='0 0 70 40'>
-   <path d='M4 34 A32 32 0 0 1 64 34' stroke='#c9d3e3' stroke-width='1.2' fill='none'/>
-   <line x1='30' y1='34' x2='${x.toFixed(1)}' y2='${y.toFixed(1)}' stroke='${getCityColor()}' stroke-width='3'/>
-   <circle cx='${x.toFixed(1)}' cy='${y.toFixed(1)}' r='4.2' fill='${getCityColor()}'/>
-  </svg><div>${elev.toFixed(1)}°</div>`);
- const {offsetMin,abbr}=getTimeZoneData(new Date(),Intl.DateTimeFormat().resolvedOptions().timeZone);
- const times=sunriseSunset(lat,lon,refDay,offsetMin);
- addRow("Sunrise (local)",`${times.sunrise} ${abbr}`);
- addRow("Sunset (local)",`${times.sunset} ${abbr}`);
- addRow("Daylight (hrs)",daylightHours(lat,refDay).toFixed(2));
-}
-
-/* ---------- Chart ---------- */
-let chart, currentMode="hours";
-function createChart(lat){
- const ctx=document.getElementById("daylightChart").getContext("2d");
- const days=Array.from({length:365},(_,i)=>i+1);
- const dataFn=currentMode==="hours"?daylightHours:noonElevation;
- const labelTxt=currentMode==="hours"?"Daylight Hours":"Noon Elevation (°)";
- const yRange=currentMode==="hours"?{min:5,max:20}:{min:0,max:90};
- const dataset={label:labelTxt,
-   data:days.map(d=>dataFn(lat,d)),
-   borderColor:"#0b5fb3",borderWidth:2,fill:false,tension:0.25,pointRadius:0};
- if(chart) chart.destroy();
- chart=new Chart(ctx,{
-   type:'line',
-   data:{labels:days,datasets:[dataset]},
-   options:{responsive:true,
-     plugins:{legend:{display:false},annotation:{annotations:{}}},
-     scales:{x:{display:false,min:1,max:365},
-       y:{title:{display:true,text:labelTxt},...yRange,grid:{color:'#f4f5f7'}}}},
-   plugins:[Chart.registry.getPlugin('annotation')]
+/* --- Table build --- */
+function buildTable(base,comp,day){
+ const body=document.getElementById('tableBody');body.innerHTML='';
+ const rows=[
+   ['Latitude',base.lat.toFixed(2),comp.lat.toFixed(2)],
+   ['Longitude',base.lon.toFixed(2),comp.lon.toFixed(2)],
+   ['Noon Elevation',`${noonElevation(base.lat,day).toFixed(1)}°`,`${noonElevation(comp.lat,day).toFixed(1)}°`],
+ ];
+ const tb1=getTimes(base.lat,base.lon,day,base.tz),tb2=getTimes(comp.lat,comp.lon,day,comp.tz);
+ rows.push(['Sunrise',`${tb1.sunrise} ${getTimeZoneAbbr(base.tz)}`,`${tb2.sunrise} ${getTimeZoneAbbr(comp.tz)}`]);
+ rows.push(['Sunset',`${tb1.sunset} ${getTimeZoneAbbr(base.tz)}`,`${tb2.sunset} ${getTimeZoneAbbr(comp.tz)}`]);
+ rows.push(['Daylight',fmtHoursMin(tb1.hrs),fmtHoursMin(tb2.hrs)]);
+ rows.forEach(r=>{
+   const tr=document.createElement('tr');
+   tr.innerHTML=`<td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td>`;
+   body.appendChild(tr);
  });
-}
-function updateAnnotations(refDay,eqDateObj){
- if(!chart)return;
- const year=new Date(document.getElementById("dateInput").value).getFullYear();
- const selDate=dateFromDay(year,refDay);
- const annotations={selected:{type:'line',xMin:refDay,xMax:refDay,borderColor:'#000',borderWidth:2,
-   label:{enabled:true,content:fmtMD(selDate),position:'start',yAdjust:-10,
-          backgroundColor:'rgba(255,255,255,.8)',color:'#000'}}};
- if(eqDateObj){
-   const eqDay=dayOfYear(eqDateObj);
-   annotations.equivalent={type:'line',xMin:eqDay,xMax:eqDay,borderColor:'#e11d48',borderWidth:2,
-     label:{enabled:true,content:fmtMD(eqDateObj),position:'start',yAdjust:-10,
-            backgroundColor:'rgba(255,255,255,.85)',color:'#e11d48'}};
- }
- chart.options.plugins.annotation.annotations=annotations;
- chart.update();
+ document.getElementById('leftHead').textContent=`${base.name}`;
+ document.getElementById('rightHead').textContent=`${comp.name}`;
 }
 
-/* ---------- Slider + updates ---------- */
-const dateInput=document.getElementById("dateInput"),
-      equivEl=document.getElementById("equivDate"),
-      slider=document.getElementById("dateSlider"),
-      selectedLbl=document.getElementById("selectedLabel"),
-      equivLbl=document.getElementById("equivLabel");
-let userLat=27.95,userLon=-82.46;
-function syncFromDateInput(){const d=new Date(dateInput.value);
- slider.value=String(dayOfYear(d));updateAll();}
-function syncFromSlider(){const d=new Date(dateInput.value);
- const y=d.getFullYear(),newD=dateFromDay(y,Number(slider.value));
- dateInput.value=newD.toISOString().slice(0,10);updateAll();}
+/* --- Chart --- */
+let chart,mode='hours';
+function drawChart(base,comp){
+ const ctx=document.getElementById('chartCanvas').getContext('2d');
+ const days=Array.from({length:365},(_,i)=>i+1);
+ const fn=mode==='hours'?daylightHours:noonElevation;
+ const lbl=mode==='hours'?'Daylight Hours':'Noon Elevation (°)';
+ const yCfg=mode==='hours'?{min:5,max:20}:{min:0,max:90};
+ const ds1={label:base.name,data:days.map(d=>fn(base.lat,d)),borderColor:'#0b5fb3',borderWidth:2,tension:.25,fill:false,pointRadius:0};
+ const ds2={label:comp.name,data:days.map(d=>fn(comp.lat,d)),borderColor:'#f28e2b',borderWidth:2,tension:.25,fill:false,pointRadius:0};
+ if(chart)chart.destroy();
+ chart=new Chart(ctx,{type:'line',data:{labels:days,datasets:[ds1,ds2]},
+  options:{responsive:true,plugins:{legend:{display:true,position:'bottom'}},
+  scales:{x:{display:false},y:{title:{display:true,text:lbl},...yCfg}}}});
+}
+
+/* --- Core update --- */
 function updateAll(){
- const d=new Date(dateInput.value);const refDay=dayOfYear(d);const year=d.getFullYear();
- const refHrs=daylightHours(userLat,refDay);const eqDate=findEquivalentDate(userLat,refHrs,refDay,year);
- equivEl.value=eqDate?fmtMMDDYYYY(eqDate):"—";
- selectedLbl.textContent=`Selected: ${fmtMD(d)}`;
- equivLbl.textContent=`Equivalent: ${eqDate?fmtMD(eqDate):"—"}`;
- buildTable(userLat,userLon,refDay);
- createChart(userLat);
- updateAnnotations(refDay,eqDate);
- document.getElementById("resultsTable").classList.add("show");
- document.getElementById("chartContainer").classList.add("show");
+ const base={lat:userLat,lon:userLon,tz:userTZ,name:userName};
+ const sel=document.getElementById('compareCity').value.split(',');
+ const comp={lat:+sel[0],lon:+sel[1],tz:sel[2],name:`${sel[3]}, ${sel[4]}`};
+ const day=dayOfYear(new Date(document.getElementById('dateInput').value));
+ buildTable(base,comp,day);
+ drawChart(base,comp);
 }
 
-/* ---------- Toggle behavior ---------- */
-const hoursBtn=document.getElementById("hoursBtn");
-const elevBtn=document.getElementById("elevBtn");
-hoursBtn.addEventListener("click",()=>{
-  currentMode="hours";
-  hoursBtn.classList.add("active");elevBtn.classList.remove("active");
-  updateAll();
-});
-elevBtn.addEventListener("click",()=>{
-  currentMode="elev";
-  elevBtn.classList.add("active");hoursBtn.classList.remove("active");
-  updateAll();
-});
-
-/* ---------- Init ---------- */
-async function init(){
- const locDisplay=document.getElementById("locationDisplay");
- const today=new Date();dateInput.value=today.toISOString().split("T")[0];
- function setLocation(lat,lon,place){
-   userLat=lat;userLon=lon;
-   locDisplay.innerHTML=`📍 Current location: <span>${place}</span> (${lat.toFixed(2)}° N, ${lon.toFixed(2)}° W)`;
-   createChart(userLat);syncFromDateInput();
- }
- if(navigator.geolocation){
-   navigator.geolocation.getCurrentPosition(async pos=>{
-     const lat=pos.coords.latitude,lon=pos.coords.longitude;
-     try{
-       const res=await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`);
-       const data=await res.json();
-       const display=data.address.city||data.address.town||data.address.village||
-                      data.address.state||"Your area";
-       setLocation(lat,lon,display);
-     }catch(e){console.warn(e);setLocation(lat,lon,"Your area");}
-   },()=>{
-     locDisplay.innerHTML="📍 Using default location: <span>Tampa, FL</span> (27.95° N, 82.46° W)";
-     createChart(userLat);syncFromDateInput();
-   });
- }else{
-   locDisplay.innerHTML="📍 Using default location: <span>Tampa, FL</span> (27.95° N, 82.46° W)";
-   createChart(userLat);syncFromDateInput();
- }
+/* --- Location defaults --- */
+let userLat=27.95,userLon=-82.46,userTZ='America/New_York',userName='Tampa, FL';
+function init(){
+ const today=new Date();document.getElementById('dateInput').value=today.toISOString().slice(0,10);
+ updateAll();
 }
-dateInput.addEventListener("change",syncFromDateInput);
-slider.addEventListener("input",syncFromSlider);
-window.addEventListener("DOMContentLoaded",init);
+
+/* --- Event wiring --- */
+document.getElementById('dateInput').addEventListener('change',updateAll);
+document.getElementById('compareCity').addEventListener('change',updateAll);
+document.getElementById('hoursBtn').addEventListener('click',()=>{
+ mode='hours';hoursBtn.classList.add('active');elevBtn.classList.remove('active');updateAll();});
+document.getElementById('elevBtn').addEventListener('click',()=>{
+ mode='elev';elevBtn.classList.add('active');hoursBtn.classList.remove('active');updateAll();});
+window.addEventListener('DOMContentLoaded',init);
 </script>
 </body>
 </html>
