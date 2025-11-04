@@ -39,6 +39,12 @@
   .note{font-size:.9rem;color:#555;text-align:center;margin-top:.35rem}
   .fade-in{opacity:0;transition:opacity 0.6s ease-in;}
   .fade-in.show{opacity:1;}
+  .toggle-buttons{text-align:center;margin-top:1rem;}
+  .toggle-buttons button{
+    font:inherit;font-weight:600;margin:0 .3rem;padding:.5rem 1rem;border-radius:.5rem;border:1px solid #cfd6e1;
+    cursor:pointer;background:#f7f9fb;color:#333;transition:all .2s;
+  }
+  .toggle-buttons button.active{background:var(--blue);color:#fff;border-color:var(--blue);}
 </style>
 </head>
 <body>
@@ -64,6 +70,10 @@
   </table>
 
   <div class="chart-wrap fade-in" id="chartContainer">
+    <div class="toggle-buttons">
+      <button id="hoursBtn" class="active">Daylight Hours</button>
+      <button id="elevBtn">Noon Elevation</button>
+    </div>
     <canvas id="daylightChart"></canvas>
     <div class="slider-area">
       <div class="live-dates">
@@ -161,19 +171,24 @@ function buildTable(lat,lon,refDay){
 }
 
 /* ---------- Chart ---------- */
-let chart;
+let chart, currentMode="hours";
 function createChart(lat){
  const ctx=document.getElementById("daylightChart").getContext("2d");
  const days=Array.from({length:365},(_,i)=>i+1);
- const dataset={label:"Daylight Hours",
-   data:days.map(d=>daylightHours(lat,d)),borderColor:"#0b5fb3",borderWidth:2,
-   fill:false,tension:0.25,pointRadius:0};
+ const dataFn=currentMode==="hours"?daylightHours:noonElevation;
+ const labelTxt=currentMode==="hours"?"Daylight Hours":"Noon Elevation (°)";
+ const yRange=currentMode==="hours"?{min:5,max:20}:{min:0,max:90};
+ const dataset={label:labelTxt,
+   data:days.map(d=>dataFn(lat,d)),
+   borderColor:"#0b5fb3",borderWidth:2,fill:false,tension:0.25,pointRadius:0};
+ if(chart) chart.destroy();
  chart=new Chart(ctx,{
-   type:'line',data:{labels:days,datasets:[dataset]},
+   type:'line',
+   data:{labels:days,datasets:[dataset]},
    options:{responsive:true,
      plugins:{legend:{display:false},annotation:{annotations:{}}},
      scales:{x:{display:false,min:1,max:365},
-       y:{title:{display:true,text:'Daylight Hours'},min:5,max:20,grid:{color:'#f4f5f7'}}}},
+       y:{title:{display:true,text:labelTxt},...yRange,grid:{color:'#f4f5f7'}}}},
    plugins:[Chart.registry.getPlugin('annotation')]
  });
 }
@@ -213,10 +228,25 @@ function updateAll(){
  selectedLbl.textContent=`Selected: ${fmtMD(d)}`;
  equivLbl.textContent=`Equivalent: ${eqDate?fmtMD(eqDate):"—"}`;
  buildTable(userLat,userLon,refDay);
+ createChart(userLat);
  updateAnnotations(refDay,eqDate);
  document.getElementById("resultsTable").classList.add("show");
  document.getElementById("chartContainer").classList.add("show");
 }
+
+/* ---------- Toggle behavior ---------- */
+const hoursBtn=document.getElementById("hoursBtn");
+const elevBtn=document.getElementById("elevBtn");
+hoursBtn.addEventListener("click",()=>{
+  currentMode="hours";
+  hoursBtn.classList.add("active");elevBtn.classList.remove("active");
+  updateAll();
+});
+elevBtn.addEventListener("click",()=>{
+  currentMode="elev";
+  elevBtn.classList.add("active");hoursBtn.classList.remove("active");
+  updateAll();
+});
 
 /* ---------- Init ---------- */
 async function init(){
