@@ -21,10 +21,12 @@ main{max-width:1100px;margin:2rem auto 3rem;padding:0 1rem;}
 .selector-group select{font:inherit;font-size:1rem;padding:.7rem;border:2px solid #e2e8f0;border-radius:8px;background:#fff;transition:all .2s;}
 .selector-group select:hover{border-color:#cbd5e1;}
 .selector-group select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(11,95,179,.1);}
-.date-control{display:flex;align-items:center;gap:1rem;flex-wrap:wrap;margin-bottom:1.5rem;}
+.date-control{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:1rem;margin-bottom:1.5rem;}
 .date-control label{font-weight:600;font-size:.95rem;color:#555;}
-.date-control input[type="date"]{font:inherit;font-size:1rem;padding:.7rem;border:2px solid #e2e8f0;border-radius:8px;transition:all .2s;}
+.date-control input[type="date"]{font:inherit;font-size:1rem;padding:.7rem;border:2px solid #e2e8f0;border-radius:8px;transition:all .2s;justify-self:start;}
 .date-control input[type="date"]:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(11,95,179,.1);}
+.date-control .equiv-info{font-size:.9rem;color:#666;justify-self:end;}
+@media(max-width:768px){.date-control{grid-template-columns:1fr;}.date-control .equiv-info{justify-self:start;}}
 .toggle-buttons{display:flex;gap:.5rem;justify-content:center;margin:1rem 0;}
 .toggle-buttons button{font:inherit;font-weight:600;padding:.7rem 1.5rem;border-radius:8px;border:2px solid #e2e8f0;cursor:pointer;background:#fff;color:#333;transition:all .2s;}
 .toggle-buttons button:hover{background:#f8fafc;}
@@ -33,11 +35,12 @@ table{width:100%;border-collapse:collapse;margin:1rem 0;font-size:.95rem;}
 th,td{padding:.8rem;border-bottom:1px solid #e9eef5;text-align:center;}
 th{background:#f8fafc;font-weight:600;color:#555;}
 th:first-child,td:first-child{text-align:left;width:180px;}
-th:nth-child(2),td:nth-child(2){width:200px;}
-th:nth-child(3),td:nth-child(3){width:200px;}
+th:nth-child(2),td:nth-child(2){width:220px;}
+th:nth-child(3),td:nth-child(3){width:220px;}
 td svg{width:80px;height:46px;vertical-align:middle}
 .chart-container{position:relative;height:420px;margin:1.5rem 0;}
-.slider-area{text-align:center;margin-top:2rem;padding:1.5rem;background:#f8fafc;border-radius:8px;}
+.slider-area{text-align:center;margin-top:2rem;padding:1.5rem;background:#f8fafc;border-radius:8px;display:grid;grid-template-columns:200px 1fr;gap:2rem;align-items:center;}
+@media(max-width:768px){.slider-area{grid-template-columns:1fr;}}
 .live-dates{font-weight:600;margin-bottom:1rem;display:flex;justify-content:center;gap:1rem;flex-wrap:wrap;align-items:center;}
 .live-dates span{display:inline-block;padding:.5rem 1rem;background:#fff;border-radius:6px;box-shadow:0 1px 2px rgba(0,0,0,.05);}
 .date-label{font-size:.85rem;color:#666;display:block;}
@@ -50,6 +53,9 @@ input[type="range"]::-webkit-slider-thumb:hover{transform:scale(1.1);}
 input[type="range"]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:var(--blue);border:3px solid #fff;box-shadow:0 2px 4px rgba(0,0,0,.2);cursor:pointer;}
 .note{font-size:.9rem;color:#666;margin-top:.5rem;}
 .icon{display:inline-block;width:18px;height:18px;vertical-align:middle;}
+.earth-container{position:relative;width:200px;height:200px;}
+.earth-canvas{width:100%;height:100%;border-radius:50%;box-shadow:0 4px 12px rgba(0,0,0,.15);}
+.slider-controls{flex:1;}
 </style>
 </head>
 <body>
@@ -72,7 +78,7 @@ input[type="range"]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;b
 <div class="date-control">
 <label for="dateInput">📅 Selected Date:</label>
 <input type="date" id="dateInput">
-<span style="margin-left:auto;font-size:.9rem;color:#666;">Equivalent: <strong id="equivDate">—</strong></span>
+<span class="equiv-info">Equivalent: <strong id="equivDate">—</strong></span>
 </div>
 </div>
 <div class="card">
@@ -88,12 +94,17 @@ input[type="range"]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;b
 <div class="card">
 <div class="chart-container"><canvas id="chartCanvas"></canvas></div>
 <div class="slider-area">
+<div class="earth-container">
+<canvas id="earthCanvas" class="earth-canvas" width="400" height="400"></canvas>
+</div>
+<div class="slider-controls">
 <div class="live-dates">
 <span class="date-selected"><span class="date-label">Selected Date</span><span class="date-value" id="selectedLabel">—</span></span>
 <span class="date-equiv"><span class="date-label">Equivalent Date</span><span class="date-value" id="equivLabel">—</span></span>
 </div>
 <input type="range" id="dateSlider" min="1" max="365" step="1" value="172">
 <div class="note">💡 Drag the slider to explore different dates throughout the year</div>
+</div>
 </div>
 </div>
 </main>
@@ -443,9 +454,139 @@ document.getElementById("equivLabel").textContent=eqDate?fmtMD(eqDate):"—";
 buildTable(base,comp,day);
 chartData=prepareChartData(base,comp);
 drawChart(day,eqDate,angleDate,refElev);
+drawEarth(day);
 }
 
-function updateAnnotationsOnly(){
+function drawEarth(day){
+const canvas=document.getElementById('earthCanvas');
+const ctx=canvas.getContext('2d');
+const w=canvas.width;
+const h=canvas.height;
+const cx=w/2;
+const cy=h/2;
+const radius=w*0.45;
+
+ctx.clearRect(0,0,w,h);
+
+// Draw space background
+ctx.fillStyle='#000814';
+ctx.fillRect(0,0,w,h);
+
+// Calculate solar declination
+const declination=solarDeclination(day);
+const decRad=toRad(declination);
+
+// Draw Earth sphere
+const gradient=ctx.createRadialGradient(cx-radius*0.3,cy-radius*0.3,radius*0.1,cx,cy,radius);
+gradient.addColorStop(0,'#4a9eff');
+gradient.addColorStop(0.7,'#1e40af');
+gradient.addColorStop(1,'#0f172a');
+ctx.fillStyle=gradient;
+ctx.beginPath();
+ctx.arc(cx,cy,radius,0,Math.PI*2);
+ctx.fill();
+
+// Draw day/night with proper terminator
+ctx.save();
+ctx.beginPath();
+ctx.arc(cx,cy,radius,0,Math.PI*2);
+ctx.clip();
+
+// Night side (gradient from terminator)
+const nightGrad=ctx.createLinearGradient(cx-radius,cy,cx+radius,cy);
+nightGrad.addColorStop(0,'rgba(15,23,42,0.85)');
+nightGrad.addColorStop(0.5,'rgba(15,23,42,0.4)');
+nightGrad.addColorStop(1,'rgba(15,23,42,0)');
+
+// Draw night as a path following terminator curve
+ctx.fillStyle=nightGrad;
+const steps=100;
+ctx.beginPath();
+
+// Start from north pole position based on declination
+const poleOffset=cy-radius*Math.sin(decRad);
+
+for(let i=0;i<=steps;i++){
+const angle=(-Math.PI/2)+(Math.PI*i/steps);
+const x=cx+radius*Math.cos(angle);
+const baseY=cy+radius*Math.sin(angle);
+const latitude=90-(i/steps*180);
+const latRad=toRad(latitude);
+
+// Calculate terminator curve based on declination
+const termShift=Math.sin(latRad)*Math.tan(decRad)*radius*0.5;
+const y=baseY;
+
+if(i===0){
+ctx.moveTo(x+termShift,y);
+}else{
+ctx.lineTo(x+termShift,y);
+}
+}
+
+// Complete the path
+ctx.lineTo(cx-radius*2,cy+radius);
+ctx.lineTo(cx-radius*2,cy-radius);
+ctx.closePath();
+ctx.fill();
+
+ctx.restore();
+
+// Draw equator line
+ctx.strokeStyle='rgba(255,255,255,0.2)';
+ctx.lineWidth=1;
+ctx.beginPath();
+ctx.ellipse(cx,cy,radius,radius*0.15,0,0,Math.PI*2);
+ctx.stroke();
+
+// Draw terminator line (sunrise/sunset line)
+ctx.strokeStyle='rgba(255,200,100,0.6)';
+ctx.lineWidth=2;
+ctx.beginPath();
+
+for(let i=0;i<=steps;i++){
+const angle=(-Math.PI/2)+(Math.PI*i/steps);
+const x=cx+radius*Math.cos(angle);
+const baseY=cy+radius*Math.sin(angle);
+const latitude=90-(i/steps*180);
+const latRad=toRad(latitude);
+const termShift=Math.sin(latRad)*Math.tan(decRad)*radius*0.5;
+
+if(i===0){
+ctx.moveTo(x+termShift,baseY);
+}else{
+ctx.lineTo(x+termShift,baseY);
+}
+}
+ctx.stroke();
+
+// Draw sunlight direction indicator
+const sunAngle=declination>0?-Math.PI/4:Math.PI/4;
+const sunX=cx+radius*1.3*Math.cos(sunAngle);
+const sunY=cy+radius*1.3*Math.sin(sunAngle);
+ctx.fillStyle='#fbbf24';
+ctx.beginPath();
+ctx.arc(sunX,sunY,12,0,Math.PI*2);
+ctx.fill();
+
+// Sun rays
+ctx.strokeStyle='rgba(251,191,36,0.4)';
+ctx.lineWidth=2;
+for(let i=0;i<8;i++){
+const rayAngle=sunAngle+(i*Math.PI/4);
+ctx.beginPath();
+ctx.moveTo(sunX+15*Math.cos(rayAngle),sunY+15*Math.sin(rayAngle));
+ctx.lineTo(sunX+25*Math.cos(rayAngle),sunY+25*Math.sin(rayAngle));
+ctx.stroke();
+}
+
+// Date label
+ctx.fillStyle='#fff';
+ctx.font='bold 16px Arial';
+ctx.textAlign='center';
+const dateStr=fmtMD(dateFromDay(new Date().getFullYear(),day));
+ctx.fillText(dateStr,cx,h-20);
+}
 const date=new Date(document.getElementById("dateInput").value);
 const day=dayOfYear(date);
 const refIdx=document.getElementById("referenceCity").selectedIndex;
