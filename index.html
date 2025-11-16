@@ -457,6 +457,24 @@ drawChart(day,eqDate,angleDate,refElev);
 drawEarth(day);
 }
 
+function updateAnnotationsOnly(){
+const refIdx=document.getElementById("referenceCity").selectedIndex;
+const compIdx=document.getElementById("compareCity").selectedIndex;
+const base=cities[refIdx];
+const comp=cities[compIdx];
+const date=new Date(document.getElementById("dateInput").value);
+const day=dayOfYear(date);
+const eqDate=findEquivalentDate(comp.lat,daylightHours(base.lat,day),day,date.getFullYear());
+const refElev=noonElevation(base.lat,day);
+const angleDate=findEquivalentAngleDate(comp.lat,refElev,day,date.getFullYear());
+document.getElementById("equivDate").textContent=eqDate?fmtMD(eqDate):"—";
+document.getElementById("selectedLabel").textContent=fmtMD(date);
+document.getElementById("equivLabel").textContent=eqDate?fmtMD(eqDate):"—";
+buildTable(base,comp,day);
+drawChart(day,eqDate,angleDate,refElev);
+drawEarth(day);
+}
+
 function drawEarth(day){
 const canvas=document.getElementById('earthCanvas');
 const ctx=canvas.getContext('2d');
@@ -586,21 +604,6 @@ ctx.font='bold 16px Arial';
 ctx.textAlign='center';
 const dateStr=fmtMD(dateFromDay(new Date().getFullYear(),day));
 ctx.fillText(dateStr,cx,h-20);
-}
-const date=new Date(document.getElementById("dateInput").value);
-const day=dayOfYear(date);
-const refIdx=document.getElementById("referenceCity").selectedIndex;
-const compIdx=document.getElementById("compareCity").selectedIndex;
-const base=cities[refIdx];
-const comp=cities[compIdx];
-const eqDate=findEquivalentDate(comp.lat,daylightHours(base.lat,day),day,date.getFullYear());
-const refElev=noonElevation(base.lat,day);
-const angleDate=findEquivalentAngleDate(comp.lat,refElev,day,date.getFullYear());
-document.getElementById("equivDate").textContent=eqDate?fmtMD(eqDate):"—";
-document.getElementById("selectedLabel").textContent=fmtMD(date);
-document.getElementById("equivLabel").textContent=eqDate?fmtMD(eqDate):"—";
-buildTable(base,comp,day);
-drawChart(day,eqDate,angleDate,refElev);
 }
 
 function syncFromDate(){
