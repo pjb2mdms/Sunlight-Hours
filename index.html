@@ -549,12 +549,13 @@ ctx.fill();
 const declination=solarDeclination(day);
 const decRad=toRad(declination);
 
-// Draw Earth sphere with gradient
-const earthGrad=ctx.createRadialGradient(cx-radius*0.25,cy-radius*0.25,radius*0.1,cx,cy,radius);
-earthGrad.addColorStop(0,'#6ba3d4');
-earthGrad.addColorStop(0.4,'#3b82f6');
-earthGrad.addColorStop(0.7,'#1e40af');
-earthGrad.addColorStop(1,'#0c1e3d');
+// Draw Earth sphere with realistic ocean gradient
+const earthGrad=ctx.createRadialGradient(cx-radius*0.3,cy-radius*0.3,radius*0.1,cx,cy,radius);
+earthGrad.addColorStop(0,'#7cb9e8');
+earthGrad.addColorStop(0.3,'#4a90c8');
+earthGrad.addColorStop(0.6,'#2a5f8f');
+earthGrad.addColorStop(0.85,'#1a3f5f');
+earthGrad.addColorStop(1,'#0d1f2f');
 ctx.fillStyle=earthGrad;
 ctx.beginPath();
 ctx.arc(cx,cy,radius,0,Math.PI*2);
@@ -579,14 +580,17 @@ const y=radius*(Math.cos(tampaLatR)*Math.sin(latR)-Math.sin(tampaLatR)*Math.cos(
 return{x:cx+x,y:cy-y,visible:Math.cos(latR)*Math.cos(dLon)>0};
 }
 
-ctx.fillStyle='#2d5016';
-ctx.strokeStyle='#1a3d0a';
-ctx.lineWidth=1;
+// Draw more detailed landmasses
+ctx.fillStyle='#3a8f3a';
+ctx.strokeStyle='rgba(45,80,22,0.3)';
+ctx.lineWidth=0.5;
 
-// North America (visible from Tampa)
+// North America - more detailed
 ctx.beginPath();
 const naCoords=[
-[70,-170],[70,-60],[25,-80],[10,-85],[10,-110],[30,-125],[60,-130],[70,-170]
+[72,-140],[70,-100],[68,-70],[60,-65],[50,-55],[45,-60],[40,-70],[32,-80],
+[28,-97],[25,-98],[22,-105],[18,-110],[25,-115],[35,-120],[45,-125],[55,-130],
+[65,-140],[72,-140]
 ];
 let first=true;
 naCoords.forEach(([lat,lon])=>{
@@ -600,10 +604,29 @@ ctx.closePath();
 ctx.fill();
 ctx.stroke();
 
-// South America
+// Central America
+ctx.beginPath();
+const caCoords=[
+[22,-105],[18,-95],[15,-88],[10,-85],[8,-80],[10,-78],[15,-82],[20,-90],[22,-105]
+];
+first=true;
+caCoords.forEach(([lat,lon])=>{
+const pt=latLonToXY(lat,lon);
+if(pt.visible){
+if(first){ctx.moveTo(pt.x,pt.y);first=false;}
+else ctx.lineTo(pt.x,pt.y);
+}
+});
+ctx.closePath();
+ctx.fill();
+ctx.stroke();
+
+// South America - more detailed
 ctx.beginPath();
 const saCoords=[
-[12,-75],[12,-60],[-55,-65],[-55,-80],[0,-82],[12,-75]
+[12,-72],[10,-75],[5,-78],[0,-79],[-5,-80],[-15,-77],[-25,-71],[-35,-72],
+[-45,-73],[-52,-70],[-55,-68],[-54,-65],[-50,-62],[-40,-60],[-30,-58],
+[-20,-55],[-10,-60],[-5,-65],[0,-70],[5,-72],[10,-70],[12,-72]
 ];
 first=true;
 saCoords.forEach(([lat,lon])=>{
@@ -617,10 +640,11 @@ ctx.closePath();
 ctx.fill();
 ctx.stroke();
 
-// Europe/Africa (partially visible)
+// Europe/Africa (partially visible from Tampa perspective)
 ctx.beginPath();
 const eaCoords=[
-[70,30],[35,40],[-35,40],[-35,-20],[35,-20],[70,30]
+[70,25],[60,10],[50,0],[40,-5],[30,-10],[20,-15],[10,-15],[0,-10],
+[-10,-5],[-20,5],[-30,15],[-35,25],[-30,35],[0,40],[30,35],[50,30],[70,25]
 ];
 first=true;
 eaCoords.forEach(([lat,lon])=>{
@@ -636,72 +660,96 @@ ctx.stroke();
 
 ctx.restore();
 
-// Draw terminator (day/night boundary)
+// Draw realistic terminator with gradual twilight zone
 ctx.save();
 ctx.beginPath();
 ctx.arc(cx,cy,radius,0,Math.PI*2);
 ctx.clip();
 
-// Calculate terminator based on solar declination
-// The terminator is perpendicular to the sun's direction
-const sunLon=0; // Noon at prime meridian for reference
+// Function to calculate sun angle for any point on visible hemisphere
+function getSunAngle(lat,lon){
+const latR=toRad(lat);
+const lonR=toRad(lon);
+const sunLon=0; // Noon at prime meridian
 const sunLonR=toRad(sunLon);
+const dLon=lonR-sunLonR;
 
-// Draw night side
-const nightGrad=ctx.createLinearGradient(cx-radius,cy,cx+radius,cy);
-nightGrad.addColorStop(0,'rgba(0,0,0,0.75)');
-nightGrad.addColorStop(0.4,'rgba(0,0,0,0.4)');
-nightGrad.addColorStop(0.6,'rgba(0,0,0,0)');
-nightGrad.addColorStop(1,'rgba(0,0,0,0)');
+// Calculate solar elevation angle
+const sinAlt=Math.sin(latR)*Math.sin(decRad)+Math.cos(latR)*Math.cos(decRad)*Math.cos(dLon);
+return Math.asin(sinAlt);
+}
 
-ctx.fillStyle=nightGrad;
-ctx.beginPath();
+// Draw pixel-by-pixel terminator with smooth gradient
+const imageData=ctx.createImageData(w,h);
+const data=imageData.data;
 
-// Draw terminator curve
-const steps=100;
-for(let i=0;i<=steps;i++){
-const lat=90-i*180/steps;
-const latR=toRad(lat);
-// Calculate longitude of terminator at this latitude
-const cosH=-Math.tan(latR)*Math.tan(decRad);
-if(cosH>=-1&&cosH<=1){
-const H=Math.acos(cosH);
-const HourAngle=toDeg(H);
-const lon1=sunLon+HourAngle;
-const pt=latLonToXY(lat,lon1);
-if(i===0){
-ctx.moveTo(pt.x,pt.y);
+for(let py=0;py<h;py++){
+for(let px=0;px<w;px++){
+const dx=px-cx;
+const dy=py-cy;
+const distFromCenter=Math.sqrt(dx*dx+dy*dy);
+
+if(distFromCenter<=radius){
+// Convert pixel position back to lat/lon
+const x=dx/radius;
+const y=-dy/radius;
+const rho=Math.sqrt(x*x+y*y);
+
+if(rho<=1){
+const c=Math.asin(rho);
+const latR=Math.asin(Math.cos(c)*Math.sin(toRad(tampaLat))+y*Math.sin(c)*Math.cos(toRad(tampaLat))/rho);
+const lonR=toRad(tampaLon)+Math.atan2(x*Math.sin(c),rho*Math.cos(toRad(tampaLat))*Math.cos(c)-y*Math.sin(toRad(tampaLat))*Math.sin(c));
+const lat=toDeg(latR);
+const lon=toDeg(lonR);
+
+// Calculate sun angle at this point
+const sunAngle=getSunAngle(lat,lon);
+const sunAngleDeg=toDeg(sunAngle);
+
+// Create smooth twilight gradient
+let darkness=0;
+if(sunAngleDeg<-18){
+// Full night (astronomical twilight)
+darkness=0.8;
+}else if(sunAngleDeg<-12){
+// Astronomical twilight
+darkness=0.65+0.15*(sunAngleDeg+18)/6;
+}else if(sunAngleDeg<-6){
+// Nautical twilight
+darkness=0.45+0.2*(sunAngleDeg+12)/6;
+}else if(sunAngleDeg<0){
+// Civil twilight
+darkness=0.15+0.3*(sunAngleDeg+6)/6;
+}else if(sunAngleDeg<6){
+// Early day
+darkness=0.05+0.1*(6-sunAngleDeg)/6;
 }else{
-ctx.lineTo(pt.x,pt.y);
+// Full daylight
+darkness=0;
+}
+
+const idx=(py*w+px)*4;
+data[idx+3]=Math.floor(darkness*255); // Alpha channel for darkness
 }
 }
 }
-// Complete the path through south pole
-for(let i=steps;i>=0;i--){
-const lat=-90+i*180/steps;
-const latR=toRad(lat);
-const cosH=-Math.tan(latR)*Math.tan(decRad);
-if(cosH>=-1&&cosH<=1){
-const H=Math.acos(cosH);
-const HourAngle=toDeg(H);
-const lon1=sunLon+HourAngle;
-const pt=latLonToXY(lat,lon1);
-ctx.lineTo(pt.x,pt.y);
 }
-}
-ctx.closePath();
-ctx.fill();
+
+// Apply the terminator overlay
+ctx.fillStyle='rgba(0,0,0,1)';
+ctx.putImageData(imageData,0,0);
 
 ctx.restore();
 
 // Draw atmospheric glow
-const glowGrad=ctx.createRadialGradient(cx,cy,radius,cx,cy,radius*1.08);
-glowGrad.addColorStop(0,'rgba(100,180,255,0)');
-glowGrad.addColorStop(0.8,'rgba(100,180,255,0.15)');
-glowGrad.addColorStop(1,'rgba(100,180,255,0)');
+const glowGrad=ctx.createRadialGradient(cx,cy,radius*0.98,cx,cy,radius*1.12);
+glowGrad.addColorStop(0,'rgba(135,206,250,0)');
+glowGrad.addColorStop(0.7,'rgba(135,206,250,0.2)');
+glowGrad.addColorStop(0.9,'rgba(100,180,240,0.15)');
+glowGrad.addColorStop(1,'rgba(70,130,180,0)');
 ctx.fillStyle=glowGrad;
 ctx.beginPath();
-ctx.arc(cx,cy,radius*1.08,0,Math.PI*2);
+ctx.arc(cx,cy,radius*1.12,0,Math.PI*2);
 ctx.fill();
 
 // Draw sun indicator
@@ -712,28 +760,28 @@ const sunY=cy+sunDist*Math.sin(sunAngle);
 
 // Sun glow
 const sunGlowGrad=ctx.createRadialGradient(sunX,sunY,0,sunX,sunY,18);
-sunGlowGrad.addColorStop(0,'rgba(255,220,100,1)');
-sunGlowGrad.addColorStop(0.4,'rgba(255,200,80,0.8)');
-sunGlowGrad.addColorStop(1,'rgba(255,180,60,0)');
+sunGlowGrad.addColorStop(0,'rgba(255,240,150,1)');
+sunGlowGrad.addColorStop(0.4,'rgba(255,220,100,0.8)');
+sunGlowGrad.addColorStop(1,'rgba(255,200,80,0)');
 ctx.fillStyle=sunGlowGrad;
 ctx.beginPath();
 ctx.arc(sunX,sunY,18,0,Math.PI*2);
 ctx.fill();
 
 // Sun core
-ctx.fillStyle='#ffd700';
+ctx.fillStyle='#ffeb3b';
 ctx.beginPath();
-ctx.arc(sunX,sunY,10,0,Math.PI*2);
+ctx.arc(sunX,sunY,9,0,Math.PI*2);
 ctx.fill();
 
 // Sun rays
-ctx.strokeStyle='rgba(255,220,100,0.6)';
-ctx.lineWidth=2;
+ctx.strokeStyle='rgba(255,235,100,0.5)';
+ctx.lineWidth=1.5;
 for(let i=0;i<8;i++){
 const rayAngle=sunAngle+(i*Math.PI/4);
 ctx.beginPath();
-ctx.moveTo(sunX+14*Math.cos(rayAngle),sunY+14*Math.sin(rayAngle));
-ctx.lineTo(sunX+24*Math.cos(rayAngle),sunY+24*Math.sin(rayAngle));
+ctx.moveTo(sunX+13*Math.cos(rayAngle),sunY+13*Math.sin(rayAngle));
+ctx.lineTo(sunX+23*Math.cos(rayAngle),sunY+23*Math.sin(rayAngle));
 ctx.stroke();
 }
 
