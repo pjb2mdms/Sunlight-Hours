@@ -14,31 +14,37 @@ header h1{margin:0;font-size:2.2rem;font-weight:300;letter-spacing:.5px;}
 header p{margin:.5rem 0 0;opacity:.9;font-size:1rem;}
 main{max-width:1100px;margin:2rem auto 3rem;padding:0 1rem;}
 .card{background:var(--card);border-radius:12px;padding:1.5rem;margin:1.5rem 0;box-shadow:0 1px 3px rgba(0,0,0,.08);}
-.city-selectors{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem;}
+.city-selectors{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;}
 @media(max-width:768px){.city-selectors{grid-template-columns:1fr;}}
 .selector-group{display:flex;flex-direction:column;gap:.5rem;}
 .selector-group label{font-weight:600;font-size:.95rem;color:#555;display:flex;align-items:center;gap:.5rem;}
 .selector-group select{font:inherit;font-size:1rem;padding:.7rem;border:2px solid #e2e8f0;border-radius:8px;background:#fff;transition:all .2s;}
 .selector-group select:hover{border-color:#cbd5e1;}
 .selector-group select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(11,95,179,.1);}
-.date-control{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:1rem;margin-bottom:1.5rem;}
-.date-control label{font-weight:600;font-size:.95rem;color:#555;}
-.date-control input[type="date"]{font:inherit;font-size:1rem;padding:.7rem;border:2px solid #e2e8f0;border-radius:8px;transition:all .2s;justify-self:start;}
-.date-control input[type="date"]:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(11,95,179,.1);}
-.date-control .equiv-info{font-size:.9rem;color:#666;justify-self:end;}
-@media(max-width:768px){.date-control{grid-template-columns:1fr;}.date-control .equiv-info{justify-self:start;}}
-.toggle-buttons{display:flex;gap:.5rem;justify-content:center;margin:1rem 0;}
-.toggle-buttons button{font:inherit;font-weight:600;padding:.7rem 1.5rem;border-radius:8px;border:2px solid #e2e8f0;cursor:pointer;background:#fff;color:#333;transition:all .2s;}
-.toggle-buttons button:hover{background:#f8fafc;}
-.toggle-buttons button.active{background:var(--blue);color:#fff;border-color:var(--blue);}
-table{width:100%;border-collapse:collapse;margin:1rem 0;font-size:.95rem;}
-th,td{padding:.8rem;border-bottom:1px solid #e9eef5;text-align:center;}
-th{background:#f8fafc;font-weight:600;color:#555;}
-th:first-child,td:first-child{text-align:left;width:180px;}
-th:nth-child(2),td:nth-child(2){width:220px;}
-th:nth-child(3),td:nth-child(3){width:220px;}
-td svg{width:80px;height:46px;vertical-align:middle}
-.chart-container{position:relative;height:420px;margin:1.5rem 0;}
+
+.chart-section{display:grid;grid-template-columns:auto 1fr auto;gap:1.5rem;align-items:start;}
+@media(max-width:968px){.chart-section{grid-template-columns:1fr;}}
+
+.vertical-tabs{display:flex;flex-direction:column;gap:.5rem;padding-top:2rem;}
+@media(max-width:968px){.vertical-tabs{flex-direction:row;padding-top:0;justify-content:center;margin-bottom:1rem;}}
+.vertical-tabs button{font:inherit;font-weight:600;padding:.7rem 1rem;border-radius:8px;border:2px solid #e2e8f0;cursor:pointer;background:#fff;color:#333;transition:all .2s;white-space:nowrap;min-width:140px;}
+@media(max-width:968px){.vertical-tabs button{min-width:auto;}}
+.vertical-tabs button:hover{background:#f8fafc;}
+.vertical-tabs button.active{background:var(--blue);color:#fff;border-color:var(--blue);}
+
+.chart-and-table{flex:1;min-width:0;}
+.chart-container{position:relative;height:400px;margin-bottom:1.5rem;}
+
+.data-table-section{min-width:280px;}
+@media(max-width:968px){.data-table-section{min-width:0;}}
+table{width:100%;border-collapse:collapse;font-size:.9rem;}
+th,td{padding:.7rem .5rem;border-bottom:1px solid #e9eef5;text-align:left;}
+th{background:#f8fafc;font-weight:600;color:#555;font-size:.85rem;}
+td:first-child{font-weight:500;color:#666;}
+td:last-child{text-align:right;}
+td svg{width:60px;height:35px;vertical-align:middle;margin-left:auto;display:block;}
+.city-header{background:#f1f5f9;font-weight:700;color:#334155;text-align:center;padding:.6rem;}
+
 .slider-area{text-align:center;margin-top:2rem;padding:1.5rem;background:#f8fafc;border-radius:8px;display:grid;grid-template-columns:200px 1fr;gap:2rem;align-items:center;}
 @media(max-width:768px){.slider-area{grid-template-columns:1fr;}}
 .live-dates{font-weight:600;margin-bottom:1rem;display:flex;justify-content:center;gap:1rem;flex-wrap:wrap;align-items:center;}
@@ -75,24 +81,26 @@ input[type="range"]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;b
 <select id="compareCity"></select>
 </div>
 </div>
-<div class="date-control">
-<label for="dateInput">📅 Selected Date:</label>
-<input type="date" id="dateInput">
-<span class="equiv-info">Equivalent: <strong id="equivDate">—</strong></span>
 </div>
-</div>
+
 <div class="card">
-<div class="toggle-buttons">
-<button id="hoursBtn" class="active">📊 Daylight Hours</button>
-<button id="elevBtn">🌞 Noon Elevation</button>
+<div class="chart-section">
+<div class="vertical-tabs">
+<button id="hoursBtn" class="active">📊 Daylight<br>Hours</button>
+<button id="elevBtn">🌞 Noon<br>Elevation</button>
 </div>
+<div class="chart-and-table">
+<div class="chart-container"><canvas id="chartCanvas"></canvas></div>
+</div>
+<div class="data-table-section">
 <table id="resultsTable">
-<thead><tr><th>Measure</th><th id="leftHead">Reference City</th><th id="rightHead">Comparison City</th></tr></thead>
 <tbody id="tableBody"></tbody>
 </table>
 </div>
+</div>
+</div>
+
 <div class="card">
-<div class="chart-container"><canvas id="chartCanvas"></canvas></div>
 <div class="slider-area">
 <div class="earth-container">
 <canvas id="earthCanvas" class="earth-canvas" width="400" height="400"></canvas>
@@ -236,12 +244,12 @@ return{sunrise:fmtTime(sunriseUTC),sunset:fmtTime(sunsetUTC),hrs:daylight};
 
 function arcSVG(lat,day,color){
 const elev=noonElevation(lat,day);
-const R=32,a=Math.min(90,Math.max(0,elev))*Math.PI/180;
-const x=30+R*Math.cos(Math.PI-a),y=34-R*Math.sin(Math.PI-a);
-return `<svg viewBox='0 0 70 40'><path d='M4 34 A32 32 0 0 1 64 34' stroke='#c9d3e3' stroke-width='1.2' fill='none'/><line x1='30' y1='34' x2='${x.toFixed(1)}' y2='${y.toFixed(1)}' stroke='${color}' stroke-width='3'/><circle cx='${x.toFixed(1)}' cy='${y.toFixed(1)}' r='4.2' fill='${color}'/></svg><div style="margin-top:4px">${elev.toFixed(1)}°</div>`;
+const R=28,a=Math.min(90,Math.max(0,elev))*Math.PI/180;
+const x=26+R*Math.cos(Math.PI-a),y=30-R*Math.sin(Math.PI-a);
+return `<svg viewBox='0 0 60 36' style='display:block;margin:0 auto;'><path d='M4 30 A28 28 0 0 1 56 30' stroke='#c9d3e3' stroke-width='1.2' fill='none'/><line x1='26' y1='30' x2='${x.toFixed(1)}' y2='${y.toFixed(1)}' stroke='${color}' stroke-width='2.5'/><circle cx='${x.toFixed(1)}' cy='${y.toFixed(1)}' r='3.5' fill='${color}'/></svg>`;
 }
 
-function buildTable(base,comp,day){
+function buildTable(base,comp,day,mode){
 const body=document.getElementById('tableBody');
 body.innerHTML='';
 const tb1=getTimes(base.lat,base.lon,day,base.tz),tb2=getTimes(comp.lat,comp.lon,day,comp.tz);
@@ -249,22 +257,54 @@ const ab1=getTimeZoneAbbr(base.tz),ab2=getTimeZoneAbbr(comp.tz);
 const refElev=noonElevation(base.lat,day);
 const compElev=noonElevation(comp.lat,day);
 const angleDate=findEquivalentAngleDate(comp.lat,refElev,day,new Date().getFullYear());
+
+if(mode==='hours'){
+// Daylight Hours mode
 const rows=[
-['Latitude',base.lat.toFixed(2)+'°',comp.lat.toFixed(2)+'°'],
-['Longitude',base.lon.toFixed(2)+'°',comp.lon.toFixed(2)+'°'],
-['Noon Elevation',arcSVG(base.lat,day,'#0b5fb3'),arcSVG(comp.lat,day,'#f28e2b')],
-['Sunrise',`${tb1.sunrise} ${ab1}`,`${tb2.sunrise} ${ab2}`],
-['Sunset',`${tb1.sunset} ${ab1}`,`${tb2.sunset} ${ab2}`],
-['Daylight',fmtHoursMin(tb1.hrs),fmtHoursMin(tb2.hrs)],
-['Equivalent Sun Angle',`${refElev.toFixed(1)}° (selected date)`,angleDate?`${refElev.toFixed(1)}° on ${fmtMD(angleDate)}`:'—']
+{label:'',value:`<div class="city-header">${base.name}</div>`,span:true},
+{label:'Latitude',value:base.lat.toFixed(2)+'°'},
+{label:'Sunrise',value:`${tb1.sunrise} ${ab1}`},
+{label:'Sunset',value:`${tb1.sunset} ${ab1}`},
+{label:'Daylight',value:fmtHoursMin(tb1.hrs)},
+{label:'',value:`<div class="city-header">${comp.name}</div>`,span:true},
+{label:'Latitude',value:comp.lat.toFixed(2)+'°'},
+{label:'Sunrise',value:`${tb2.sunrise} ${ab2}`},
+{label:'Sunset',value:`${tb2.sunset} ${ab2}`},
+{label:'Daylight',value:fmtHoursMin(tb2.hrs)}
 ];
 rows.forEach(r=>{
 const tr=document.createElement('tr');
-tr.innerHTML=`<td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td>`;
+if(r.span){
+tr.innerHTML=`<td colspan="2">${r.value}</td>`;
+}else{
+tr.innerHTML=`<td>${r.label}</td><td>${r.value}</td>`;
+}
 body.appendChild(tr);
 });
-document.getElementById('leftHead').textContent=`${base.name}`;
-document.getElementById('rightHead').textContent=`${comp.name}`;
+}else{
+// Elevation mode
+const rows=[
+{label:'',value:`<div class="city-header">${base.name}</div>`,span:true},
+{label:'Latitude',value:base.lat.toFixed(2)+'°'},
+{label:'Noon Elevation',value:`${refElev.toFixed(1)}°`},
+{label:'',value:arcSVG(base.lat,day,'#0b5fb3'),span:true},
+{label:'',value:`<div class="city-header">${comp.name}</div>`,span:true},
+{label:'Latitude',value:comp.lat.toFixed(2)+'°'},
+{label:'Noon Elevation',value:`${compElev.toFixed(1)}°`},
+{label:'',value:arcSVG(comp.lat,day,'#f28e2b'),span:true},
+{label:'',value:'<div style="height:8px"></div>',span:true},
+{label:'Equivalent Angle',value:angleDate?`${refElev.toFixed(1)}° on ${fmtMD(angleDate)}`:'—',span:true}
+];
+rows.forEach(r=>{
+const tr=document.createElement('tr');
+if(r.span){
+tr.innerHTML=`<td colspan="2">${r.value}</td>`;
+}else{
+tr.innerHTML=`<td>${r.label}</td><td>${r.value}</td>`;
+}
+body.appendChild(tr);
+});
+}
 }
 
 let chart,mode='hours',chartData=null;
@@ -443,15 +483,15 @@ const refIdx=document.getElementById("referenceCity").selectedIndex;
 const compIdx=document.getElementById("compareCity").selectedIndex;
 const base=cities[refIdx];
 const comp=cities[compIdx];
-const date=new Date(document.getElementById("dateInput").value);
-const day=dayOfYear(date);
+const sliderVal=Number(document.getElementById("dateSlider").value);
+const date=dateFromDay(new Date().getFullYear(),sliderVal);
+const day=sliderVal;
 const eqDate=findEquivalentDate(comp.lat,daylightHours(base.lat,day),day,date.getFullYear());
 const refElev=noonElevation(base.lat,day);
 const angleDate=findEquivalentAngleDate(comp.lat,refElev,day,date.getFullYear());
-document.getElementById("equivDate").textContent=eqDate?fmtMD(eqDate):"—";
 document.getElementById("selectedLabel").textContent=fmtMD(date);
 document.getElementById("equivLabel").textContent=eqDate?fmtMD(eqDate):"—";
-buildTable(base,comp,day);
+buildTable(base,comp,day,mode);
 chartData=prepareChartData(base,comp);
 drawChart(day,eqDate,angleDate,refElev);
 drawEarth(day);
@@ -462,15 +502,15 @@ const refIdx=document.getElementById("referenceCity").selectedIndex;
 const compIdx=document.getElementById("compareCity").selectedIndex;
 const base=cities[refIdx];
 const comp=cities[compIdx];
-const date=new Date(document.getElementById("dateInput").value);
-const day=dayOfYear(date);
+const sliderVal=Number(document.getElementById("dateSlider").value);
+const date=dateFromDay(new Date().getFullYear(),sliderVal);
+const day=sliderVal;
 const eqDate=findEquivalentDate(comp.lat,daylightHours(base.lat,day),day,date.getFullYear());
 const refElev=noonElevation(base.lat,day);
 const angleDate=findEquivalentAngleDate(comp.lat,refElev,day,date.getFullYear());
-document.getElementById("equivDate").textContent=eqDate?fmtMD(eqDate):"—";
 document.getElementById("selectedLabel").textContent=fmtMD(date);
 document.getElementById("equivLabel").textContent=eqDate?fmtMD(eqDate):"—";
-buildTable(base,comp,day);
+buildTable(base,comp,day,mode);
 drawChart(day,eqDate,angleDate,refElev);
 drawEarth(day);
 }
@@ -606,16 +646,7 @@ const dateStr=fmtMD(dateFromDay(new Date().getFullYear(),day));
 ctx.fillText(dateStr,cx,h-20);
 }
 
-function syncFromDate(){
-const d=new Date(document.getElementById("dateInput").value);
-document.getElementById("dateSlider").value=dayOfYear(d);
-updateAnnotationsOnly();
-}
-
 function syncFromSlider(){
-const y=new Date().getFullYear();
-const d=dateFromDay(y,Number(document.getElementById("dateSlider").value));
-document.getElementById("dateInput").value=d.toISOString().slice(0,10);
 updateAnnotationsOnly();
 }
 
@@ -666,13 +697,10 @@ function init(){
 populateSelectors();
 document.getElementById("compareCity").selectedIndex=16;
 const now=new Date();
-const isoDate=now.toISOString().slice(0,10);
-document.getElementById("dateInput").value=isoDate;
 document.getElementById("dateSlider").value=dayOfYear(now);
 initWithGeolocation();
 }
 
-document.getElementById("dateInput").addEventListener("change",syncFromDate);
 document.getElementById("dateSlider").addEventListener("input",syncFromSlider);
 document.getElementById("referenceCity").addEventListener("change",updateAll);
 document.getElementById("compareCity").addEventListener("change",updateAll);
