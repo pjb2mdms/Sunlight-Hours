@@ -22,6 +22,23 @@ main{max-width:1100px;margin:2rem auto 3rem;padding:0 1rem;}
 .selector-group select:hover{border-color:#cbd5e1;}
 .selector-group select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(11,95,179,.1);}
 
+.date-earth-section{display:grid;grid-template-columns:160px 1fr;gap:1.5rem;align-items:center;margin-bottom:1.5rem;padding:1.2rem;background:#f8fafc;border-radius:8px;}
+@media(max-width:768px){.date-earth-section{grid-template-columns:1fr;}}
+.earth-container{position:relative;width:160px;height:160px;margin:0 auto;}
+.earth-canvas{width:100%;height:100%;border-radius:50%;box-shadow:0 4px 12px rgba(0,0,0,.15);}
+.slider-controls{flex:1;}
+.live-dates{font-weight:600;margin-bottom:1rem;display:flex;justify-content:center;gap:1rem;flex-wrap:wrap;align-items:center;}
+.live-dates span{display:inline-block;padding:.5rem 1rem;background:#fff;border-radius:6px;box-shadow:0 1px 2px rgba(0,0,0,.05);}
+.date-label{font-size:.85rem;color:#666;display:block;}
+.date-value{font-size:1.1rem;color:#000;}
+.date-selected{border:2px solid #1e293b;}
+.date-equiv{border:2px solid #e11d48;}
+input[type="range"]{-webkit-appearance:none;appearance:none;width:100%;max-width:800px;height:8px;background:linear-gradient(to right,#e2e8f0 0%,#cbd5e1 100%);border-radius:4px;outline:none;margin:1rem 0;}
+input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--blue);border:3px solid #fff;box-shadow:0 2px 4px rgba(0,0,0,.2);cursor:pointer;transition:all .2s;}
+input[type="range"]::-webkit-slider-thumb:hover{transform:scale(1.1);}
+input[type="range"]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:var(--blue);border:3px solid #fff;box-shadow:0 2px 4px rgba(0,0,0,.2);cursor:pointer;}
+.note{font-size:.85rem;color:#666;margin-top:.5rem;text-align:center;}
+
 .chart-section{display:grid;grid-template-columns:auto 1fr auto;gap:1.5rem;align-items:start;}
 @media(max-width:968px){.chart-section{grid-template-columns:1fr;}}
 
@@ -45,23 +62,7 @@ td:last-child{text-align:right;}
 td svg{width:60px;height:35px;vertical-align:middle;margin-left:auto;display:block;}
 .city-header{background:#f1f5f9;font-weight:700;color:#334155;text-align:center;padding:.6rem;}
 
-.slider-area{text-align:center;margin-top:2rem;padding:1.5rem;background:#f8fafc;border-radius:8px;display:grid;grid-template-columns:200px 1fr;gap:2rem;align-items:center;}
-@media(max-width:768px){.slider-area{grid-template-columns:1fr;}}
-.live-dates{font-weight:600;margin-bottom:1rem;display:flex;justify-content:center;gap:1rem;flex-wrap:wrap;align-items:center;}
-.live-dates span{display:inline-block;padding:.5rem 1rem;background:#fff;border-radius:6px;box-shadow:0 1px 2px rgba(0,0,0,.05);}
-.date-label{font-size:.85rem;color:#666;display:block;}
-.date-value{font-size:1.1rem;color:#000;}
-.date-selected{border:2px solid #1e293b;}
-.date-equiv{border:2px solid #e11d48;}
-input[type="range"]{-webkit-appearance:none;appearance:none;width:100%;max-width:800px;height:8px;background:linear-gradient(to right,#e2e8f0 0%,#cbd5e1 100%);border-radius:4px;outline:none;margin:1rem 0;}
-input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--blue);border:3px solid #fff;box-shadow:0 2px 4px rgba(0,0,0,.2);cursor:pointer;transition:all .2s;}
-input[type="range"]::-webkit-slider-thumb:hover{transform:scale(1.1);}
-input[type="range"]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:var(--blue);border:3px solid #fff;box-shadow:0 2px 4px rgba(0,0,0,.2);cursor:pointer;}
-.note{font-size:.9rem;color:#666;margin-top:.5rem;}
 .icon{display:inline-block;width:18px;height:18px;vertical-align:middle;}
-.earth-container{position:relative;width:200px;height:200px;}
-.earth-canvas{width:100%;height:100%;border-radius:50%;box-shadow:0 4px 12px rgba(0,0,0,.15);}
-.slider-controls{flex:1;}
 </style>
 </head>
 <body>
@@ -84,6 +85,20 @@ input[type="range"]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;b
 </div>
 
 <div class="card">
+<div class="date-earth-section">
+<div class="earth-container">
+<canvas id="earthCanvas" class="earth-canvas" width="320" height="320"></canvas>
+</div>
+<div class="slider-controls">
+<div class="live-dates">
+<span class="date-selected"><span class="date-label">Selected Date</span><span class="date-value" id="selectedLabel">—</span></span>
+<span class="date-equiv"><span class="date-label">Equivalent Date</span><span class="date-value" id="equivLabel">—</span></span>
+</div>
+<input type="range" id="dateSlider" min="1" max="365" step="1" value="172">
+<div class="note">💡 Drag the slider to explore different dates throughout the year</div>
+</div>
+</div>
+
 <div class="chart-section">
 <div class="vertical-tabs">
 <button id="hoursBtn" class="active">📊 Daylight<br>Hours</button>
@@ -96,22 +111,6 @@ input[type="range"]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;b
 <table id="resultsTable">
 <tbody id="tableBody"></tbody>
 </table>
-</div>
-</div>
-</div>
-
-<div class="card">
-<div class="slider-area">
-<div class="earth-container">
-<canvas id="earthCanvas" class="earth-canvas" width="400" height="400"></canvas>
-</div>
-<div class="slider-controls">
-<div class="live-dates">
-<span class="date-selected"><span class="date-label">Selected Date</span><span class="date-value" id="selectedLabel">—</span></span>
-<span class="date-equiv"><span class="date-label">Equivalent Date</span><span class="date-value" id="equivLabel">—</span></span>
-</div>
-<input type="range" id="dateSlider" min="1" max="365" step="1" value="172">
-<div class="note">💡 Drag the slider to explore different dates throughout the year</div>
 </div>
 </div>
 </div>
@@ -259,7 +258,6 @@ const compElev=noonElevation(comp.lat,day);
 const angleDate=findEquivalentAngleDate(comp.lat,refElev,day,new Date().getFullYear());
 
 if(mode==='hours'){
-// Daylight Hours mode
 const rows=[
 {label:'',value:`<div class="city-header">${base.name}</div>`,span:true},
 {label:'Latitude',value:base.lat.toFixed(2)+'°'},
@@ -282,7 +280,6 @@ tr.innerHTML=`<td>${r.label}</td><td>${r.value}</td>`;
 body.appendChild(tr);
 });
 }else{
-// Elevation mode
 const rows=[
 {label:'',value:`<div class="city-header">${base.name}</div>`,span:true},
 {label:'Latitude',value:base.lat.toFixed(2)+'°'},
@@ -524,126 +521,231 @@ const cx=w/2;
 const cy=h/2;
 const radius=w*0.45;
 
+// Tampa FL coordinates for geosynchronous view
+const tampaLat=27.95;
+const tampaLon=-82.46;
+
 ctx.clearRect(0,0,w,h);
 
 // Draw space background
-ctx.fillStyle='#000814';
+const spaceGrad=ctx.createRadialGradient(cx,cy,0,cx,cy,w*0.7);
+spaceGrad.addColorStop(0,'#001a33');
+spaceGrad.addColorStop(1,'#000000');
+ctx.fillStyle=spaceGrad;
 ctx.fillRect(0,0,w,h);
+
+// Add stars
+ctx.fillStyle='#ffffff';
+for(let i=0;i<80;i++){
+const sx=Math.random()*w;
+const sy=Math.random()*h;
+const sr=Math.random()*1.5;
+ctx.beginPath();
+ctx.arc(sx,sy,sr,0,Math.PI*2);
+ctx.fill();
+}
 
 // Calculate solar declination
 const declination=solarDeclination(day);
 const decRad=toRad(declination);
 
-// Draw Earth sphere
-const gradient=ctx.createRadialGradient(cx-radius*0.3,cy-radius*0.3,radius*0.1,cx,cy,radius);
-gradient.addColorStop(0,'#4a9eff');
-gradient.addColorStop(0.7,'#1e40af');
-gradient.addColorStop(1,'#0f172a');
-ctx.fillStyle=gradient;
+// Draw Earth sphere with gradient
+const earthGrad=ctx.createRadialGradient(cx-radius*0.25,cy-radius*0.25,radius*0.1,cx,cy,radius);
+earthGrad.addColorStop(0,'#6ba3d4');
+earthGrad.addColorStop(0.4,'#3b82f6');
+earthGrad.addColorStop(0.7,'#1e40af');
+earthGrad.addColorStop(1,'#0c1e3d');
+ctx.fillStyle=earthGrad;
 ctx.beginPath();
 ctx.arc(cx,cy,radius,0,Math.PI*2);
 ctx.fill();
 
-// Draw day/night with proper terminator
+// Draw landmasses (simplified continents visible from Tampa perspective)
 ctx.save();
 ctx.beginPath();
 ctx.arc(cx,cy,radius,0,Math.PI*2);
 ctx.clip();
 
-// Night side (gradient from terminator)
-const nightGrad=ctx.createLinearGradient(cx-radius,cy,cx+radius,cy);
-nightGrad.addColorStop(0,'rgba(15,23,42,0.85)');
-nightGrad.addColorStop(0.5,'rgba(15,23,42,0.4)');
-nightGrad.addColorStop(1,'rgba(15,23,42,0)');
+// Function to convert lat/lon to x/y on canvas from Tampa's perspective
+function latLonToXY(lat,lon){
+// Orthographic projection centered on Tampa
+const latR=toRad(lat);
+const lonR=toRad(lon);
+const tampaLatR=toRad(tampaLat);
+const tampaLonR=toRad(tampaLon);
+const dLon=lonR-tampaLonR;
+const x=radius*Math.cos(latR)*Math.sin(dLon);
+const y=radius*(Math.cos(tampaLatR)*Math.sin(latR)-Math.sin(tampaLatR)*Math.cos(latR)*Math.cos(dLon));
+return{x:cx+x,y:cy-y,visible:Math.cos(latR)*Math.cos(dLon)>0};
+}
 
-// Draw night as a path following terminator curve
+ctx.fillStyle='#2d5016';
+ctx.strokeStyle='#1a3d0a';
+ctx.lineWidth=1;
+
+// North America (visible from Tampa)
+ctx.beginPath();
+const naCoords=[
+[70,-170],[70,-60],[25,-80],[10,-85],[10,-110],[30,-125],[60,-130],[70,-170]
+];
+let first=true;
+naCoords.forEach(([lat,lon])=>{
+const pt=latLonToXY(lat,lon);
+if(pt.visible){
+if(first){ctx.moveTo(pt.x,pt.y);first=false;}
+else ctx.lineTo(pt.x,pt.y);
+}
+});
+ctx.closePath();
+ctx.fill();
+ctx.stroke();
+
+// South America
+ctx.beginPath();
+const saCoords=[
+[12,-75],[12,-60],[-55,-65],[-55,-80],[0,-82],[12,-75]
+];
+first=true;
+saCoords.forEach(([lat,lon])=>{
+const pt=latLonToXY(lat,lon);
+if(pt.visible){
+if(first){ctx.moveTo(pt.x,pt.y);first=false;}
+else ctx.lineTo(pt.x,pt.y);
+}
+});
+ctx.closePath();
+ctx.fill();
+ctx.stroke();
+
+// Europe/Africa (partially visible)
+ctx.beginPath();
+const eaCoords=[
+[70,30],[35,40],[-35,40],[-35,-20],[35,-20],[70,30]
+];
+first=true;
+eaCoords.forEach(([lat,lon])=>{
+const pt=latLonToXY(lat,lon);
+if(pt.visible){
+if(first){ctx.moveTo(pt.x,pt.y);first=false;}
+else ctx.lineTo(pt.x,pt.y);
+}
+});
+ctx.closePath();
+ctx.fill();
+ctx.stroke();
+
+ctx.restore();
+
+// Draw terminator (day/night boundary)
+ctx.save();
+ctx.beginPath();
+ctx.arc(cx,cy,radius,0,Math.PI*2);
+ctx.clip();
+
+// Calculate terminator based on solar declination
+// The terminator is perpendicular to the sun's direction
+const sunLon=0; // Noon at prime meridian for reference
+const sunLonR=toRad(sunLon);
+
+// Draw night side
+const nightGrad=ctx.createLinearGradient(cx-radius,cy,cx+radius,cy);
+nightGrad.addColorStop(0,'rgba(0,0,0,0.75)');
+nightGrad.addColorStop(0.4,'rgba(0,0,0,0.4)');
+nightGrad.addColorStop(0.6,'rgba(0,0,0,0)');
+nightGrad.addColorStop(1,'rgba(0,0,0,0)');
+
 ctx.fillStyle=nightGrad;
-const steps=100;
 ctx.beginPath();
 
-// Start from north pole position based on declination
-const poleOffset=cy-radius*Math.sin(decRad);
-
+// Draw terminator curve
+const steps=100;
 for(let i=0;i<=steps;i++){
-const angle=(-Math.PI/2)+(Math.PI*i/steps);
-const x=cx+radius*Math.cos(angle);
-const baseY=cy+radius*Math.sin(angle);
-const latitude=90-(i/steps*180);
-const latRad=toRad(latitude);
-
-// Calculate terminator curve based on declination
-const termShift=Math.sin(latRad)*Math.tan(decRad)*radius*0.5;
-const y=baseY;
-
+const lat=90-i*180/steps;
+const latR=toRad(lat);
+// Calculate longitude of terminator at this latitude
+const cosH=-Math.tan(latR)*Math.tan(decRad);
+if(cosH>=-1&&cosH<=1){
+const H=Math.acos(cosH);
+const HourAngle=toDeg(H);
+const lon1=sunLon+HourAngle;
+const pt=latLonToXY(lat,lon1);
 if(i===0){
-ctx.moveTo(x+termShift,y);
+ctx.moveTo(pt.x,pt.y);
 }else{
-ctx.lineTo(x+termShift,y);
+ctx.lineTo(pt.x,pt.y);
 }
 }
-
-// Complete the path
-ctx.lineTo(cx-radius*2,cy+radius);
-ctx.lineTo(cx-radius*2,cy-radius);
+}
+// Complete the path through south pole
+for(let i=steps;i>=0;i--){
+const lat=-90+i*180/steps;
+const latR=toRad(lat);
+const cosH=-Math.tan(latR)*Math.tan(decRad);
+if(cosH>=-1&&cosH<=1){
+const H=Math.acos(cosH);
+const HourAngle=toDeg(H);
+const lon1=sunLon+HourAngle;
+const pt=latLonToXY(lat,lon1);
+ctx.lineTo(pt.x,pt.y);
+}
+}
 ctx.closePath();
 ctx.fill();
 
 ctx.restore();
 
-// Draw equator line
-ctx.strokeStyle='rgba(255,255,255,0.2)';
-ctx.lineWidth=1;
+// Draw atmospheric glow
+const glowGrad=ctx.createRadialGradient(cx,cy,radius,cx,cy,radius*1.08);
+glowGrad.addColorStop(0,'rgba(100,180,255,0)');
+glowGrad.addColorStop(0.8,'rgba(100,180,255,0.15)');
+glowGrad.addColorStop(1,'rgba(100,180,255,0)');
+ctx.fillStyle=glowGrad;
 ctx.beginPath();
-ctx.ellipse(cx,cy,radius,radius*0.15,0,0,Math.PI*2);
-ctx.stroke();
+ctx.arc(cx,cy,radius*1.08,0,Math.PI*2);
+ctx.fill();
 
-// Draw terminator line (sunrise/sunset line)
-ctx.strokeStyle='rgba(255,200,100,0.6)';
-ctx.lineWidth=2;
+// Draw sun indicator
+const sunAngle=declination>0?-Math.PI/3.5:-Math.PI/2.5;
+const sunDist=radius*1.4;
+const sunX=cx+sunDist*Math.cos(sunAngle);
+const sunY=cy+sunDist*Math.sin(sunAngle);
+
+// Sun glow
+const sunGlowGrad=ctx.createRadialGradient(sunX,sunY,0,sunX,sunY,18);
+sunGlowGrad.addColorStop(0,'rgba(255,220,100,1)');
+sunGlowGrad.addColorStop(0.4,'rgba(255,200,80,0.8)');
+sunGlowGrad.addColorStop(1,'rgba(255,180,60,0)');
+ctx.fillStyle=sunGlowGrad;
 ctx.beginPath();
+ctx.arc(sunX,sunY,18,0,Math.PI*2);
+ctx.fill();
 
-for(let i=0;i<=steps;i++){
-const angle=(-Math.PI/2)+(Math.PI*i/steps);
-const x=cx+radius*Math.cos(angle);
-const baseY=cy+radius*Math.sin(angle);
-const latitude=90-(i/steps*180);
-const latRad=toRad(latitude);
-const termShift=Math.sin(latRad)*Math.tan(decRad)*radius*0.5;
-
-if(i===0){
-ctx.moveTo(x+termShift,baseY);
-}else{
-ctx.lineTo(x+termShift,baseY);
-}
-}
-ctx.stroke();
-
-// Draw sunlight direction indicator
-const sunAngle=declination>0?-Math.PI/4:Math.PI/4;
-const sunX=cx+radius*1.3*Math.cos(sunAngle);
-const sunY=cy+radius*1.3*Math.sin(sunAngle);
-ctx.fillStyle='#fbbf24';
+// Sun core
+ctx.fillStyle='#ffd700';
 ctx.beginPath();
-ctx.arc(sunX,sunY,12,0,Math.PI*2);
+ctx.arc(sunX,sunY,10,0,Math.PI*2);
 ctx.fill();
 
 // Sun rays
-ctx.strokeStyle='rgba(251,191,36,0.4)';
+ctx.strokeStyle='rgba(255,220,100,0.6)';
 ctx.lineWidth=2;
 for(let i=0;i<8;i++){
 const rayAngle=sunAngle+(i*Math.PI/4);
 ctx.beginPath();
-ctx.moveTo(sunX+15*Math.cos(rayAngle),sunY+15*Math.sin(rayAngle));
-ctx.lineTo(sunX+25*Math.cos(rayAngle),sunY+25*Math.sin(rayAngle));
+ctx.moveTo(sunX+14*Math.cos(rayAngle),sunY+14*Math.sin(rayAngle));
+ctx.lineTo(sunX+24*Math.cos(rayAngle),sunY+24*Math.sin(rayAngle));
 ctx.stroke();
 }
 
 // Date label
 ctx.fillStyle='#fff';
-ctx.font='bold 16px Arial';
+ctx.font='bold 14px Arial';
 ctx.textAlign='center';
+ctx.shadowColor='rgba(0,0,0,0.8)';
+ctx.shadowBlur=4;
 const dateStr=fmtMD(dateFromDay(new Date().getFullYear(),day));
-ctx.fillText(dateStr,cx,h-20);
+ctx.fillText(dateStr,cx,h-15);
+ctx.shadowBlur=0;
 }
 
 function syncFromSlider(){
