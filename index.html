@@ -122,9 +122,11 @@ const cities=[
 {lat:50.85,lon:4.35,tz:"Europe/Brussels",name:"Brussels",country:"Belgium"},
 {lat:-34.60,lon:-58.38,tz:"America/Argentina/Buenos_Aires",name:"Buenos Aires",country:"Argentina"},
 {lat:35.23,lon:-80.84,tz:"America/New_York",name:"Charlotte, NC",country:"USA"},
+{lat:38.03,lon:-78.48,tz:"America/New_York",name:"Charlottesville, VA",country:"USA"},
 {lat:64.13,lon:-21.82,tz:"Atlantic/Reykjavik",name:"Reykjavik",country:"Iceland"},
 {lat:55.68,lon:12.57,tz:"Europe/Copenhagen",name:"Copenhagen",country:"Denmark"},
 {lat:53.35,lon:-6.26,tz:"Europe/Dublin",name:"Dublin",country:"Ireland"},
+{lat:42.06,lon:-72.51,tz:"America/New_York",name:"East Longmeadow, MA",country:"USA"},
 {lat:60.17,lon:24.94,tz:"Europe/Helsinki",name:"Helsinki",country:"Finland"},
 {lat:29.76,lon:-95.37,tz:"America/Chicago",name:"Houston, TX",country:"USA"},
 {lat:51.51,lon:-0.13,tz:"Europe/London",name:"London",country:"UK"},
@@ -679,8 +681,14 @@ const sinAlt=Math.sin(latR)*Math.sin(decRad)+Math.cos(latR)*Math.cos(decRad)*Mat
 return Math.asin(sinAlt);
 }
 
+// Create an offscreen canvas for the darkness overlay
+const overlayCanvas=document.createElement('canvas');
+overlayCanvas.width=w;
+overlayCanvas.height=h;
+const overlayCtx=overlayCanvas.getContext('2d');
+
 // Draw pixel-by-pixel terminator with smooth gradient
-const imageData=ctx.createImageData(w,h);
+const imageData=overlayCtx.createImageData(w,h);
 const data=imageData.data;
 
 for(let py=0;py<h;py++){
@@ -710,34 +718,39 @@ const sunAngleDeg=toDeg(sunAngle);
 let darkness=0;
 if(sunAngleDeg<-18){
 // Full night (astronomical twilight)
-darkness=0.8;
+darkness=0.7;
 }else if(sunAngleDeg<-12){
 // Astronomical twilight
-darkness=0.65+0.15*(sunAngleDeg+18)/6;
+darkness=0.55+0.15*(sunAngleDeg+18)/6;
 }else if(sunAngleDeg<-6){
 // Nautical twilight
-darkness=0.45+0.2*(sunAngleDeg+12)/6;
+darkness=0.35+0.2*(sunAngleDeg+12)/6;
 }else if(sunAngleDeg<0){
 // Civil twilight
-darkness=0.15+0.3*(sunAngleDeg+6)/6;
+darkness=0.1+0.25*(sunAngleDeg+6)/6;
 }else if(sunAngleDeg<6){
 // Early day
-darkness=0.05+0.1*(6-sunAngleDeg)/6;
+darkness=0.02+0.08*(6-sunAngleDeg)/6;
 }else{
 // Full daylight
 darkness=0;
 }
 
 const idx=(py*w+px)*4;
+data[idx]=0; // Black overlay
+data[idx+1]=0;
+data[idx+2]=0;
 data[idx+3]=Math.floor(darkness*255); // Alpha channel for darkness
 }
 }
 }
 }
 
-// Apply the terminator overlay
-ctx.fillStyle='rgba(0,0,0,1)';
-ctx.putImageData(imageData,0,0);
+// Apply the overlay to the offscreen canvas
+overlayCtx.putImageData(imageData,0,0);
+
+// Draw the overlay onto the main canvas
+ctx.drawImage(overlayCanvas,0,0);
 
 ctx.restore();
 
@@ -833,12 +846,17 @@ navigator.geolocation.getCurrentPosition(pos=>{
 const closest=findClosestCity(pos.coords.latitude,pos.coords.longitude);
 document.getElementById("referenceCity").selectedIndex=closest;
 updateAll();
-},()=>{
-document.getElementById("referenceCity").selectedIndex=0;
+},err=>{
+console.log('Geolocation error:',err);
+// Default to Tampa if geolocation fails
+const tampaIndex=cities.findIndex(c=>c.name==="Tampa, FL");
+document.getElementById("referenceCity").selectedIndex=tampaIndex>=0?tampaIndex:0;
 updateAll();
-});
+},{timeout:5000,enableHighAccuracy:false});
 }else{
-document.getElementById("referenceCity").selectedIndex=0;
+// Default to Tampa if geolocation not available
+const tampaIndex=cities.findIndex(c=>c.name==="Tampa, FL");
+document.getElementById("referenceCity").selectedIndex=tampaIndex>=0?tampaIndex:0;
 updateAll();
 }
 }
