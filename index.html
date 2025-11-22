@@ -841,58 +841,10 @@ drawChart(day,eqDate,angleDate,refElev);
 drawEarth(day);
 }
 
-// Earth texture images (loaded once)
-let earthDayImg = null;
-let earthNightImg = null;
-let earthImagesLoaded = false;
-let earthImagesLoading = false;
-
 // Smoothstep function for smooth interpolation
 function smoothstep(edge0, edge1, x) {
     const t = Math.max(0, Math.min(1, (x - edge0) / (edge1 - edge0)));
     return t * t * (3 - 2 * t);
-}
-
-// Load Earth textures
-function loadEarthImages(callback) {
-    if (earthImagesLoaded) {
-        if (callback) callback();
-        return;
-    }
-    if (earthImagesLoading) return;
-    earthImagesLoading = true;
-    
-    let loaded = 0;
-    const checkDone = () => {
-        loaded++;
-        if (loaded === 2) {
-            earthImagesLoaded = true;
-            earthImagesLoading = false;
-            if (callback) callback();
-        }
-    };
-    
-    // NASA Blue Marble (day)
-    earthDayImg = new Image();
-    earthDayImg.crossOrigin = 'anonymous';
-    earthDayImg.onload = checkDone;
-    earthDayImg.onerror = () => {
-        console.warn('Failed to load day Earth image, using fallback');
-        earthDayImg = null;
-        checkDone();
-    };
-    earthDayImg.src = 'https://eoimages.gsfc.nasa.gov/images/imagerecords/57000/57752/land_ocean_ice_2048.jpg';
-    
-    // NASA Black Marble (night with city lights)
-    earthNightImg = new Image();
-    earthNightImg.crossOrigin = 'anonymous';
-    earthNightImg.onload = checkDone;
-    earthNightImg.onerror = () => {
-        console.warn('Failed to load night Earth image, using fallback');
-        earthNightImg = null;
-        checkDone();
-    };
-    earthNightImg.src = 'https://eoimages.gsfc.nasa.gov/images/imagerecords/144000/144898/BlackMarble_2016_01deg.jpg';
 }
 
 // Precomputed stars for consistent rendering
@@ -901,13 +853,12 @@ function getStars(w, h) {
     if (!starsCache || starsCache.w !== w || starsCache.h !== h) {
         const stars = [];
         // Use seeded random for consistent star positions
-        const seed = 12345;
-        let rand = seed;
+        let rand = 12345;
         const random = () => {
             rand = (rand * 1103515245 + 12345) & 0x7fffffff;
             return rand / 0x7fffffff;
         };
-        for (let i = 0; i < 120; i++) {
+        for (let i = 0; i < 100; i++) {
             stars.push({
                 x: random() * w,
                 y: random() * h,
@@ -919,6 +870,37 @@ function getStars(w, h) {
     }
     return starsCache.stars;
 }
+
+// City lights data (approximate major city locations)
+const cityLights = [
+    // North America
+    {lat: 40.7, lon: -74.0, size: 3},    // NYC
+    {lat: 34.0, lon: -118.2, size: 2.5}, // LA
+    {lat: 41.9, lon: -87.6, size: 2},    // Chicago
+    {lat: 29.8, lon: -95.4, size: 1.8},  // Houston
+    {lat: 33.4, lon: -112.1, size: 1.5}, // Phoenix
+    {lat: 39.7, lon: -104.9, size: 1.5}, // Denver
+    {lat: 47.6, lon: -122.3, size: 1.5}, // Seattle
+    {lat: 25.8, lon: -80.2, size: 1.8},  // Miami
+    {lat: 43.7, lon: -79.4, size: 1.8},  // Toronto
+    {lat: 19.4, lon: -99.1, size: 2.5},  // Mexico City
+    // South America
+    {lat: -23.5, lon: -46.6, size: 2.5}, // Sao Paulo
+    {lat: -34.6, lon: -58.4, size: 2},   // Buenos Aires
+    {lat: -22.9, lon: -43.2, size: 2},   // Rio
+    {lat: 4.7, lon: -74.1, size: 1.5},   // Bogota
+    {lat: -12.0, lon: -77.0, size: 1.5}, // Lima
+    // Europe
+    {lat: 51.5, lon: -0.1, size: 2.5},   // London
+    {lat: 48.9, lon: 2.3, size: 2.5},    // Paris
+    {lat: 52.5, lon: 13.4, size: 2},     // Berlin
+    {lat: 41.9, lon: 12.5, size: 2},     // Rome
+    {lat: 40.4, lon: -3.7, size: 2},     // Madrid
+    // Africa
+    {lat: 30.0, lon: 31.2, size: 2},     // Cairo
+    {lat: -33.9, lon: 18.4, size: 1.5},  // Cape Town
+    {lat: 6.5, lon: 3.4, size: 2},       // Lagos
+];
 
 function drawEarth(day) {
     const canvas = document.getElementById('earthCanvas');
@@ -932,6 +914,8 @@ function drawEarth(day) {
     // View centered on Tampa FL
     const viewLat = 27.95;
     const viewLon = -82.46;
+    const viewLatR = toRad(viewLat);
+    const viewLonR = toRad(viewLon);
 
     ctx.clearRect(0, 0, w, h);
 
@@ -956,171 +940,229 @@ function drawEarth(day) {
     const declination = solarDeclination(day);
     const decRad = toRad(declination);
 
-    // Create offscreen canvas for Earth rendering
-    const earthCanvas = document.createElement('canvas');
-    earthCanvas.width = w;
-    earthCanvas.height = h;
-    const earthCtx = earthCanvas.getContext('2d');
+    // Create Earth with pixel-by-pixel rendering for smooth terminator
+    const imageData = ctx.createImageData(w, h);
+    const data = imageData.data;
 
-    // If images are loaded, use them; otherwise use fallback
-    if (earthImagesLoaded && earthDayImg && earthNightImg) {
-        // Render Earth with NASA imagery
-        const imageData = earthCtx.createImageData(w, h);
-        const data = imageData.data;
+    // Continent polygon data (simplified but more detailed)
+    const continents = {
+        northAmerica: [
+            [70,-140],[72,-120],[70,-100],[65,-85],[60,-75],[55,-60],[50,-55],
+            [45,-65],[42,-70],[38,-75],[35,-78],[30,-82],[28,-82],[25,-80],
+            [25,-85],[27,-97],[26,-98],[22,-100],[18,-105],[15,-95],[18,-88],
+            [21,-87],[22,-90],[25,-90],[28,-95],[29,-104],[32,-115],[35,-120],
+            [40,-124],[45,-124],[50,-127],[55,-130],[60,-140],[65,-145],[70,-140]
+        ],
+        centralAmerica: [
+            [18,-88],[15,-88],[12,-85],[10,-84],[8,-80],[9,-78],[10,-75],
+            [8,-77],[7,-77],[9,-80],[10,-83],[14,-87],[18,-88]
+        ],
+        southAmerica: [
+            [10,-75],[12,-72],[12,-68],[10,-65],[6,-60],[4,-52],[0,-50],
+            [-5,-35],[-10,-37],[-15,-40],[-20,-42],[-25,-48],[-30,-52],
+            [-35,-58],[-40,-65],[-45,-68],[-50,-72],[-55,-68],[-55,-65],
+            [-52,-60],[-48,-65],[-42,-63],[-35,-55],[-28,-49],[-22,-42],
+            [-15,-45],[-10,-50],[-5,-55],[0,-60],[2,-68],[5,-73],[10,-75]
+        ],
+        europe: [
+            [70,30],[65,25],[60,30],[55,38],[50,40],[45,40],[40,30],
+            [37,25],[36,28],[38,30],[40,25],[42,18],[43,10],[44,5],
+            [46,0],[48,-5],[50,0],[52,5],[55,10],[58,15],[60,20],
+            [62,25],[65,28],[70,30]
+        ],
+        africa: [
+            [35,10],[37,-5],[35,-10],[30,-15],[25,-17],[20,-17],[15,-17],
+            [10,-15],[5,-8],[0,-5],[-5,10],[-10,15],[-15,20],[-20,25],
+            [-25,30],[-30,32],[-35,20],[-35,27],[-30,35],[-25,40],
+            [-15,42],[-10,45],[0,45],[5,42],[10,40],[15,45],[20,50],
+            [25,52],[30,35],[32,32],[35,30],[35,10]
+        ],
+        australia: [
+            [-12,130],[-15,125],[-20,118],[-25,114],[-30,115],[-35,118],
+            [-38,142],[-35,148],[-30,153],[-25,152],[-20,148],[-15,145],
+            [-12,142],[-10,145],[-12,135],[-12,130]
+        ],
+        greenland: [
+            [76,-20],[80,-30],[82,-40],[80,-55],[75,-60],[70,-55],
+            [68,-45],[70,-35],[72,-25],[76,-20]
+        ]
+    };
 
-        // Precompute view angles
-        const viewLatR = toRad(viewLat);
-        const viewLonR = toRad(viewLon);
-        const cosViewLat = Math.cos(viewLatR);
-        const sinViewLat = Math.sin(viewLatR);
+    // Function to check if a point is inside a polygon (ray casting)
+    function pointInPolygon(lat, lon, polygon) {
+        let inside = false;
+        for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+            const xi = polygon[i][1], yi = polygon[i][0];
+            const xj = polygon[j][1], yj = polygon[j][0];
+            if (((yi > lat) !== (yj > lat)) && (lon < (xj - xi) * (lat - yi) / (yj - yi) + xi)) {
+                inside = !inside;
+            }
+        }
+        return inside;
+    }
 
-        // Get image data from day and night textures
-        const tempCanvas = document.createElement('canvas');
-        tempCanvas.width = earthDayImg.width;
-        tempCanvas.height = earthDayImg.height;
-        const tempCtx = tempCanvas.getContext('2d');
+    function isLand(lat, lon) {
+        // Normalize longitude
+        while (lon > 180) lon -= 360;
+        while (lon < -180) lon += 360;
         
-        tempCtx.drawImage(earthDayImg, 0, 0);
-        const dayData = tempCtx.getImageData(0, 0, earthDayImg.width, earthDayImg.height).data;
-        
-        tempCanvas.width = earthNightImg.width;
-        tempCanvas.height = earthNightImg.height;
-        tempCtx.drawImage(earthNightImg, 0, 0);
-        const nightData = tempCtx.getImageData(0, 0, earthNightImg.width, earthNightImg.height).data;
+        for (const continent of Object.values(continents)) {
+            if (pointInPolygon(lat, lon, continent)) return true;
+        }
+        return false;
+    }
 
-        const dayW = earthDayImg.width;
-        const dayH = earthDayImg.height;
-        const nightW = earthNightImg.width;
-        const nightH = earthNightImg.height;
+    // Render Earth pixel by pixel
+    for (let py = 0; py < h; py++) {
+        for (let px = 0; px < w; px++) {
+            const dx = px - cx;
+            const dy = py - cy;
+            const distSq = dx * dx + dy * dy;
+            const radiusSq = radius * radius;
 
-        for (let py = 0; py < h; py++) {
-            for (let px = 0; px < w; px++) {
-                const dx = px - cx;
-                const dy = py - cy;
-                const distSq = dx * dx + dy * dy;
-                const radiusSq = radius * radius;
+            if (distSq <= radiusSq) {
+                const x = dx / radius;
+                const y = -dy / radius;
+                const rho = Math.sqrt(x * x + y * y);
 
-                if (distSq <= radiusSq) {
-                    // Convert pixel to normalized coordinates on sphere
-                    const x = dx / radius;
-                    const y = -dy / radius;
-                    const rho = Math.sqrt(x * x + y * y);
+                if (rho <= 1 && rho > 0.001) {
+                    // Inverse orthographic projection
+                    const c = Math.asin(rho);
+                    const cosC = Math.cos(c);
+                    const sinC = Math.sin(c);
+                    const cosViewLat = Math.cos(viewLatR);
+                    const sinViewLat = Math.sin(viewLatR);
 
-                    if (rho <= 1) {
-                        // Inverse orthographic projection
-                        const c = Math.asin(rho);
-                        const cosC = Math.cos(c);
-                        const sinC = Math.sin(c);
+                    const latR = Math.asin(cosC * sinViewLat + (y * sinC * cosViewLat) / rho);
+                    const lonR = viewLonR + Math.atan2(x * sinC, rho * cosViewLat * cosC - y * sinViewLat * sinC);
+                    const lat = toDeg(latR);
+                    let lon = toDeg(lonR);
+                    while (lon > 180) lon -= 360;
+                    while (lon < -180) lon += 360;
 
-                        // Handle center point separately to avoid division by zero
-                        let lat, lon;
-                        if (rho < 0.0001) {
-                            lat = viewLat;
-                            lon = viewLon;
+                    // Calculate sun angle for smooth terminator
+                    const sunLon = 0;
+                    const dLon = toRad(lon - sunLon);
+                    const sinAlt = Math.sin(latR) * Math.sin(decRad) + Math.cos(latR) * Math.cos(decRad) * Math.cos(dLon);
+                    const sunAngleDeg = toDeg(Math.asin(sinAlt));
+
+                    // Smooth day/night blend using smoothstep (-12° to 6° transition)
+                    const dayAmount = smoothstep(-12, 6, sunAngleDeg);
+                    const nightAmount = 1 - dayAmount;
+
+                    // Determine if land or ocean
+                    const land = isLand(lat, lon);
+
+                    // Limb darkening
+                    const limbFactor = 1 - (rho * rho * 0.25);
+
+                    // Day colors
+                    let dayR, dayG, dayB;
+                    if (land) {
+                        // Land: greens and browns
+                        const latFactor = Math.abs(lat) / 90;
+                        if (Math.abs(lat) > 65) {
+                            // Ice/snow
+                            dayR = 240; dayG = 245; dayB = 250;
+                        } else if (Math.abs(lat) > 50) {
+                            // Northern forests
+                            dayR = 60 + latFactor * 40; 
+                            dayG = 100 + latFactor * 30; 
+                            dayB = 50;
+                        } else if (Math.abs(lat) < 25) {
+                            // Tropical
+                            dayR = 50; dayG = 130; dayB = 50;
                         } else {
-                            const latR = Math.asin(cosC * sinViewLat + (y * sinC * cosViewLat) / rho);
-                            const lonR = viewLonR + Math.atan2(x * sinC, rho * cosViewLat * cosC - y * sinViewLat * sinC);
-                            lat = toDeg(latR);
-                            lon = toDeg(lonR);
+                            // Temperate
+                            dayR = 80; dayG = 120; dayB = 60;
                         }
-
-                        // Normalize longitude to -180 to 180
-                        while (lon > 180) lon -= 360;
-                        while (lon < -180) lon += 360;
-
-                        // Calculate sun angle at this point (smooth terminator)
-                        const latR = toRad(lat);
-                        const sunLon = 0; // Noon at prime meridian
-                        const dLon = toRad(lon - sunLon);
-                        const sinAlt = Math.sin(latR) * Math.sin(decRad) + Math.cos(latR) * Math.cos(decRad) * Math.cos(dLon);
-                        const sunAngleDeg = toDeg(Math.asin(sinAlt));
-
-                        // Smooth day/night blend using smoothstep
-                        // Transition from full day (>6°) to full night (<-12°)
-                        const dayBlend = smoothstep(-12, 6, sunAngleDeg);
-                        const nightBlend = 1 - dayBlend;
-
-                        // Sample from equirectangular textures
-                        // Day texture
-                        const dayU = ((lon + 180) / 360) * dayW;
-                        const dayV = ((90 - lat) / 180) * dayH;
-                        const dayPx = Math.floor(Math.max(0, Math.min(dayW - 1, dayU)));
-                        const dayPy = Math.floor(Math.max(0, Math.min(dayH - 1, dayV)));
-                        const dayIdx = (dayPy * dayW + dayPx) * 4;
-
-                        // Night texture
-                        const nightU = ((lon + 180) / 360) * nightW;
-                        const nightV = ((90 - lat) / 180) * nightH;
-                        const nightPx = Math.floor(Math.max(0, Math.min(nightW - 1, nightU)));
-                        const nightPy = Math.floor(Math.max(0, Math.min(nightH - 1, nightV)));
-                        const nightIdx = (nightPy * nightW + nightPx) * 4;
-
-                        // Blend day and night
-                        const r = dayData[dayIdx] * dayBlend + nightData[nightIdx] * nightBlend * 1.5;
-                        const g = dayData[dayIdx + 1] * dayBlend + nightData[nightIdx + 1] * nightBlend * 1.3;
-                        const b = dayData[dayIdx + 2] * dayBlend + nightData[nightIdx + 2] * nightBlend * 0.8;
-
-                        // Apply slight darkening at edges (limb darkening)
-                        const limbFactor = 1 - (rho * rho * 0.3);
-
-                        const idx = (py * w + px) * 4;
-                        data[idx] = Math.min(255, r * limbFactor);
-                        data[idx + 1] = Math.min(255, g * limbFactor);
-                        data[idx + 2] = Math.min(255, b * limbFactor);
-                        data[idx + 3] = 255;
+                    } else {
+                        // Ocean: blues
+                        const depthVariation = Math.sin(lat * 0.1) * 10;
+                        dayR = 30 + depthVariation;
+                        dayG = 80 + depthVariation;
+                        dayB = 160 + depthVariation;
                     }
+
+                    // Night colors (dark with potential city lights)
+                    let nightR = 5, nightG = 5, nightB = 15;
+                    
+                    // Add city lights on night side
+                    if (land && nightAmount > 0.3) {
+                        for (const city of cityLights) {
+                            const dLat = lat - city.lat;
+                            const dLon = lon - city.lon;
+                            const dist = Math.sqrt(dLat * dLat + dLon * dLon);
+                            if (dist < city.size * 3) {
+                                const glow = Math.exp(-dist / city.size) * nightAmount;
+                                nightR += glow * 255 * 0.9;
+                                nightG += glow * 200 * 0.7;
+                                nightB += glow * 100 * 0.3;
+                            }
+                        }
+                    }
+
+                    // Blend day and night
+                    let r = dayR * dayAmount * limbFactor + nightR * nightAmount;
+                    let g = dayG * dayAmount * limbFactor + nightG * nightAmount;
+                    let b = dayB * dayAmount * limbFactor + nightB * nightAmount;
+
+                    // Add subtle atmosphere at edges
+                    if (rho > 0.85) {
+                        const atmosBlend = (rho - 0.85) / 0.15;
+                        r = r * (1 - atmosBlend * 0.3) + 100 * atmosBlend * 0.3;
+                        g = g * (1 - atmosBlend * 0.3) + 150 * atmosBlend * 0.3;
+                        b = b * (1 - atmosBlend * 0.3) + 255 * atmosBlend * 0.3;
+                    }
+
+                    const idx = (py * w + px) * 4;
+                    data[idx] = Math.min(255, Math.max(0, r));
+                    data[idx + 1] = Math.min(255, Math.max(0, g));
+                    data[idx + 2] = Math.min(255, Math.max(0, b));
+                    data[idx + 3] = 255;
+                } else if (rho <= 0.001) {
+                    // Center pixel
+                    const idx = (py * w + px) * 4;
+                    data[idx] = 30; data[idx + 1] = 80; data[idx + 2] = 160; data[idx + 3] = 255;
                 }
             }
         }
-
-        earthCtx.putImageData(imageData, 0, 0);
-    } else {
-        // Fallback: simple gradient sphere if images not loaded
-        const earthGrad = earthCtx.createRadialGradient(cx - radius * 0.3, cy - radius * 0.3, radius * 0.1, cx, cy, radius);
-        earthGrad.addColorStop(0, '#7cb9e8');
-        earthGrad.addColorStop(0.5, '#4a90c8');
-        earthGrad.addColorStop(1, '#1a3f5f');
-        earthCtx.fillStyle = earthGrad;
-        earthCtx.beginPath();
-        earthCtx.arc(cx, cy, radius, 0, Math.PI * 2);
-        earthCtx.fill();
     }
 
-    // Draw Earth onto main canvas
-    ctx.drawImage(earthCanvas, 0, 0);
+    ctx.putImageData(imageData, 0, 0);
 
     // Draw atmospheric glow (blue limb)
-    const glowGrad = ctx.createRadialGradient(cx, cy, radius * 0.95, cx, cy, radius * 1.15);
+    const glowGrad = ctx.createRadialGradient(cx, cy, radius * 0.92, cx, cy, radius * 1.12);
     glowGrad.addColorStop(0, 'rgba(100, 180, 255, 0)');
-    glowGrad.addColorStop(0.5, 'rgba(120, 180, 255, 0.15)');
-    glowGrad.addColorStop(0.75, 'rgba(80, 140, 220, 0.1)');
+    glowGrad.addColorStop(0.4, 'rgba(120, 180, 255, 0.12)');
+    glowGrad.addColorStop(0.7, 'rgba(80, 140, 220, 0.08)');
     glowGrad.addColorStop(1, 'rgba(50, 100, 180, 0)');
     ctx.fillStyle = glowGrad;
     ctx.beginPath();
-    ctx.arc(cx, cy, radius * 1.15, 0, Math.PI * 2);
+    ctx.arc(cx, cy, radius * 1.12, 0, Math.PI * 2);
     ctx.fill();
 
-    // Draw sun indicator (position based on declination)
-    const sunAngle = declination > 0 ? -Math.PI / 3.5 : -Math.PI / 2.5;
+    // Draw sun indicator
+    const sunVisualAngle = declination > 0 ? -Math.PI / 3.5 : -Math.PI / 2.5;
     const sunDist = radius * 1.35;
-    const sunX = cx + sunDist * Math.cos(sunAngle);
-    const sunY = cy + sunDist * Math.sin(sunAngle);
+    const sunX = cx + sunDist * Math.cos(sunVisualAngle);
+    const sunY = cy + sunDist * Math.sin(sunVisualAngle);
 
     // Sun glow
-    const sunGlowGrad = ctx.createRadialGradient(sunX, sunY, 0, sunX, sunY, 22);
-    sunGlowGrad.addColorStop(0, 'rgba(255, 250, 200, 1)');
+    const sunGlowGrad = ctx.createRadialGradient(sunX, sunY, 0, sunX, sunY, 20);
+    sunGlowGrad.addColorStop(0, 'rgba(255, 250, 220, 1)');
     sunGlowGrad.addColorStop(0.3, 'rgba(255, 240, 150, 0.8)');
     sunGlowGrad.addColorStop(0.6, 'rgba(255, 220, 100, 0.3)');
     sunGlowGrad.addColorStop(1, 'rgba(255, 200, 80, 0)');
     ctx.fillStyle = sunGlowGrad;
     ctx.beginPath();
-    ctx.arc(sunX, sunY, 22, 0, Math.PI * 2);
+    ctx.arc(sunX, sunY, 20, 0, Math.PI * 2);
     ctx.fill();
 
     // Sun core
-    ctx.fillStyle = '#fff8e0';
+    ctx.fillStyle = '#fffef0';
     ctx.beginPath();
-    ctx.arc(sunX, sunY, 7, 0, Math.PI * 2);
+    ctx.arc(sunX, sunY, 6, 0, Math.PI * 2);
     ctx.fill();
 
     // Date label
@@ -1191,16 +1233,7 @@ populateSelectors();
 document.getElementById("compareCity").selectedIndex=16;
 const now=new Date();
 document.getElementById("dateSlider").value=dayOfYear(now);
-
-// Start geolocation and initial render immediately
 initWithGeolocation();
-
-// Preload Earth images in background, redraw when ready
-loadEarthImages(() => {
-    // Redraw Earth with loaded textures
-    const day = Number(document.getElementById("dateSlider").value);
-    drawEarth(day);
-});
 }
 
 document.getElementById("dateSlider").addEventListener("input",syncFromSlider);
