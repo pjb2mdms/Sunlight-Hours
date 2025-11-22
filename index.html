@@ -21,7 +21,6 @@ main{max-width:1100px;margin:2rem auto 3rem;padding:0 1rem;}
 .selector-group select{font:inherit;font-size:1rem;padding:.7rem;border:2px solid #e2e8f0;border-radius:8px;background:#fff;transition:all .2s;}
 .selector-group select:hover{border-color:#cbd5e1;}
 .selector-group select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(11,95,179,.1);}
-
 .date-earth-section{display:grid;grid-template-columns:160px 1fr;gap:1.5rem;align-items:center;margin-bottom:1.5rem;padding:1.2rem;background:#f8fafc;border-radius:8px;}
 @media(max-width:768px){.date-earth-section{grid-template-columns:1fr;}}
 .earth-container{position:relative;width:160px;height:160px;margin:0 auto;}
@@ -38,10 +37,8 @@ input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;hei
 input[type="range"]::-webkit-slider-thumb:hover{transform:scale(1.1);}
 input[type="range"]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:var(--blue);border:3px solid #fff;box-shadow:0 2px 4px rgba(0,0,0,.2);cursor:pointer;}
 .note{font-size:.85rem;color:#666;margin-top:.5rem;text-align:center;}
-
 .chart-section{display:grid;grid-template-columns:auto 1fr auto;gap:1.5rem;align-items:start;}
 @media(max-width:968px){.chart-section{grid-template-columns:1fr;}}
-
 .vertical-tabs{display:flex;flex-direction:column;gap:.5rem;padding-top:2rem;}
 @media(max-width:968px){.vertical-tabs{flex-direction:row;flex-wrap:wrap;padding-top:0;justify-content:center;margin-bottom:1rem;}}
 .vertical-tabs button{font:inherit;font-weight:600;padding:.7rem 1rem;border-radius:8px;border:2px solid #e2e8f0;cursor:pointer;background:#fff;color:#333;transition:all .2s;white-space:nowrap;min-width:140px;}
@@ -49,10 +46,8 @@ input[type="range"]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;b
 .vertical-tabs button:hover{background:#f8fafc;}
 .vertical-tabs button.active{background:var(--blue);color:#fff;border-color:var(--blue);}
 .vertical-tabs button.active-green{background:var(--green);color:#fff;border-color:var(--green);}
-
 .chart-and-table{flex:1;min-width:0;}
 .chart-container{position:relative;height:400px;margin-bottom:1.5rem;}
-
 .data-table-section{min-width:280px;}
 @media(max-width:968px){.data-table-section{min-width:0;}}
 table{width:100%;border-collapse:collapse;font-size:.9rem;}
@@ -62,17 +57,12 @@ td:first-child{font-weight:500;color:#666;}
 td:last-child{text-align:right;}
 td svg{width:60px;height:35px;vertical-align:middle;margin-left:auto;display:block;}
 .city-header{background:#f1f5f9;font-weight:700;color:#334155;text-align:center;padding:.6rem;}
-
 .icon{display:inline-block;width:18px;height:18px;vertical-align:middle;}
-
-/* SAD Index specific styles */
 .sad-score-display{display:flex;justify-content:center;gap:2rem;margin:1rem 0;flex-wrap:wrap;}
 .sad-score-card{text-align:center;padding:1.5rem 2rem;border-radius:12px;min-width:140px;}
 .sad-score-value{font-size:2.5rem;font-weight:700;margin-bottom:.25rem;}
 .sad-score-label{font-size:.85rem;font-weight:600;text-transform:uppercase;letter-spacing:1px;opacity:.9;}
 .sad-score-city{font-size:.75rem;margin-top:.5rem;opacity:.7;}
-.sad-category{font-size:.9rem;font-weight:600;margin-top:.5rem;padding:.25rem .75rem;border-radius:20px;display:inline-block;}
-
 .sad-breakdown{margin-top:1rem;}
 .sad-breakdown-title{font-size:.85rem;font-weight:600;color:#555;margin-bottom:.75rem;text-transform:uppercase;letter-spacing:1px;}
 .sad-component{margin-bottom:.75rem;}
@@ -81,20 +71,30 @@ td svg{width:60px;height:35px;vertical-align:middle;margin-left:auto;display:blo
 .sad-component-value{font-weight:500;}
 .sad-component-bar{height:6px;background:#e2e8f0;border-radius:3px;overflow:hidden;}
 .sad-component-fill{height:100%;border-radius:3px;transition:width .4s ease-out;}
-
 .sad-advice{margin-top:1.5rem;padding:1rem;border-radius:8px;font-size:.9rem;line-height:1.5;}
-
-.cloud-control{display:flex;align-items:center;justify-content:center;gap:1rem;margin-top:1rem;padding:.75rem;background:#fff;border-radius:8px;box-shadow:0 1px 2px rgba(0,0,0,.05);}
-.cloud-control label{font-size:.9rem;color:#555;display:flex;align-items:center;gap:.5rem;}
-.cloud-control input[type="range"]{width:150px;margin:0;}
-.cloud-control .cloud-value{font-weight:600;min-width:40px;}
-
-/* Category colors */
+.sad-controls{display:flex;flex-direction:column;gap:1rem;margin-top:1rem;padding:1rem;background:#fff;border-radius:8px;box-shadow:0 1px 2px rgba(0,0,0,.05);}
+.control-row{display:flex;align-items:center;justify-content:center;gap:1rem;flex-wrap:wrap;}
+.control-row label{font-size:.9rem;color:#555;display:flex;align-items:center;gap:.5rem;}
+.control-row input[type="range"]{width:150px;margin:0;}
+.control-row .value-display{font-weight:600;min-width:50px;text-align:center;}
+.control-row select{font:inherit;font-size:.9rem;padding:.4rem .6rem;border:1px solid #e2e8f0;border-radius:6px;background:#fff;}
+.region-badge{display:inline-block;padding:.2rem .5rem;border-radius:10px;font-size:.7rem;font-weight:600;margin-left:.25rem;vertical-align:middle;}
+.region-na{background:#dbeafe;color:#1e40af;}
+.region-eu{background:#fef3c7;color:#b45309;}
+.region-nordic{background:#e0e7ff;color:#4338ca;}
+.region-iceland{background:#ddd6fe;color:#6d28d9;}
+.region-uk{background:#d1fae5;color:#047857;}
+.region-southern{background:#fed7aa;color:#c2410c;}
+.disclaimer{background:linear-gradient(135deg,#fffbeb 0%,#fef3c7 100%);border-left:4px solid #f59e0b;padding:1rem;margin:1rem 0;border-radius:0 8px 8px 0;font-size:.85rem;line-height:1.5;}
+.disclaimer-title{font-weight:700;color:#b45309;margin-bottom:.5rem;display:flex;align-items:center;gap:.5rem;}
+.disclaimer-toggle{background:none;border:none;color:#b45309;cursor:pointer;font-size:.8rem;text-decoration:underline;padding:0;margin-top:.5rem;}
+.info-icon{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:#94a3b8;color:#fff;font-size:.65rem;font-weight:700;cursor:help;margin-left:.25rem;}
 .cat-excellent{background:rgba(245,158,11,0.15);color:#b45309;}
 .cat-good{background:rgba(132,204,22,0.15);color:#4d7c0f;}
 .cat-moderate{background:rgba(34,211,238,0.15);color:#0e7490;}
 .cat-low{background:rgba(167,139,250,0.15);color:#6d28d9;}
 .cat-verylow{background:rgba(244,114,182,0.15);color:#be185d;}
+.adjusted-note{font-size:.7rem;color:#666;margin-top:.25rem;}
 </style>
 </head>
 <body>
@@ -115,12 +115,9 @@ td svg{width:60px;height:35px;vertical-align:middle;margin-left:auto;display:blo
 </div>
 </div>
 </div>
-
 <div class="card">
 <div class="date-earth-section">
-<div class="earth-container">
-<canvas id="earthCanvas" class="earth-canvas" width="320" height="320"></canvas>
-</div>
+<div class="earth-container"><canvas id="earthCanvas" class="earth-canvas" width="320" height="320"></canvas></div>
 <div class="slider-controls">
 <div class="live-dates">
 <span class="date-selected"><span class="date-label">Selected Date</span><span class="date-value" id="selectedLabel">—</span></span>
@@ -130,1131 +127,345 @@ td svg{width:60px;height:35px;vertical-align:middle;margin-left:auto;display:blo
 <div class="note">💡 Drag the slider to explore different dates throughout the year</div>
 </div>
 </div>
-
-<!-- Cloud cover control for SAD mode -->
-<div class="cloud-control" id="cloudControl" style="display:none;">
-<label>
-<span>☁️ Cloud Cover:</span>
+<div class="sad-controls" id="sadControls" style="display:none;">
+<div class="control-row">
+<label>☁️ Cloud Cover:
 <input type="range" id="cloudSlider" min="0" max="100" value="30">
-<span class="cloud-value" id="cloudValue">30%</span>
+<span class="value-display" id="cloudValue">30%</span>
 </label>
-<span style="font-size:.8rem;color:#888;">Adjust for current weather conditions</span>
+<button id="resetCloudBtn" style="font-size:.75rem;padding:.25rem .5rem;border:1px solid #cbd5e1;border-radius:4px;background:#fff;cursor:pointer;" title="Reset to city defaults">↺ Auto</button>
 </div>
-
+<div class="control-row">
+<label>🌍 Regional Adjustment:
+<select id="regionMode">
+<option value="auto">Auto (by city)</option>
+<option value="none">None (raw light score)</option>
+<option value="na">North America (1.0×)</option>
+<option value="eu">Western Europe (0.6×)</option>
+<option value="nordic">Nordic (0.7×)</option>
+<option value="iceland">Iceland (0.4×)</option>
+<option value="uk">UK/Ireland (0.9×)</option>
+<option value="southern">Southern (0.8×)</option>
+</select>
+<span class="info-icon" title="Regional factors account for genetics, diet, and culture affecting SAD beyond light exposure. Based on epidemiological research.">?</span>
+</label>
+</div>
+</div>
+<div class="disclaimer" id="sadDisclaimer" style="display:none;">
+<div class="disclaimer-title">⚠️ About the SAD Light Index</div>
+<div id="disclaimerContent">
+<p style="margin:0 0 .5rem 0;">This index measures <strong>environmental light conditions</strong> relevant to SAD, not predicted prevalence. Actual risk depends on genetics (family history, population genetics like Iceland's adaptation), diet (vitamin D, omega-3 from fish), culture (winter mindset, light therapy use), and demographics (women 4× more likely; typical onset ages 18-30).</p>
+<p style="margin:0;">Regional adjustments are derived from epidemiological research comparing SAD prevalence across populations at similar latitudes.</p>
+</div>
+<button class="disclaimer-toggle" id="disclaimerToggle" onclick="toggleDisclaimer()">Show less</button>
+</div>
 <div class="chart-section">
 <div class="vertical-tabs">
 <button id="hoursBtn" class="active">📊 Daylight<br>Hours</button>
 <button id="elevBtn">🌞 Noon<br>Elevation</button>
 <button id="sadBtn">🧠 SAD Light<br>Index</button>
 </div>
-<div class="chart-and-table">
-<div class="chart-container"><canvas id="chartCanvas"></canvas></div>
-</div>
-<div class="data-table-section">
-<table id="resultsTable">
-<tbody id="tableBody"></tbody>
-</table>
-</div>
+<div class="chart-and-table"><div class="chart-container"><canvas id="chartCanvas"></canvas></div></div>
+<div class="data-table-section"><table id="resultsTable"><tbody id="tableBody"></tbody></table></div>
 </div>
 </div>
 </main>
 <script>
 const cities=[
-{lat:52.37,lon:4.89,tz:"Europe/Amsterdam",name:"Amsterdam",country:"Netherlands"},
-{lat:47.50,lon:19.04,tz:"Europe/Budapest",name:"Budapest",country:"Hungary"},
-{lat:50.85,lon:4.35,tz:"Europe/Brussels",name:"Brussels",country:"Belgium"},
-{lat:-34.60,lon:-58.38,tz:"America/Argentina/Buenos_Aires",name:"Buenos Aires",country:"Argentina"},
-{lat:35.23,lon:-80.84,tz:"America/New_York",name:"Charlotte, NC",country:"USA"},
-{lat:38.03,lon:-78.48,tz:"America/New_York",name:"Charlottesville, VA",country:"USA"},
-{lat:64.13,lon:-21.82,tz:"Atlantic/Reykjavik",name:"Reykjavik",country:"Iceland"},
-{lat:55.68,lon:12.57,tz:"Europe/Copenhagen",name:"Copenhagen",country:"Denmark"},
-{lat:53.35,lon:-6.26,tz:"Europe/Dublin",name:"Dublin",country:"Ireland"},
-{lat:42.06,lon:-72.51,tz:"America/New_York",name:"East Longmeadow, MA",country:"USA"},
-{lat:60.17,lon:24.94,tz:"Europe/Helsinki",name:"Helsinki",country:"Finland"},
-{lat:29.76,lon:-95.37,tz:"America/Chicago",name:"Houston, TX",country:"USA"},
-{lat:51.51,lon:-0.13,tz:"Europe/London",name:"London",country:"UK"},
-{lat:40.42,lon:-3.70,tz:"Europe/Madrid",name:"Madrid",country:"Spain"},
-{lat:19.43,lon:-99.13,tz:"America/Mexico_City",name:"Mexico City",country:"Mexico"},
-{lat:59.91,lon:10.75,tz:"Europe/Oslo",name:"Oslo",country:"Norway"},
-{lat:45.42,lon:-75.70,tz:"America/Toronto",name:"Ottawa",country:"Canada"},
-{lat:9.10,lon:-79.38,tz:"America/Panama",name:"Panama City",country:"Panama"},
-{lat:48.85,lon:2.35,tz:"Europe/Paris",name:"Paris",country:"France"},
-{lat:33.45,lon:-112.07,tz:"America/Phoenix",name:"Phoenix, AZ",country:"USA"},
-{lat:50.08,lon:14.44,tz:"Europe/Prague",name:"Prague",country:"Czech Republic"},
-{lat:41.90,lon:12.50,tz:"Europe/Rome",name:"Rome",country:"Italy"},
-{lat:-33.45,lon:-70.67,tz:"America/Santiago",name:"Santiago",country:"Chile"},
-{lat:56.34,lon:-2.80,tz:"Europe/London",name:"St Andrews",country:"Scotland"},
-{lat:59.33,lon:18.06,tz:"Europe/Stockholm",name:"Stockholm",country:"Sweden"},
-{lat:27.95,lon:-82.46,tz:"America/New_York",name:"Tampa, FL",country:"USA"},
-{lat:38.91,lon:-77.04,tz:"America/New_York",name:"Washington, D.C.",country:"USA"}
+{lat:52.37,lon:4.89,tz:"Europe/Amsterdam",name:"Amsterdam",country:"Netherlands",cloud:65,region:"eu"},
+{lat:47.50,lon:19.04,tz:"Europe/Budapest",name:"Budapest",country:"Hungary",cloud:55,region:"eu"},
+{lat:50.85,lon:4.35,tz:"Europe/Brussels",name:"Brussels",country:"Belgium",cloud:65,region:"eu"},
+{lat:-34.60,lon:-58.38,tz:"America/Argentina/Buenos_Aires",name:"Buenos Aires",country:"Argentina",cloud:45,region:"southern"},
+{lat:35.23,lon:-80.84,tz:"America/New_York",name:"Charlotte, NC",country:"USA",cloud:50,region:"na"},
+{lat:38.03,lon:-78.48,tz:"America/New_York",name:"Charlottesville, VA",country:"USA",cloud:50,region:"na"},
+{lat:64.13,lon:-21.82,tz:"Atlantic/Reykjavik",name:"Reykjavik",country:"Iceland",cloud:70,region:"iceland"},
+{lat:55.68,lon:12.57,tz:"Europe/Copenhagen",name:"Copenhagen",country:"Denmark",cloud:60,region:"nordic"},
+{lat:53.35,lon:-6.26,tz:"Europe/Dublin",name:"Dublin",country:"Ireland",cloud:70,region:"uk"},
+{lat:42.06,lon:-72.51,tz:"America/New_York",name:"East Longmeadow, MA",country:"USA",cloud:55,region:"na"},
+{lat:60.17,lon:24.94,tz:"Europe/Helsinki",name:"Helsinki",country:"Finland",cloud:65,region:"nordic"},
+{lat:29.76,lon:-95.37,tz:"America/Chicago",name:"Houston, TX",country:"USA",cloud:45,region:"na"},
+{lat:51.51,lon:-0.13,tz:"Europe/London",name:"London",country:"UK",cloud:70,region:"uk"},
+{lat:40.42,lon:-3.70,tz:"Europe/Madrid",name:"Madrid",country:"Spain",cloud:35,region:"eu"},
+{lat:19.43,lon:-99.13,tz:"America/Mexico_City",name:"Mexico City",country:"Mexico",cloud:40,region:"na"},
+{lat:59.91,lon:10.75,tz:"Europe/Oslo",name:"Oslo",country:"Norway",cloud:60,region:"nordic"},
+{lat:45.42,lon:-75.70,tz:"America/Toronto",name:"Ottawa",country:"Canada",cloud:55,region:"na"},
+{lat:9.10,lon:-79.38,tz:"America/Panama",name:"Panama City",country:"Panama",cloud:55,region:"southern"},
+{lat:48.85,lon:2.35,tz:"Europe/Paris",name:"Paris",country:"France",cloud:60,region:"eu"},
+{lat:33.45,lon:-112.07,tz:"America/Phoenix",name:"Phoenix, AZ",country:"USA",cloud:20,region:"na"},
+{lat:50.08,lon:14.44,tz:"Europe/Prague",name:"Prague",country:"Czech Republic",cloud:55,region:"eu"},
+{lat:41.90,lon:12.50,tz:"Europe/Rome",name:"Rome",country:"Italy",cloud:40,region:"eu"},
+{lat:-33.45,lon:-70.67,tz:"America/Santiago",name:"Santiago",country:"Chile",cloud:40,region:"southern"},
+{lat:56.34,lon:-2.80,tz:"Europe/London",name:"St Andrews",country:"Scotland",cloud:70,region:"uk"},
+{lat:59.33,lon:18.06,tz:"Europe/Stockholm",name:"Stockholm",country:"Sweden",cloud:60,region:"nordic"},
+{lat:27.95,lon:-82.46,tz:"America/New_York",name:"Tampa, FL",country:"USA",cloud:40,region:"na"},
+{lat:38.91,lon:-77.04,tz:"America/New_York",name:"Washington, D.C.",country:"USA",cloud:50,region:"na"}
 ];
 
+const regionalFactors={
+na:{factor:1.0,label:"N.America",cls:"region-na"},
+eu:{factor:0.6,label:"W.Europe",cls:"region-eu"},
+nordic:{factor:0.7,label:"Nordic",cls:"region-nordic"},
+iceland:{factor:0.4,label:"Iceland",cls:"region-iceland"},
+uk:{factor:0.9,label:"UK/Ireland",cls:"region-uk"},
+southern:{factor:0.8,label:"Southern",cls:"region-southern"}
+};
+
+let useAutoCloud=true,disclaimerExpanded=true;
 const toRad=d=>d*Math.PI/180,toDeg=r=>r*180/Math.PI;
 
-// More accurate solar declination using Spencer formula
 function solarDeclination(day){
-const gamma = (2 * Math.PI / 365) * (day - 1);
-const decl = 0.006918 - 0.399912 * Math.cos(gamma) + 0.070257 * Math.sin(gamma)
-             - 0.006758 * Math.cos(2 * gamma) + 0.000907 * Math.sin(2 * gamma)
-             - 0.002697 * Math.cos(3 * gamma) + 0.00148 * Math.sin(3 * gamma);
-return toDeg(decl);
+const g=(2*Math.PI/365)*(day-1);
+return toDeg(0.006918-0.399912*Math.cos(g)+0.070257*Math.sin(g)-0.006758*Math.cos(2*g)+0.000907*Math.sin(2*g)-0.002697*Math.cos(3*g)+0.00148*Math.sin(3*g));
 }
-
-// Equation of Time using Spencer formula (returns minutes)
-function equationOfTime(day) {
-const gamma = (2 * Math.PI / 365) * (day - 1);
-const eqTime = 229.18 * (0.000075 + 0.001868 * Math.cos(gamma) - 0.032077 * Math.sin(gamma)
-               - 0.014615 * Math.cos(2 * gamma) - 0.040849 * Math.sin(2 * gamma));
-return eqTime;
+function equationOfTime(day){
+const g=(2*Math.PI/365)*(day-1);
+return 229.18*(0.000075+0.001868*Math.cos(g)-0.032077*Math.sin(g)-0.014615*Math.cos(2*g)-0.040849*Math.sin(2*g));
 }
-
 function daylightHours(lat,day){
-const decR=toRad(solarDeclination(day)),latR=toRad(lat);
-const cosH=-Math.tan(latR)*Math.tan(decR);
-if(cosH>=1)return 0;
-if(cosH<=-1)return 24;
-const H=Math.acos(cosH);
-return(2*toDeg(H))/15;
+const decR=toRad(solarDeclination(day)),latR=toRad(lat),cosH=-Math.tan(latR)*Math.tan(decR);
+if(cosH>=1)return 0;if(cosH<=-1)return 24;
+return(2*toDeg(Math.acos(cosH)))/15;
 }
+function noonElevation(lat,day){return 90-Math.abs(lat-solarDeclination(day));}
+function dayOfYear(dt){return Math.floor((dt-new Date(dt.getFullYear(),0,0))/86400000);}
+function dateFromDay(y,d){return new Date(y,0,d);}
+function fmtMD(date){return date.toLocaleDateString("en-US",{month:"short",day:"numeric"}).replace(',','');}
 
-function noonElevation(lat,day){
-const dec=solarDeclination(day);
-return 90-Math.abs(lat-dec);
+const SUMMER_SOLSTICE=172;
+function getSummerRef(lat){
+return{daylightMins:daylightHours(lat,SUMMER_SOLSTICE)*60,elevation:noonElevation(lat,SUMMER_SOLSTICE),sunriseMins:getSunriseMins(lat,SUMMER_SOLSTICE)};
 }
-
-function dayOfYear(dt){
-return Math.floor((dt-new Date(dt.getFullYear(),0,0))/86400000);
+function getSunriseMins(lat,day){
+const dec=toRad(solarDeclination(day)),latR=toRad(lat),cosH=(Math.sin(toRad(-0.833))-Math.sin(latR)*Math.sin(dec))/(Math.cos(latR)*Math.cos(dec));
+if(cosH>1)return 720;if(cosH<-1)return 0;
+return 720-equationOfTime(day)-(toDeg(Math.acos(cosH))/15)*60;
 }
-
-function dateFromDay(y,d){
-return new Date(y,0,d);
+function calcSADIndex(lat,day,cloud){
+const ref=getSummerRef(lat),dlMins=daylightHours(lat,day)*60,elev=noonElevation(lat,day),srMins=getSunriseMins(lat,day);
+const dlScore=Math.min(100,Math.max(0,((dlMins-400)/(ref.daylightMins-400))*100));
+const elScore=Math.min(100,Math.max(0,(Math.sin(toRad(elev))/Math.sin(toRad(ref.elevation)))*100));
+const clScore=100-cloud*0.8;
+const srScore=Math.max(0,100-Math.max(0,srMins-ref.sunriseMins)*0.8);
+const total=Math.round(dlScore*0.35+elScore*0.30+clScore*0.25+srScore*0.10);
+return{total,comp:{daylight:{s:Math.round(dlScore),v:dlMins},elevation:{s:Math.round(elScore),v:elev},cloud:{s:Math.round(clScore),v:cloud},sunrise:{s:Math.round(srScore),v:srMins}}};
 }
-
-function fmtMD(date){
-return date.toLocaleDateString("en-US",{month:"short",day:"numeric"}).replace(',','');
+function applyRegion(score,region,mode){
+if(mode==='none')return{adj:score,factor:1,label:'Raw',cls:''};
+const r=regionalFactors[mode==='auto'?region:mode]||regionalFactors.na;
+return{adj:Math.round(100-(100-score)*r.factor),factor:r.factor,label:r.label,cls:r.cls};
 }
-
-// ============ SAD LIGHT INDEX CALCULATIONS ============
-
-// Summer solstice reference values (using each city's own latitude for fairness)
-const SUMMER_SOLSTICE_DAY = 172; // June 21
-
-function getSummerSolsticeReference(lat) {
-    const daylightMins = daylightHours(lat, SUMMER_SOLSTICE_DAY) * 60;
-    const elevation = noonElevation(lat, SUMMER_SOLSTICE_DAY);
-    const sunriseMins = getSunriseMinutes(lat, SUMMER_SOLSTICE_DAY);
-    return {
-        daylightMinutes: daylightMins,
-        solarNoonElevation: elevation,
-        sunriseMinutes: sunriseMins,
-        cloudCover: 0
-    };
+function getSADCat(score){
+if(score>=85)return{label:'Excellent',cls:'cat-excellent',color:'#f59e0b',advice:'Great light day! 30+ min outdoors recommended.'};
+if(score>=70)return{label:'Good',cls:'cat-good',color:'#84cc16',advice:'Solid conditions. Morning outdoor time helps.'};
+if(score>=55)return{label:'Moderate',cls:'cat-moderate',color:'#22d3ee',advice:'Consider a 10,000 lux light therapy lamp.'};
+if(score>=40)return{label:'Low',cls:'cat-low',color:'#a78bfa',advice:'Light therapy recommended. Prioritize outdoor time.'};
+return{label:'Very Low',cls:'cat-verylow',color:'#f472b6',advice:'Use light therapy box 30 min each morning.'};
 }
+function fmtTime(mins){const h=Math.floor(mins/60),m=Math.round(mins%60),ap=h>=12?'PM':'AM',dh=h>12?h-12:(h===0?12:h);return dh+':'+m.toString().padStart(2,'0')+' '+ap;}
+function fmtHM(h){const hrs=Math.floor(h),mins=Math.round((h-hrs)*60);return hrs+'h '+mins.toString().padStart(2,'0')+'m';}
 
-function getSunriseMinutes(lat, day) {
-    const dec = toRad(solarDeclination(day));
-    const latR = toRad(lat);
-    const solarDep = toRad(-0.833); // Standard refraction correction
-    
-    const cosH = (Math.sin(solarDep) - Math.sin(latR) * Math.sin(dec)) / (Math.cos(latR) * Math.cos(dec));
-    if (cosH > 1) return 12 * 60; // No sunrise (polar night)
-    if (cosH < -1) return 0; // No sunset (midnight sun)
-    
-    const H = Math.acos(cosH);
-    const Hh = toDeg(H) / 15; // Hour angle in hours
-    
-    // Equation of Time correction
-    const EoT = equationOfTime(day); // in minutes
-    
-    // Solar noon in local solar time is 12:00, but we need clock time
-    // For a rough approximation, sunrise = 12:00 - (daylight/2) hours, converted to minutes
-    // This is simplified since we're comparing relative values
-    const solarNoonMinutes = 12 * 60 - EoT;
-    const sunriseMinutes = solarNoonMinutes - (Hh * 60);
-    
-    return sunriseMinutes;
+function findEquivDate(lat,tgtHrs,refDay,yr){
+const ss=172,ws=355,dss=Math.abs(refDay-ss),dws=Math.min(Math.abs(refDay-ws),Math.abs(refDay-(ws-365)));
+let mirror=2*(dss<dws?ss:ws)-refDay;
+if(mirror<1)mirror+=365;if(mirror>365)mirror-=365;
+return dateFromDay(yr,mirror);
 }
-
-function calculateSADLightIndex(lat, day, cloudCoverPercent = 30) {
-    const ref = getSummerSolsticeReference(lat);
-    
-    // Get values for this date
-    const daylightMins = daylightHours(lat, day) * 60;
-    const solarElevation = noonElevation(lat, day);
-    const sunriseMins = getSunriseMinutes(lat, day);
-    
-    // Score each component (0-100, where 100 = summer solstice ideal)
-    
-    // 1. Daylight Duration Score (35% weight)
-    const minDaylight = 400; // baseline minimum (~6.5 hours)
-    const daylightScore = Math.min(100, Math.max(0, 
-        ((daylightMins - minDaylight) / (ref.daylightMinutes - minDaylight)) * 100
-    ));
-    
-    // 2. Solar Elevation Score (30% weight)
-    const elevationRatio = Math.sin(toRad(solarElevation)) / Math.sin(toRad(ref.solarNoonElevation));
-    const elevationScore = Math.min(100, Math.max(0, elevationRatio * 100));
-    
-    // 3. Cloud Cover Score (25% weight)
-    const cloudScore = 100 - (cloudCoverPercent * 0.8);
-    
-    // 4. Sunrise Timing Score (10% weight)
-    const sunriseDelay = Math.max(0, sunriseMins - ref.sunriseMinutes);
-    const sunriseScore = Math.max(0, 100 - (sunriseDelay * 0.8));
-    
-    // Weighted combination
-    const totalScore = Math.round(
-        (daylightScore * 0.35) +
-        (elevationScore * 0.30) +
-        (cloudScore * 0.25) +
-        (sunriseScore * 0.10)
-    );
-    
-    return {
-        totalScore,
-        components: {
-            daylight: { score: Math.round(daylightScore), value: daylightMins },
-            elevation: { score: Math.round(elevationScore), value: solarElevation },
-            cloud: { score: Math.round(cloudScore), value: cloudCoverPercent },
-            sunrise: { score: Math.round(sunriseScore), value: sunriseMins }
-        }
-    };
-}
-
-function getSADCategory(score) {
-    if (score >= 85) return { label: 'Excellent', class: 'cat-excellent', color: '#f59e0b', advice: 'Great natural light day! Aim for 30+ minutes outdoors, especially in the morning.' };
-    if (score >= 70) return { label: 'Good', class: 'cat-good', color: '#84cc16', advice: 'Solid light conditions. Morning outdoor time is recommended.' };
-    if (score >= 55) return { label: 'Moderate', class: 'cat-moderate', color: '#22d3ee', advice: 'Consider supplementing natural light with a 10,000 lux light therapy lamp.' };
-    if (score >= 40) return { label: 'Low', class: 'cat-low', color: '#a78bfa', advice: 'Light therapy recommended. Prioritize any available outdoor time, even on cloudy days.' };
-    return { label: 'Very Low', class: 'cat-verylow', color: '#f472b6', advice: 'Use a 10,000 lux light therapy box for 30 minutes each morning upon waking.' };
-}
-
-function formatTimeFromMinutes(mins) {
-    const hours = Math.floor(mins / 60);
-    const minutes = Math.round(mins % 60);
-    const ampm = hours >= 12 ? 'PM' : 'AM';
-    const displayHours = hours > 12 ? hours - 12 : (hours === 0 ? 12 : hours);
-    return `${displayHours}:${minutes.toString().padStart(2, '0')} ${ampm}`;
-}
-
-// ============ END SAD CALCULATIONS ============
-
-function findEquivalentDate(lat,targetHours,refDay,year){
-const summerSolstice=172;
-const winterSolstice=355;
-const distToSummer=Math.abs(refDay-summerSolstice);
-const distToWinter=Math.min(Math.abs(refDay-winterSolstice),Math.abs(refDay-(winterSolstice-365)));
-const closestSolstice=distToSummer<distToWinter?summerSolstice:winterSolstice;
-const mirrorDay=2*closestSolstice-refDay;
-let normalizedMirror=mirrorDay;
-if(normalizedMirror<1)normalizedMirror+=365;
-if(normalizedMirror>365)normalizedMirror-=365;
-return dateFromDay(year,normalizedMirror);
-}
-
-function findEquivalentAngleDate(lat,targetElev,refDay,year){
-// Find the day where the comparison city's elevation matches the target,
-// choosing the one closest to the reference day.
-// Returns null if no actual intersection exists (target elevation unreachable).
-let best=null;
-let bestDist=Infinity;
-
+function findAngleDate(lat,tgtElev,refDay,yr){
+let best=null,bestD=Infinity;
 for(let d=1;d<=365;d++){
 if(d===refDay)continue;
-const elev=noonElevation(lat,d);
-const diff=Math.abs(elev-targetElev);
-
-// Only consider days where elevation is very close to target (actual intersection)
-if(diff < 0.5) {
-    // Calculate circular distance from refDay
-    const dist = Math.min(Math.abs(d - refDay), 365 - Math.abs(d - refDay));
-    if(dist < bestDist) {
-        bestDist = dist;
-        best = d;
-    }
+const diff=Math.abs(noonElevation(lat,d)-tgtElev);
+if(diff<0.5){const dist=Math.min(Math.abs(d-refDay),365-Math.abs(d-refDay));if(dist<bestD){bestD=dist;best=d;}}
 }
+return best?dateFromDay(yr,best):null;
 }
-
-// Only return if we found an actual intersection
-return best ? dateFromDay(year, best) : null;
-}
-
-function fmtHoursMin(h){
-const hrs=Math.floor(h);
-const mins=Math.round((h-hrs)*60);
-return `${hrs}h ${mins.toString().padStart(2,'0')}m`;
-}
-
-function getTimeZoneAbbr(tz){
-try{
-const fmt=new Intl.DateTimeFormat('en-US',{timeZone:tz,timeZoneName:'short'});
-return fmt.formatToParts(new Date()).find(p=>p.type==='timeZoneName').value;
-}catch{
-return'';
-}
-}
-
 function getTimes(lat,lon,day,tz){
-const dec=toRad(solarDeclination(day)),latR=toRad(lat),solarDep=toRad(-0.833);
-const cosH=(Math.sin(solarDep)-Math.sin(latR)*Math.sin(dec))/(Math.cos(latR)*Math.cos(dec));
+const dec=toRad(solarDeclination(day)),latR=toRad(lat),cosH=(Math.sin(toRad(-0.833))-Math.sin(latR)*Math.sin(dec))/(Math.cos(latR)*Math.cos(dec));
 if(cosH>1||cosH<-1)return{sunrise:'—',sunset:'—',hrs:0};
-const H=Math.acos(cosH);
-const Hh=toDeg(H)/15;
-const daylight=2*Hh;
-const year=new Date().getFullYear();
-const dateObj=new Date(year,0,day);
-const month=dateObj.getMonth();
-const dayOfMonth=dateObj.getDate();
-
-// Get timezone offset for this specific date (handles DST)
-const testDate = new Date(year, month, dayOfMonth, 12, 0, 0);
-const utcDate = new Date(testDate.toLocaleString('en-US', { timeZone: 'UTC' }));
-const tzDate = new Date(testDate.toLocaleString('en-US', { timeZone: tz }));
-const tzOffsetHours = (tzDate - utcDate) / (1000 * 60 * 60);
-
-// Equation of Time correction (convert minutes to hours)
-const EoT = equationOfTime(day) / 60;
-
-// Solar noon in UTC, corrected for longitude and Equation of Time
-// Standard formula: Solar Noon (UTC) = 12:00 - (longitude/15) - EoT
-const solarNoonUTC = 12 - (lon / 15) - EoT;
-
-const sunriseUTC = solarNoonUTC - Hh;
-const sunsetUTC = solarNoonUTC + Hh;
-
-const fmtTime=(utcHr)=>{
-// Handle day wraparound
-let adjustedHr = utcHr;
-let dayOffset = 0;
-if (adjustedHr < 0) { adjustedHr += 24; dayOffset = -1; }
-if (adjustedHr >= 24) { adjustedHr -= 24; dayOffset = 1; }
-
-const hrs=Math.floor(adjustedHr);
-const mins=Math.round((adjustedHr-hrs)*60);
-const d=new Date(Date.UTC(year,month,dayOfMonth + dayOffset,hrs,mins,0));
-return d.toLocaleTimeString('en-US',{timeZone:tz,hour:'numeric',minute:'2-digit'});
-};
-return{sunrise:fmtTime(sunriseUTC),sunset:fmtTime(sunsetUTC),hrs:daylight};
+const Hh=toDeg(Math.acos(cosH))/15,daylight=2*Hh,yr=new Date().getFullYear(),dt=new Date(yr,0,day);
+const EoT=equationOfTime(day)/60,solarNoonUTC=12-(lon/15)-EoT;
+const fmt=utcHr=>{let h=utcHr,off=0;if(h<0){h+=24;off=-1;}if(h>=24){h-=24;off=1;}
+const d=new Date(Date.UTC(yr,dt.getMonth(),dt.getDate()+off,Math.floor(h),Math.round((h%1)*60)));
+return d.toLocaleTimeString('en-US',{timeZone:tz,hour:'numeric',minute:'2-digit'});};
+return{sunrise:fmt(solarNoonUTC-Hh),sunset:fmt(solarNoonUTC+Hh),hrs:daylight};
 }
-
 function arcSVG(lat,day,color){
-const elev=noonElevation(lat,day);
-const R=28,a=Math.min(90,Math.max(0,elev))*Math.PI/180;
+const elev=noonElevation(lat,day),R=28,a=Math.min(90,Math.max(0,elev))*Math.PI/180;
 const x=26+R*Math.cos(Math.PI-a),y=30-R*Math.sin(Math.PI-a);
-return '<svg viewBox="0 0 60 36" style="display:block;margin:0 auto;"><path d="M4 30 A28 28 0 0 1 56 30" stroke="#c9d3e3" stroke-width="1.2" fill="none"/><line x1="26" y1="30" x2="'+x.toFixed(1)+'" y2="'+y.toFixed(1)+'" stroke="'+color+'" stroke-width="2.5"/><circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="3.5" fill="'+color+'"/></svg>';
+return '<svg viewBox="0 0 60 36"><path d="M4 30 A28 28 0 0 1 56 30" stroke="#c9d3e3" stroke-width="1.2" fill="none"/><line x1="26" y1="30" x2="'+x.toFixed(1)+'" y2="'+y.toFixed(1)+'" stroke="'+color+'" stroke-width="2.5"/><circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="3.5" fill="'+color+'"/></svg>';
 }
+function getCloud(){return useAutoCloud?getAvgCloud():Number(document.getElementById('cloudSlider').value);}
+function getAvgCloud(){
+const r=document.getElementById('referenceCity').selectedIndex,c=document.getElementById('compareCity').selectedIndex;
+return Math.round((cities[r].cloud+cities[c].cloud)/2);
+}
+function getRegionMode(){return document.getElementById('regionMode').value;}
 
-function buildSADBreakdown(result, cityName, color) {
-    const c = result.components;
-    return '<div class="sad-breakdown"><div class="sad-breakdown-title">'+cityName+' Breakdown</div><div class="sad-component"><div class="sad-component-header"><span class="sad-component-label">Daylight Duration (35%)</span><span class="sad-component-value">'+fmtHoursMin(c.daylight.value / 60)+'</span></div><div class="sad-component-bar"><div class="sad-component-fill" style="width:'+c.daylight.score+'%;background:'+color+';"></div></div></div><div class="sad-component"><div class="sad-component-header"><span class="sad-component-label">Solar Elevation (30%)</span><span class="sad-component-value">'+c.elevation.value.toFixed(1)+'°</span></div><div class="sad-component-bar"><div class="sad-component-fill" style="width:'+c.elevation.score+'%;background:'+color+';"></div></div></div><div class="sad-component"><div class="sad-component-header"><span class="sad-component-label">Sky Clarity (25%)</span><span class="sad-component-value">'+(100 - c.cloud.value)+'% clear</span></div><div class="sad-component-bar"><div class="sad-component-fill" style="width:'+c.cloud.score+'%;background:'+color+';"></div></div></div><div class="sad-component"><div class="sad-component-header"><span class="sad-component-label">Sunrise Time (10%)</span><span class="sad-component-value">'+formatTimeFromMinutes(c.sunrise.value)+'</span></div><div class="sad-component-bar"><div class="sad-component-fill" style="width:'+c.sunrise.score+'%;background:'+color+';"></div></div></div></div>';
+function buildBreakdown(res,name,color){
+const c=res.comp;
+return '<div class="sad-breakdown"><div class="sad-breakdown-title">'+name+' Breakdown</div>'+
+['daylight','elevation','cloud','sunrise'].map(k=>{
+const labels={daylight:['Daylight (35%)',fmtHM(c.daylight.v/60)],elevation:['Elevation (30%)',c.elevation.v.toFixed(1)+'°'],cloud:['Sky Clarity (25%)',(100-c.cloud.v)+'% clear'],sunrise:['Sunrise (10%)',fmtTime(c.sunrise.v)]};
+return '<div class="sad-component"><div class="sad-component-header"><span class="sad-component-label">'+labels[k][0]+'</span><span class="sad-component-value">'+labels[k][1]+'</span></div><div class="sad-component-bar"><div class="sad-component-fill" style="width:'+c[k].s+'%;background:'+color+';"></div></div></div>';
+}).join('')+'</div>';
 }
 
 function buildTable(base,comp,day,mode){
-const body=document.getElementById('tableBody');
-body.innerHTML='';
+const body=document.getElementById('tableBody');body.innerHTML='';
 const tb1=getTimes(base.lat,base.lon,day,base.tz),tb2=getTimes(comp.lat,comp.lon,day,comp.tz);
-const ab1=getTimeZoneAbbr(base.tz),ab2=getTimeZoneAbbr(comp.tz);
-const refElev=noonElevation(base.lat,day);
-const compElev=noonElevation(comp.lat,day);
-const angleDate=findEquivalentAngleDate(comp.lat,refElev,day,new Date().getFullYear());
-
+const refElev=noonElevation(base.lat,day),compElev=noonElevation(comp.lat,day);
+const angleDate=findAngleDate(comp.lat,refElev,day,new Date().getFullYear());
 if(mode==='hours'){
-const rows=[
-{label:'',value:'<div class="city-header">'+base.name+'</div>',span:true},
-{label:'Latitude',value:base.lat.toFixed(2)+'°'},
-{label:'Sunrise',value:tb1.sunrise+' '+ab1},
-{label:'Sunset',value:tb1.sunset+' '+ab1},
-{label:'Daylight',value:fmtHoursMin(tb1.hrs)},
-{label:'',value:'<div class="city-header">'+comp.name+'</div>',span:true},
-{label:'Latitude',value:comp.lat.toFixed(2)+'°'},
-{label:'Sunrise',value:tb2.sunrise+' '+ab2},
-{label:'Sunset',value:tb2.sunset+' '+ab2},
-{label:'Daylight',value:fmtHoursMin(tb2.hrs)}
-];
-rows.forEach(r=>{
-const tr=document.createElement('tr');
-if(r.span){
-tr.innerHTML='<td colspan="2">'+r.value+'</td>';
-}else{
-tr.innerHTML='<td>'+r.label+'</td><td>'+r.value+'</td>';
-}
-body.appendChild(tr);
-});
+const rows=[{v:'<div class="city-header">'+base.name+'</div>',s:1},{l:'Latitude',v:base.lat.toFixed(2)+'°'},{l:'Sunrise',v:tb1.sunrise},{l:'Sunset',v:tb1.sunset},{l:'Daylight',v:fmtHM(tb1.hrs)},
+{v:'<div class="city-header">'+comp.name+'</div>',s:1},{l:'Latitude',v:comp.lat.toFixed(2)+'°'},{l:'Sunrise',v:tb2.sunrise},{l:'Sunset',v:tb2.sunset},{l:'Daylight',v:fmtHM(tb2.hrs)}];
+rows.forEach(r=>{const tr=document.createElement('tr');tr.innerHTML=r.s?'<td colspan="2">'+r.v+'</td>':'<td>'+r.l+'</td><td>'+r.v+'</td>';body.appendChild(tr);});
 }else if(mode==='elev'){
-const rows=[
-{label:'',value:'<div class="city-header">'+base.name+'</div>',span:true},
-{label:'Latitude',value:base.lat.toFixed(2)+'°'},
-{label:'Noon Elevation',value:refElev.toFixed(1)+'°'},
-{label:'',value:arcSVG(base.lat,day,'#0b5fb3'),span:true},
-{label:'',value:'<div class="city-header">'+comp.name+'</div>',span:true},
-{label:'Latitude',value:comp.lat.toFixed(2)+'°'},
-{label:'Noon Elevation',value:compElev.toFixed(1)+'°'},
-{label:'',value:arcSVG(comp.lat,day,'#f28e2b'),span:true},
-{label:'',value:'<div style="height:8px"></div>',span:true},
-{label:'Equivalent Angle',value:angleDate?refElev.toFixed(1)+'° on '+fmtMD(angleDate):'—',span:true}
-];
-rows.forEach(r=>{
-const tr=document.createElement('tr');
-if(r.span){
-tr.innerHTML='<td colspan="2">'+r.value+'</td>';
+const rows=[{v:'<div class="city-header">'+base.name+'</div>',s:1},{l:'Latitude',v:base.lat.toFixed(2)+'°'},{l:'Noon Elev',v:refElev.toFixed(1)+'°'},{v:arcSVG(base.lat,day,'#0b5fb3'),s:1},
+{v:'<div class="city-header">'+comp.name+'</div>',s:1},{l:'Latitude',v:comp.lat.toFixed(2)+'°'},{l:'Noon Elev',v:compElev.toFixed(1)+'°'},{v:arcSVG(comp.lat,day,'#f28e2b'),s:1},
+{v:'<div style="height:8px"></div>',s:1},{l:'Equiv Angle',v:angleDate?refElev.toFixed(1)+'° on '+fmtMD(angleDate):'—'}];
+rows.forEach(r=>{const tr=document.createElement('tr');tr.innerHTML=r.s?'<td colspan="2">'+r.v+'</td>':'<td>'+r.l+'</td><td>'+r.v+'</td>';body.appendChild(tr);});
 }else{
-tr.innerHTML='<td>'+r.label+'</td><td>'+r.value+'</td>';
-}
-body.appendChild(tr);
-});
-}else if(mode==='sad'){
-    // SAD Light Index mode
-    const cloudCover = Number(document.getElementById('cloudSlider').value);
-    const sadBase = calculateSADLightIndex(base.lat, day, cloudCover);
-    const sadComp = calculateSADLightIndex(comp.lat, day, cloudCover);
-    const catBase = getSADCategory(sadBase.totalScore);
-    const catComp = getSADCategory(sadComp.totalScore);
-    
-    // Find the worse score for advice
-    const worseScore = Math.min(sadBase.totalScore, sadComp.totalScore);
-    const worseCategory = getSADCategory(worseScore);
-    
-    body.innerHTML = '<tr><td colspan="2"><div class="sad-score-display"><div class="sad-score-card" style="background:'+catBase.color+'22;border:2px solid '+catBase.color+'44;"><div class="sad-score-value" style="color:'+catBase.color+';">'+sadBase.totalScore+'</div><div class="sad-score-label" style="color:'+catBase.color+';">'+catBase.label+'</div><div class="sad-score-city">'+base.name+'</div></div><div class="sad-score-card" style="background:'+catComp.color+'22;border:2px solid '+catComp.color+'44;"><div class="sad-score-value" style="color:'+catComp.color+';">'+sadComp.totalScore+'</div><div class="sad-score-label" style="color:'+catComp.color+';">'+catComp.label+'</div><div class="sad-score-city">'+comp.name+'</div></div></div></td></tr><tr><td colspan="2">'+buildSADBreakdown(sadBase, base.name, '#0b5fb3')+'</td></tr><tr><td colspan="2">'+buildSADBreakdown(sadComp, comp.name, '#f28e2b')+'</td></tr><tr><td colspan="2"><div class="sad-advice '+worseCategory.class+'">💡 <strong>Recommendation:</strong> '+worseCategory.advice+'</div></td></tr><tr><td colspan="2"><div style="font-size:.8rem;color:#888;margin-top:.5rem;line-height:1.5;"><strong>About this index:</strong> The SAD Light Index (0-100) compares daily light conditions to each city\'s summer solstice as a reference. Based on research showing that ~5,000 lux-hours daily helps manage SAD symptoms. Scores are weighted: daylight duration (35%), solar elevation (30%), sky clarity (25%), and sunrise timing (10%).</div></td></tr>';
+const cloud=getCloud(),rm=getRegionMode();
+const sadB=calcSADIndex(base.lat,day,cloud),sadC=calcSADIndex(comp.lat,day,cloud);
+const adjB=applyRegion(sadB.total,base.region,rm),adjC=applyRegion(sadC.total,comp.region,rm);
+const catB=getSADCat(adjB.adj),catC=getSADCat(adjC.adj);
+const worse=Math.min(adjB.adj,adjC.adj),worseCat=getSADCat(worse);
+const badge=r=>r.cls?'<span class="region-badge '+r.cls+'">'+r.label+'</span>':'';
+body.innerHTML='<tr><td colspan="2"><div class="sad-score-display">'+
+'<div class="sad-score-card" style="background:'+catB.color+'22;border:2px solid '+catB.color+'44;"><div class="sad-score-value" style="color:'+catB.color+';">'+adjB.adj+'</div><div class="sad-score-label" style="color:'+catB.color+';">'+catB.label+'</div><div class="sad-score-city">'+base.name+badge(adjB)+'</div>'+(rm!=='none'&&adjB.adj!==sadB.total?'<div class="adjusted-note">Light: '+sadB.total+' → Adj: '+adjB.adj+'</div>':'')+'</div>'+
+'<div class="sad-score-card" style="background:'+catC.color+'22;border:2px solid '+catC.color+'44;"><div class="sad-score-value" style="color:'+catC.color+';">'+adjC.adj+'</div><div class="sad-score-label" style="color:'+catC.color+';">'+catC.label+'</div><div class="sad-score-city">'+comp.name+badge(adjC)+'</div>'+(rm!=='none'&&adjC.adj!==sadC.total?'<div class="adjusted-note">Light: '+sadC.total+' → Adj: '+adjC.adj+'</div>':'')+'</div>'+
+'</div></td></tr><tr><td colspan="2">'+buildBreakdown(sadB,base.name,'#0b5fb3')+'</td></tr><tr><td colspan="2">'+buildBreakdown(sadC,comp.name,'#f28e2b')+'</td></tr>'+
+'<tr><td colspan="2"><div class="sad-advice '+worseCat.cls+'">💡 <strong>Tip:</strong> '+worseCat.advice+'</div></td></tr>'+
+'<tr><td colspan="2"><div style="font-size:.75rem;color:#888;margin-top:.5rem;line-height:1.4;"><strong>Index basis:</strong> Compares light to summer solstice. Weights: daylight 35%, elevation 30%, sky 25%, sunrise 10%.'+(rm!=='none'?' Regional adjustment applied.':'')+'</div></td></tr>';
 }
 }
 
 let chart,mode='hours',chartData=null;
-
-function prepareChartData(base,comp){
-const daysRaw=[];
-// Start at winter solstice (Dec 21 = day 355) and go through a full year
-// ending just before the next winter solstice (Dec 20 = day 354)
-for(let d=355;d<=365;d++)daysRaw.push(d);
-for(let d=1;d<=354;d++)daysRaw.push(d);
+function prepChartData(base,comp){
+const daysRaw=[];for(let d=355;d<=365;d++)daysRaw.push(d);for(let d=1;d<=354;d++)daysRaw.push(d);
 const days=Array.from({length:daysRaw.length},(_,i)=>i+1);
-const dataHours={
-base:daysRaw.map(d=>daylightHours(base.lat,d)),
-comp:daysRaw.map(d=>daylightHours(comp.lat,d))
-};
-const dataElev={
-base:daysRaw.map(d=>noonElevation(base.lat,d)),
-comp:daysRaw.map(d=>noonElevation(comp.lat,d)),
-threshold:noonElevation(base.lat,355)
-};
-const cloudCover = Number(document.getElementById('cloudSlider').value);
-const dataSAD={
-base:daysRaw.map(d=>calculateSADLightIndex(base.lat,d,cloudCover).totalScore),
-comp:daysRaw.map(d=>calculateSADLightIndex(comp.lat,d,cloudCover).totalScore)
-};
-return{days,daysRaw,dataHours,dataElev,dataSAD,base,comp};
+const cloud=getCloud(),rm=getRegionMode();
+const dataH={base:daysRaw.map(d=>daylightHours(base.lat,d)),comp:daysRaw.map(d=>daylightHours(comp.lat,d))};
+const dataE={base:daysRaw.map(d=>noonElevation(base.lat,d)),comp:daysRaw.map(d=>noonElevation(comp.lat,d)),threshold:noonElevation(base.lat,355)};
+const dataS={base:daysRaw.map(d=>applyRegion(calcSADIndex(base.lat,d,cloud).total,base.region,rm).adj),comp:daysRaw.map(d=>applyRegion(calcSADIndex(comp.lat,d,cloud).total,comp.region,rm).adj)};
+return{days,daysRaw,dataH,dataE,dataS,base,comp};
 }
-
 function drawChart(refDay,eqDate,angleDate,refElev){
 if(!chartData)return;
 const ctx=document.getElementById("chartCanvas").getContext("2d");
-const {days,daysRaw,dataHours,dataElev,dataSAD,base,comp}=chartData;
-
-let data, lbl, yCfg;
-if(mode==="hours"){
-    data=dataHours;
-    lbl="Daylight Hours";
-    yCfg={min:5,max:20};
-}else if(mode==="elev"){
-    data=dataElev;
-    lbl="Noon Elevation (°)";
-    yCfg={min:0,max:90};
-}else{
-    data=dataSAD;
-    lbl="SAD Light Index";
-    yCfg={min:0,max:100};
-}
-
-const dsBase={
-label:base.name,
-data:data.base,
-borderColor:"#0b5fb3",
-borderWidth:2.5,
-tension:.3,
-fill:false,
-pointRadius:0
-};
-const dsComp={
-label:comp.name,
-data:data.comp,
-borderColor:"#f28e2b",
-borderWidth:2.5,
-tension:.3,
-fill:false,
-pointRadius:0
-};
+const{days,daysRaw,dataH,dataE,dataS,base,comp}=chartData;
+let data,lbl,yCfg;
+if(mode==="hours"){data=dataH;lbl="Daylight Hours";yCfg={min:5,max:20};}
+else if(mode==="elev"){data=dataE;lbl="Noon Elevation (°)";yCfg={min:0,max:90};}
+else{data=dataS;lbl="SAD Light Index";yCfg={min:0,max:100};}
+const dsBase={label:base.name,data:data.base,borderColor:"#0b5fb3",borderWidth:2.5,tension:.3,fill:false,pointRadius:0};
+const dsComp={label:comp.name,data:data.comp,borderColor:"#f28e2b",borderWidth:2.5,tension:.3,fill:false,pointRadius:0};
 const datasets=[dsBase,dsComp];
 const annotations={};
-
 if(mode==='elev'){
-const threshold=dataElev.threshold;
-annotations.threshold={
-type:"line",
-yMin:threshold,
-yMax:threshold,
-borderColor:"rgba(11,95,179,0.4)",
-borderWidth:2,
-borderDash:[5,5],
-label:{
-enabled:true,
-content:base.name+' Dec 21: '+threshold.toFixed(1)+'°',
-position:"end",
-backgroundColor:"rgba(255,255,255,.9)",
-color:"#0b5fb3",
-font:{size:11}
+const thr=dataE.threshold;
+annotations.threshold={type:"line",yMin:thr,yMax:thr,borderColor:"rgba(11,95,179,0.4)",borderWidth:2,borderDash:[5,5],label:{enabled:true,content:base.name+' Dec 21: '+thr.toFixed(1)+'°',position:"end",backgroundColor:"rgba(255,255,255,.9)",color:"#0b5fb3",font:{size:11}}};
+const below=daysRaw.map(d=>dataE.comp[daysRaw.indexOf(d)]<thr?thr:null);
+datasets.splice(1,0,{label:'Below '+base.name+' Dec 21',data:below,backgroundColor:"rgba(11,95,179,0.12)",borderWidth:0,type:"line",pointRadius:0,fill:true});
+if(refElev!==undefined)annotations.angleH={type:"line",yMin:refElev,yMax:refElev,borderColor:"#10b981",borderWidth:2.5,borderDash:[5,5],label:{enabled:true,content:base.name+' angle: '+refElev.toFixed(1)+'°',position:"start",backgroundColor:"rgba(255,255,255,.95)",color:"#10b981",font:{size:11,weight:"bold"}}};
 }
-};
-const below=daysRaw.map(d=>dataElev.comp[daysRaw.indexOf(d)]<threshold?threshold:null);
-const shade={
-label:'Below '+base.name+' Dec 21',
-data:below,
-backgroundColor:"rgba(11,95,179,0.12)",
-borderWidth:0,
-type:"line",
-pointRadius:0,
-fill:true
-};
-datasets.splice(1,0,shade);
-if(refElev!==undefined){
-annotations.angleHorizontal={
-type:"line",
-yMin:refElev,
-yMax:refElev,
-borderColor:"#10b981",
-borderWidth:2.5,
-borderDash:[5,5],
-label:{
-enabled:true,
-content:base.name+' angle: '+refElev.toFixed(1)+'°',
-position:"start",
-backgroundColor:"rgba(255,255,255,.95)",
-color:"#10b981",
-font:{size:11,weight:"bold"}
-}
-};
-}
-}
-
-if(mode==='sad'){
-    // Add threshold lines for SAD categories
-    annotations.excellent={
-        type:"line",
-        yMin:85,
-        yMax:85,
-        borderColor:"rgba(245,158,11,0.4)",
-        borderWidth:1,
-        borderDash:[3,3]
-    };
-    annotations.good={
-        type:"line",
-        yMin:70,
-        yMax:70,
-        borderColor:"rgba(132,204,22,0.4)",
-        borderWidth:1,
-        borderDash:[3,3]
-    };
-    annotations.moderate={
-        type:"line",
-        yMin:55,
-        yMax:55,
-        borderColor:"rgba(34,211,238,0.4)",
-        borderWidth:1,
-        borderDash:[3,3]
-    };
-    annotations.low={
-        type:"line",
-        yMin:40,
-        yMax:40,
-        borderColor:"rgba(167,139,250,0.4)",
-        borderWidth:1,
-        borderDash:[3,3]
-    };
-}
-
+if(mode==='sad'){[85,70,55,40].forEach((v,i)=>{annotations['t'+i]={type:"line",yMin:v,yMax:v,borderColor:['rgba(245,158,11,0.3)','rgba(132,204,22,0.3)','rgba(34,211,238,0.3)','rgba(167,139,250,0.3)'][i],borderWidth:1,borderDash:[3,3]};});}
 const refIdx=daysRaw.indexOf(refDay);
-if(refIdx!==-1){
-annotations.selected={
-type:"line",
-xMin:refIdx+1,
-xMax:refIdx+1,
-borderColor:"#1e293b",
-borderWidth:2.5,
-label:{
-enabled:true,
-content:fmtMD(dateFromDay(new Date().getFullYear(),refDay)),
-position:"start",
-backgroundColor:"rgba(255,255,255,.95)",
-color:"#1e293b",
-font:{size:11,weight:"bold"}
-}
-};
-}
-
-// Show appropriate equivalent date vertical line based on mode
-const displayEqDate = (mode === 'elev') ? angleDate : eqDate;
-if(displayEqDate && mode!=='sad'){
-const eqD=dayOfYear(displayEqDate);
-const eqIdx=daysRaw.indexOf(eqD);
-if(eqIdx!==-1){
-annotations.equiv={
-type:"line",
-xMin:eqIdx+1,
-xMax:eqIdx+1,
-borderColor:"#e11d48",
-borderWidth:2.5,
-label:{
-enabled:true,
-content:fmtMD(displayEqDate),
-position:"start",
-backgroundColor:"rgba(255,255,255,.95)",
-color:"#e11d48",
-font:{size:11,weight:"bold"}
-}
-};
-}
-}
+if(refIdx!==-1)annotations.selected={type:"line",xMin:refIdx+1,xMax:refIdx+1,borderColor:"#1e293b",borderWidth:2.5,label:{enabled:true,content:fmtMD(dateFromDay(new Date().getFullYear(),refDay)),position:"start",backgroundColor:"rgba(255,255,255,.95)",color:"#1e293b",font:{size:11,weight:"bold"}}};
+const dispEq=(mode==='elev')?angleDate:eqDate;
+if(dispEq&&mode!=='sad'){const eqIdx=daysRaw.indexOf(dayOfYear(dispEq));if(eqIdx!==-1)annotations.equiv={type:"line",xMin:eqIdx+1,xMax:eqIdx+1,borderColor:"#e11d48",borderWidth:2.5,label:{enabled:true,content:fmtMD(dispEq),position:"start",backgroundColor:"rgba(255,255,255,.95)",color:"#e11d48",font:{size:11,weight:"bold"}}};}
 if(chart)chart.destroy();
-chart=new Chart(ctx,{
-type:"line",
-data:{labels:days,datasets},
-options:{
-responsive:true,
-maintainAspectRatio:false,
-animation:false,
-plugins:{
-legend:{
-display:true,
-position:"bottom",
-labels:{
-usePointStyle:true,
-padding:15,
-font:{size:12}
-}
-},
-annotation:{annotations}
-},
-scales:{
-x:{display:false},
-y:{
-title:{
-display:true,
-text:lbl,
-font:{size:13,weight:"600"}
-},
-...yCfg,
-grid:{color:"#e2e8f0"}
-}
-}
-},
-plugins:[Chart.registry.getPlugin("annotation")]
-});
+chart=new Chart(ctx,{type:"line",data:{labels:days,datasets},options:{responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{display:true,position:"bottom",labels:{usePointStyle:true,padding:15,font:{size:12}}},annotation:{annotations}},scales:{x:{display:false},y:{title:{display:true,text:lbl,font:{size:13,weight:"600"}},...yCfg,grid:{color:"#e2e8f0"}}}},plugins:[Chart.registry.getPlugin("annotation")]});
 }
 
 function updateAll(){
-const refIdx=document.getElementById("referenceCity").selectedIndex;
-const compIdx=document.getElementById("compareCity").selectedIndex;
-const base=cities[refIdx];
-const comp=cities[compIdx];
-const sliderVal=Number(document.getElementById("dateSlider").value);
-const date=dateFromDay(new Date().getFullYear(),sliderVal);
-const day=sliderVal;
-const eqDate=findEquivalentDate(comp.lat,daylightHours(base.lat,day),day,date.getFullYear());
+const base=cities[document.getElementById("referenceCity").selectedIndex];
+const comp=cities[document.getElementById("compareCity").selectedIndex];
+const day=Number(document.getElementById("dateSlider").value);
+const date=dateFromDay(new Date().getFullYear(),day);
+const eqDate=findEquivDate(comp.lat,daylightHours(base.lat,day),day,date.getFullYear());
 const refElev=noonElevation(base.lat,day);
-const angleDate=findEquivalentAngleDate(comp.lat,refElev,day,date.getFullYear());
+const angleDate=findAngleDate(comp.lat,refElev,day,date.getFullYear());
 document.getElementById("selectedLabel").textContent=fmtMD(date);
-
-// Update the equivalent date label and value based on mode
-const equivBox = document.querySelector('.date-equiv');
-if (mode === 'elev') {
-    equivBox.style.display = 'inline-block';
-    document.getElementById("equivLabelTitle").textContent="Elevation Equivalent";
-    document.getElementById("equivLabel").textContent=angleDate?fmtMD(angleDate):"—";
-} else if (mode === 'sad') {
-    equivBox.style.display = 'none';
-} else {
-    equivBox.style.display = 'inline-block';
-    document.getElementById("equivLabelTitle").textContent="Daylight Equivalent";
-    document.getElementById("equivLabel").textContent=eqDate?fmtMD(eqDate):"—";
-}
-
+const eqBox=document.querySelector('.date-equiv');
+if(mode==='elev'){eqBox.style.display='inline-block';document.getElementById("equivLabelTitle").textContent="Elevation Equivalent";document.getElementById("equivLabel").textContent=angleDate?fmtMD(angleDate):"—";}
+else if(mode==='sad'){eqBox.style.display='none';}
+else{eqBox.style.display='inline-block';document.getElementById("equivLabelTitle").textContent="Daylight Equivalent";document.getElementById("equivLabel").textContent=eqDate?fmtMD(eqDate):"—";}
+if(useAutoCloud){const avg=getAvgCloud();document.getElementById('cloudSlider').value=avg;document.getElementById('cloudValue').textContent=avg+'%';}
 buildTable(base,comp,day,mode);
-chartData=prepareChartData(base,comp);
+chartData=prepChartData(base,comp);
 drawChart(day,eqDate,angleDate,refElev);
 drawEarth(day);
-
-// Show/hide cloud control
-document.getElementById('cloudControl').style.display = mode==='sad' ? 'flex' : 'none';
+document.getElementById('sadControls').style.display=mode==='sad'?'flex':'none';
+document.getElementById('sadDisclaimer').style.display=mode==='sad'?'block':'none';
 }
 
-function updateAnnotationsOnly(){
-const refIdx=document.getElementById("referenceCity").selectedIndex;
-const compIdx=document.getElementById("compareCity").selectedIndex;
-const base=cities[refIdx];
-const comp=cities[compIdx];
-const sliderVal=Number(document.getElementById("dateSlider").value);
-const date=dateFromDay(new Date().getFullYear(),sliderVal);
-const day=sliderVal;
-const eqDate=findEquivalentDate(comp.lat,daylightHours(base.lat,day),day,date.getFullYear());
-const refElev=noonElevation(base.lat,day);
-const angleDate=findEquivalentAngleDate(comp.lat,refElev,day,date.getFullYear());
-document.getElementById("selectedLabel").textContent=fmtMD(date);
-
-// Update the equivalent date label and value based on mode
-const equivBox2 = document.querySelector('.date-equiv');
-if (mode === 'elev') {
-    equivBox2.style.display = 'inline-block';
-    document.getElementById("equivLabelTitle").textContent="Elevation Equivalent";
-    document.getElementById("equivLabel").textContent=angleDate?fmtMD(angleDate):"—";
-} else if (mode === 'sad') {
-    equivBox2.style.display = 'none';
-} else {
-    equivBox2.style.display = 'inline-block';
-    document.getElementById("equivLabelTitle").textContent="Daylight Equivalent";
-    document.getElementById("equivLabel").textContent=eqDate?fmtMD(eqDate):"—";
+function toggleDisclaimer(){
+disclaimerExpanded=!disclaimerExpanded;
+document.getElementById('disclaimerContent').style.display=disclaimerExpanded?'block':'none';
+document.getElementById('disclaimerToggle').textContent=disclaimerExpanded?'Show less':'Show more';
 }
 
-buildTable(base,comp,day,mode);
-drawChart(day,eqDate,angleDate,refElev);
-drawEarth(day);
-}
-
-// Smoothstep function for smooth interpolation
-function smoothstep(edge0, edge1, x) {
-    const t = Math.max(0, Math.min(1, (x - edge0) / (edge1 - edge0)));
-    return t * t * (3 - 2 * t);
-}
-
-// Precomputed stars for consistent rendering
-let starsCache = null;
-function getStars(w, h) {
-    if (!starsCache || starsCache.w !== w || starsCache.h !== h) {
-        const stars = [];
-        // Use seeded random for consistent star positions
-        let rand = 12345;
-        const random = () => {
-            rand = (rand * 1103515245 + 12345) & 0x7fffffff;
-            return rand / 0x7fffffff;
-        };
-        for (let i = 0; i < 100; i++) {
-            stars.push({
-                x: random() * w,
-                y: random() * h,
-                r: random() * 1.2 + 0.3,
-                brightness: random() * 0.5 + 0.5
-            });
-        }
-        starsCache = { w, h, stars };
-    }
-    return starsCache.stars;
-}
-
-// City lights data (approximate major city locations)
-const cityLights = [
-    // North America
-    {lat: 40.7, lon: -74.0, size: 3},    // NYC
-    {lat: 34.0, lon: -118.2, size: 2.5}, // LA
-    {lat: 41.9, lon: -87.6, size: 2},    // Chicago
-    {lat: 29.8, lon: -95.4, size: 1.8},  // Houston
-    {lat: 33.4, lon: -112.1, size: 1.5}, // Phoenix
-    {lat: 39.7, lon: -104.9, size: 1.5}, // Denver
-    {lat: 47.6, lon: -122.3, size: 1.5}, // Seattle
-    {lat: 25.8, lon: -80.2, size: 1.8},  // Miami
-    {lat: 43.7, lon: -79.4, size: 1.8},  // Toronto
-    {lat: 19.4, lon: -99.1, size: 2.5},  // Mexico City
-    // South America
-    {lat: -23.5, lon: -46.6, size: 2.5}, // Sao Paulo
-    {lat: -34.6, lon: -58.4, size: 2},   // Buenos Aires
-    {lat: -22.9, lon: -43.2, size: 2},   // Rio
-    {lat: 4.7, lon: -74.1, size: 1.5},   // Bogota
-    {lat: -12.0, lon: -77.0, size: 1.5}, // Lima
-    // Europe
-    {lat: 51.5, lon: -0.1, size: 2.5},   // London
-    {lat: 48.9, lon: 2.3, size: 2.5},    // Paris
-    {lat: 52.5, lon: 13.4, size: 2},     // Berlin
-    {lat: 41.9, lon: 12.5, size: 2},     // Rome
-    {lat: 40.4, lon: -3.7, size: 2},     // Madrid
-    // Africa
-    {lat: 30.0, lon: 31.2, size: 2},     // Cairo
-    {lat: -33.9, lon: 18.4, size: 1.5},  // Cape Town
-    {lat: 6.5, lon: 3.4, size: 2},       // Lagos
-];
-
-function drawEarth(day) {
-    const canvas = document.getElementById('earthCanvas');
-    const ctx = canvas.getContext('2d');
-    const w = canvas.width;
-    const h = canvas.height;
-    const cx = w / 2;
-    const cy = h / 2;
-    const radius = w * 0.45;
-
-    // View centered on Tampa FL
-    const viewLat = 27.95;
-    const viewLon = -82.46;
-    const viewLatR = toRad(viewLat);
-    const viewLonR = toRad(viewLon);
-
-    ctx.clearRect(0, 0, w, h);
-
-    // Draw space background
-    const spaceGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, w * 0.7);
-    spaceGrad.addColorStop(0, '#0a0a1a');
-    spaceGrad.addColorStop(0.5, '#050510');
-    spaceGrad.addColorStop(1, '#000000');
-    ctx.fillStyle = spaceGrad;
-    ctx.fillRect(0, 0, w, h);
-
-    // Draw stars (consistent positions)
-    const stars = getStars(w, h);
-    stars.forEach(star => {
-        ctx.fillStyle = 'rgba(255, 255, 255, '+star.brightness+')';
-        ctx.beginPath();
-        ctx.arc(star.x, star.y, star.r, 0, Math.PI * 2);
-        ctx.fill();
-    });
-
-    // Calculate solar declination
-    const declination = solarDeclination(day);
-    const decRad = toRad(declination);
-
-    // Create Earth with pixel-by-pixel rendering for smooth terminator
-    const imageData = ctx.createImageData(w, h);
-    const data = imageData.data;
-
-    // Continent polygon data (simplified but more detailed)
-    const continents = {
-        northAmerica: [
-            [70,-140],[72,-120],[70,-100],[65,-85],[60,-75],[55,-60],[50,-55],
-            [45,-65],[42,-70],[38,-75],[35,-78],[30,-82],[28,-82],[25,-80],
-            [25,-85],[27,-97],[26,-98],[22,-100],[18,-105],[15,-95],[18,-88],
-            [21,-87],[22,-90],[25,-90],[28,-95],[29,-104],[32,-115],[35,-120],
-            [40,-124],[45,-124],[50,-127],[55,-130],[60,-140],[65,-145],[70,-140]
-        ],
-        centralAmerica: [
-            [18,-88],[15,-88],[12,-85],[10,-84],[8,-80],[9,-78],[10,-75],
-            [8,-77],[7,-77],[9,-80],[10,-83],[14,-87],[18,-88]
-        ],
-        southAmerica: [
-            [10,-75],[12,-72],[12,-68],[10,-65],[6,-60],[4,-52],[0,-50],
-            [-5,-35],[-10,-37],[-15,-40],[-20,-42],[-25,-48],[-30,-52],
-            [-35,-58],[-40,-65],[-45,-68],[-50,-72],[-55,-68],[-55,-65],
-            [-52,-60],[-48,-65],[-42,-63],[-35,-55],[-28,-49],[-22,-42],
-            [-15,-45],[-10,-50],[-5,-55],[0,-60],[2,-68],[5,-73],[10,-75]
-        ],
-        europe: [
-            [70,30],[65,25],[60,30],[55,38],[50,40],[45,40],[40,30],
-            [37,25],[36,28],[38,30],[40,25],[42,18],[43,10],[44,5],
-            [46,0],[48,-5],[50,0],[52,5],[55,10],[58,15],[60,20],
-            [62,25],[65,28],[70,30]
-        ],
-        africa: [
-            [35,10],[37,-5],[35,-10],[30,-15],[25,-17],[20,-17],[15,-17],
-            [10,-15],[5,-8],[0,-5],[-5,10],[-10,15],[-15,20],[-20,25],
-            [-25,30],[-30,32],[-35,20],[-35,27],[-30,35],[-25,40],
-            [-15,42],[-10,45],[0,45],[5,42],[10,40],[15,45],[20,50],
-            [25,52],[30,35],[32,32],[35,30],[35,10]
-        ],
-        australia: [
-            [-12,130],[-15,125],[-20,118],[-25,114],[-30,115],[-35,118],
-            [-38,142],[-35,148],[-30,153],[-25,152],[-20,148],[-15,145],
-            [-12,142],[-10,145],[-12,135],[-12,130]
-        ],
-        greenland: [
-            [76,-20],[80,-30],[82,-40],[80,-55],[75,-60],[70,-55],
-            [68,-45],[70,-35],[72,-25],[76,-20]
-        ]
-    };
-
-    // Function to check if a point is inside a polygon (ray casting)
-    function pointInPolygon(lat, lon, polygon) {
-        let inside = false;
-        for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
-            const xi = polygon[i][1], yi = polygon[i][0];
-            const xj = polygon[j][1], yj = polygon[j][0];
-            if (((yi > lat) !== (yj > lat)) && (lon < (xj - xi) * (lat - yi) / (yj - yi) + xi)) {
-                inside = !inside;
-            }
-        }
-        return inside;
-    }
-
-    function isLand(lat, lon) {
-        // Normalize longitude
-        while (lon > 180) lon -= 360;
-        while (lon < -180) lon += 360;
-        
-        for (const continent of Object.values(continents)) {
-            if (pointInPolygon(lat, lon, continent)) return true;
-        }
-        return false;
-    }
-
-    // Render Earth pixel by pixel
-    for (let py = 0; py < h; py++) {
-        for (let px = 0; px < w; px++) {
-            const dx = px - cx;
-            const dy = py - cy;
-            const distSq = dx * dx + dy * dy;
-            const radiusSq = radius * radius;
-
-            if (distSq <= radiusSq) {
-                const x = dx / radius;
-                const y = -dy / radius;
-                const rho = Math.sqrt(x * x + y * y);
-
-                if (rho <= 1 && rho > 0.001) {
-                    // Inverse orthographic projection
-                    const c = Math.asin(rho);
-                    const cosC = Math.cos(c);
-                    const sinC = Math.sin(c);
-                    const cosViewLat = Math.cos(viewLatR);
-                    const sinViewLat = Math.sin(viewLatR);
-
-                    const latR = Math.asin(cosC * sinViewLat + (y * sinC * cosViewLat) / rho);
-                    const lonR = viewLonR + Math.atan2(x * sinC, rho * cosViewLat * cosC - y * sinViewLat * sinC);
-                    const lat = toDeg(latR);
-                    let lon = toDeg(lonR);
-                    while (lon > 180) lon -= 360;
-                    while (lon < -180) lon += 360;
-
-                    // Calculate sun angle for smooth terminator
-                    const sunLon = 0;
-                    const dLon = toRad(lon - sunLon);
-                    const sinAlt = Math.sin(latR) * Math.sin(decRad) + Math.cos(latR) * Math.cos(decRad) * Math.cos(dLon);
-                    const sunAngleDeg = toDeg(Math.asin(sinAlt));
-
-                    // Smooth day/night blend using smoothstep (-12° to 6° transition)
-                    const dayAmount = smoothstep(-12, 6, sunAngleDeg);
-                    const nightAmount = 1 - dayAmount;
-
-                    // Determine if land or ocean
-                    const land = isLand(lat, lon);
-
-                    // Limb darkening
-                    const limbFactor = 1 - (rho * rho * 0.25);
-
-                    // Day colors
-                    let dayR, dayG, dayB;
-                    if (land) {
-                        // Land: greens and browns
-                        const latFactor = Math.abs(lat) / 90;
-                        if (Math.abs(lat) > 65) {
-                            // Ice/snow
-                            dayR = 240; dayG = 245; dayB = 250;
-                        } else if (Math.abs(lat) > 50) {
-                            // Northern forests
-                            dayR = 60 + latFactor * 40; 
-                            dayG = 100 + latFactor * 30; 
-                            dayB = 50;
-                        } else if (Math.abs(lat) < 25) {
-                            // Tropical
-                            dayR = 50; dayG = 130; dayB = 50;
-                        } else {
-                            // Temperate
-                            dayR = 80; dayG = 120; dayB = 60;
-                        }
-                    } else {
-                        // Ocean: blues
-                        const depthVariation = Math.sin(lat * 0.1) * 10;
-                        dayR = 30 + depthVariation;
-                        dayG = 80 + depthVariation;
-                        dayB = 160 + depthVariation;
-                    }
-
-                    // Night colors (dark with potential city lights)
-                    let nightR = 5, nightG = 5, nightB = 15;
-                    
-                    // Add city lights on night side
-                    if (land && nightAmount > 0.3) {
-                        for (const city of cityLights) {
-                            const dLat = lat - city.lat;
-                            const dLon2 = lon - city.lon;
-                            const dist = Math.sqrt(dLat * dLat + dLon2 * dLon2);
-                            if (dist < city.size * 3) {
-                                const glow = Math.exp(-dist / city.size) * nightAmount;
-                                nightR += glow * 255 * 0.9;
-                                nightG += glow * 200 * 0.7;
-                                nightB += glow * 100 * 0.3;
-                            }
-                        }
-                    }
-
-                    // Blend day and night
-                    let r = dayR * dayAmount * limbFactor + nightR * nightAmount;
-                    let g = dayG * dayAmount * limbFactor + nightG * nightAmount;
-                    let b = dayB * dayAmount * limbFactor + nightB * nightAmount;
-
-                    // Add subtle atmosphere at edges
-                    if (rho > 0.85) {
-                        const atmosBlend = (rho - 0.85) / 0.15;
-                        r = r * (1 - atmosBlend * 0.3) + 100 * atmosBlend * 0.3;
-                        g = g * (1 - atmosBlend * 0.3) + 150 * atmosBlend * 0.3;
-                        b = b * (1 - atmosBlend * 0.3) + 255 * atmosBlend * 0.3;
-                    }
-
-                    const idx = (py * w + px) * 4;
-                    data[idx] = Math.min(255, Math.max(0, r));
-                    data[idx + 1] = Math.min(255, Math.max(0, g));
-                    data[idx + 2] = Math.min(255, Math.max(0, b));
-                    data[idx + 3] = 255;
-                } else if (rho <= 0.001) {
-                    // Center pixel
-                    const idx = (py * w + px) * 4;
-                    data[idx] = 30; data[idx + 1] = 80; data[idx + 2] = 160; data[idx + 3] = 255;
-                }
-            }
-        }
-    }
-
-    ctx.putImageData(imageData, 0, 0);
-
-    // Draw atmospheric glow (blue limb)
-    const glowGrad = ctx.createRadialGradient(cx, cy, radius * 0.92, cx, cy, radius * 1.12);
-    glowGrad.addColorStop(0, 'rgba(100, 180, 255, 0)');
-    glowGrad.addColorStop(0.4, 'rgba(120, 180, 255, 0.12)');
-    glowGrad.addColorStop(0.7, 'rgba(80, 140, 220, 0.08)');
-    glowGrad.addColorStop(1, 'rgba(50, 100, 180, 0)');
-    ctx.fillStyle = glowGrad;
-    ctx.beginPath();
-    ctx.arc(cx, cy, radius * 1.12, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Draw sun indicator
-    const sunVisualAngle = declination > 0 ? -Math.PI / 3.5 : -Math.PI / 2.5;
-    const sunDist = radius * 1.35;
-    const sunX = cx + sunDist * Math.cos(sunVisualAngle);
-    const sunY = cy + sunDist * Math.sin(sunVisualAngle);
-
-    // Sun glow
-    const sunGlowGrad = ctx.createRadialGradient(sunX, sunY, 0, sunX, sunY, 20);
-    sunGlowGrad.addColorStop(0, 'rgba(255, 250, 220, 1)');
-    sunGlowGrad.addColorStop(0.3, 'rgba(255, 240, 150, 0.8)');
-    sunGlowGrad.addColorStop(0.6, 'rgba(255, 220, 100, 0.3)');
-    sunGlowGrad.addColorStop(1, 'rgba(255, 200, 80, 0)');
-    ctx.fillStyle = sunGlowGrad;
-    ctx.beginPath();
-    ctx.arc(sunX, sunY, 20, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Sun core
-    ctx.fillStyle = '#fffef0';
-    ctx.beginPath();
-    ctx.arc(sunX, sunY, 6, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Date label
-    ctx.fillStyle = '#fff';
-    ctx.font = 'bold 13px -apple-system, BlinkMacSystemFont, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.shadowColor = 'rgba(0,0,0,0.9)';
-    ctx.shadowBlur = 4;
-    const dateStr = fmtMD(dateFromDay(new Date().getFullYear(), day));
-    ctx.fillText(dateStr, cx, h - 12);
-    ctx.shadowBlur = 0;
-}
-
-function syncFromSlider(){
-updateAnnotationsOnly();
+function smoothstep(e0,e1,x){const t=Math.max(0,Math.min(1,(x-e0)/(e1-e0)));return t*t*(3-2*t);}
+let starsCache=null;
+function getStars(w,h){if(!starsCache||starsCache.w!==w||starsCache.h!==h){const stars=[];let r=12345;const rnd=()=>{r=(r*1103515245+12345)&0x7fffffff;return r/0x7fffffff;};for(let i=0;i<100;i++)stars.push({x:rnd()*w,y:rnd()*h,r:rnd()*1.2+0.3,b:rnd()*0.5+0.5});starsCache={w,h,stars};}return starsCache.stars;}
+const cityLights=[{lat:40.7,lon:-74.0,size:3},{lat:34.0,lon:-118.2,size:2.5},{lat:41.9,lon:-87.6,size:2},{lat:29.8,lon:-95.4,size:1.8},{lat:33.4,lon:-112.1,size:1.5},{lat:39.7,lon:-104.9,size:1.5},{lat:47.6,lon:-122.3,size:1.5},{lat:25.8,lon:-80.2,size:1.8},{lat:43.7,lon:-79.4,size:1.8},{lat:19.4,lon:-99.1,size:2.5},{lat:-23.5,lon:-46.6,size:2.5},{lat:-34.6,lon:-58.4,size:2},{lat:-22.9,lon:-43.2,size:2},{lat:4.7,lon:-74.1,size:1.5},{lat:-12.0,lon:-77.0,size:1.5},{lat:51.5,lon:-0.1,size:2.5},{lat:48.9,lon:2.3,size:2.5},{lat:52.5,lon:13.4,size:2},{lat:41.9,lon:12.5,size:2},{lat:40.4,lon:-3.7,size:2},{lat:30.0,lon:31.2,size:2},{lat:-33.9,lon:18.4,size:1.5},{lat:6.5,lon:3.4,size:2}];
+const continents={northAmerica:[[70,-140],[72,-120],[70,-100],[65,-85],[60,-75],[55,-60],[50,-55],[45,-65],[42,-70],[38,-75],[35,-78],[30,-82],[28,-82],[25,-80],[25,-85],[27,-97],[26,-98],[22,-100],[18,-105],[15,-95],[18,-88],[21,-87],[22,-90],[25,-90],[28,-95],[29,-104],[32,-115],[35,-120],[40,-124],[45,-124],[50,-127],[55,-130],[60,-140],[65,-145],[70,-140]],centralAmerica:[[18,-88],[15,-88],[12,-85],[10,-84],[8,-80],[9,-78],[10,-75],[8,-77],[7,-77],[9,-80],[10,-83],[14,-87],[18,-88]],southAmerica:[[10,-75],[12,-72],[12,-68],[10,-65],[6,-60],[4,-52],[0,-50],[-5,-35],[-10,-37],[-15,-40],[-20,-42],[-25,-48],[-30,-52],[-35,-58],[-40,-65],[-45,-68],[-50,-72],[-55,-68],[-55,-65],[-52,-60],[-48,-65],[-42,-63],[-35,-55],[-28,-49],[-22,-42],[-15,-45],[-10,-50],[-5,-55],[0,-60],[2,-68],[5,-73],[10,-75]],europe:[[70,30],[65,25],[60,30],[55,38],[50,40],[45,40],[40,30],[37,25],[36,28],[38,30],[40,25],[42,18],[43,10],[44,5],[46,0],[48,-5],[50,0],[52,5],[55,10],[58,15],[60,20],[62,25],[65,28],[70,30]],africa:[[35,10],[37,-5],[35,-10],[30,-15],[25,-17],[20,-17],[15,-17],[10,-15],[5,-8],[0,-5],[-5,10],[-10,15],[-15,20],[-20,25],[-25,30],[-30,32],[-35,20],[-35,27],[-30,35],[-25,40],[-15,42],[-10,45],[0,45],[5,42],[10,40],[15,45],[20,50],[25,52],[30,35],[32,32],[35,30],[35,10]],australia:[[-12,130],[-15,125],[-20,118],[-25,114],[-30,115],[-35,118],[-38,142],[-35,148],[-30,153],[-25,152],[-20,148],[-15,145],[-12,142],[-10,145],[-12,135],[-12,130]],greenland:[[76,-20],[80,-30],[82,-40],[80,-55],[75,-60],[70,-55],[68,-45],[70,-35],[72,-25],[76,-20]]};
+function pointInPoly(lat,lon,poly){let inside=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){const xi=poly[i][1],yi=poly[i][0],xj=poly[j][1],yj=poly[j][0];if(((yi>lat)!==(yj>lat))&&(lon<(xj-xi)*(lat-yi)/(yj-yi)+xi))inside=!inside;}return inside;}
+function isLand(lat,lon){while(lon>180)lon-=360;while(lon<-180)lon+=360;for(const c of Object.values(continents))if(pointInPoly(lat,lon,c))return true;return false;}
+function drawEarth(day){
+const canvas=document.getElementById('earthCanvas'),ctx=canvas.getContext('2d'),w=canvas.width,h=canvas.height,cx=w/2,cy=h/2,radius=w*0.45;
+const viewLat=27.95,viewLon=-82.46,viewLatR=toRad(viewLat),viewLonR=toRad(viewLon);
+ctx.clearRect(0,0,w,h);
+const spaceGrad=ctx.createRadialGradient(cx,cy,0,cx,cy,w*0.7);spaceGrad.addColorStop(0,'#0a0a1a');spaceGrad.addColorStop(0.5,'#050510');spaceGrad.addColorStop(1,'#000000');ctx.fillStyle=spaceGrad;ctx.fillRect(0,0,w,h);
+const stars=getStars(w,h);stars.forEach(s=>{ctx.fillStyle='rgba(255,255,255,'+s.b+')';ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fill();});
+const decRad=toRad(solarDeclination(day));
+const imageData=ctx.createImageData(w,h),data=imageData.data;
+for(let py=0;py<h;py++){for(let px=0;px<w;px++){const dx=px-cx,dy=py-cy,distSq=dx*dx+dy*dy,radiusSq=radius*radius;
+if(distSq<=radiusSq){const x=dx/radius,y=-dy/radius,rho=Math.sqrt(x*x+y*y);
+if(rho<=1&&rho>0.001){const c=Math.asin(rho),cosC=Math.cos(c),sinC=Math.sin(c),cosVL=Math.cos(viewLatR),sinVL=Math.sin(viewLatR);
+const latR=Math.asin(cosC*sinVL+(y*sinC*cosVL)/rho);const lonR=viewLonR+Math.atan2(x*sinC,rho*cosVL*cosC-y*sinVL*sinC);
+const lat=toDeg(latR);let lon=toDeg(lonR);while(lon>180)lon-=360;while(lon<-180)lon+=360;
+const dLon=toRad(lon);const sinAlt=Math.sin(latR)*Math.sin(decRad)+Math.cos(latR)*Math.cos(decRad)*Math.cos(dLon);
+const sunAngle=toDeg(Math.asin(sinAlt));const dayAmt=smoothstep(-12,6,sunAngle),nightAmt=1-dayAmt;
+const land=isLand(lat,lon),limb=1-(rho*rho*0.25);
+let dayR,dayG,dayB;
+if(land){const lf=Math.abs(lat)/90;if(Math.abs(lat)>65){dayR=240;dayG=245;dayB=250;}else if(Math.abs(lat)>50){dayR=60+lf*40;dayG=100+lf*30;dayB=50;}else if(Math.abs(lat)<25){dayR=50;dayG=130;dayB=50;}else{dayR=80;dayG=120;dayB=60;}}
+else{const dv=Math.sin(lat*0.1)*10;dayR=30+dv;dayG=80+dv;dayB=160+dv;}
+let nightR=5,nightG=5,nightB=15;
+if(land&&nightAmt>0.3){for(const city of cityLights){const dLat=lat-city.lat,dLon2=lon-city.lon,dist=Math.sqrt(dLat*dLat+dLon2*dLon2);if(dist<city.size*3){const glow=Math.exp(-dist/city.size)*nightAmt;nightR+=glow*255*0.9;nightG+=glow*200*0.7;nightB+=glow*100*0.3;}}}
+let r=dayR*dayAmt*limb+nightR*nightAmt,g=dayG*dayAmt*limb+nightG*nightAmt,b=dayB*dayAmt*limb+nightB*nightAmt;
+if(rho>0.85){const ab=(rho-0.85)/0.15;r=r*(1-ab*0.3)+100*ab*0.3;g=g*(1-ab*0.3)+150*ab*0.3;b=b*(1-ab*0.3)+255*ab*0.3;}
+const idx=(py*w+px)*4;data[idx]=Math.min(255,Math.max(0,r));data[idx+1]=Math.min(255,Math.max(0,g));data[idx+2]=Math.min(255,Math.max(0,b));data[idx+3]=255;}
+else if(rho<=0.001){const idx=(py*w+px)*4;data[idx]=30;data[idx+1]=80;data[idx+2]=160;data[idx+3]=255;}}}}
+ctx.putImageData(imageData,0,0);
+const glowGrad=ctx.createRadialGradient(cx,cy,radius*0.92,cx,cy,radius*1.12);glowGrad.addColorStop(0,'rgba(100,180,255,0)');glowGrad.addColorStop(0.4,'rgba(120,180,255,0.12)');glowGrad.addColorStop(0.7,'rgba(80,140,220,0.08)');glowGrad.addColorStop(1,'rgba(50,100,180,0)');ctx.fillStyle=glowGrad;ctx.beginPath();ctx.arc(cx,cy,radius*1.12,0,Math.PI*2);ctx.fill();
+const dec=solarDeclination(day),sunAngle=dec>0?-Math.PI/3.5:-Math.PI/2.5,sunDist=radius*1.35,sunX=cx+sunDist*Math.cos(sunAngle),sunY=cy+sunDist*Math.sin(sunAngle);
+const sunGlow=ctx.createRadialGradient(sunX,sunY,0,sunX,sunY,20);sunGlow.addColorStop(0,'rgba(255,250,220,1)');sunGlow.addColorStop(0.3,'rgba(255,240,150,0.8)');sunGlow.addColorStop(0.6,'rgba(255,220,100,0.3)');sunGlow.addColorStop(1,'rgba(255,200,80,0)');ctx.fillStyle=sunGlow;ctx.beginPath();ctx.arc(sunX,sunY,20,0,Math.PI*2);ctx.fill();
+ctx.fillStyle='#fffef0';ctx.beginPath();ctx.arc(sunX,sunY,6,0,Math.PI*2);ctx.fill();
+ctx.fillStyle='#fff';ctx.font='bold 13px -apple-system,BlinkMacSystemFont,sans-serif';ctx.textAlign='center';ctx.shadowColor='rgba(0,0,0,0.9)';ctx.shadowBlur=4;ctx.fillText(fmtMD(dateFromDay(new Date().getFullYear(),day)),cx,h-12);ctx.shadowBlur=0;
 }
 
 function populateSelectors(){
-const refSel=document.getElementById("referenceCity");
-const compSel=document.getElementById("compareCity");
-cities.forEach((c,i)=>{
-const opt1=document.createElement("option");
-opt1.value=i;
-opt1.textContent=c.name+', '+c.country;
-refSel.appendChild(opt1);
-const opt2=document.createElement("option");
-opt2.value=i;
-opt2.textContent=c.name+', '+c.country;
-compSel.appendChild(opt2);
-});
+const ref=document.getElementById("referenceCity"),cmp=document.getElementById("compareCity");
+cities.forEach((c,i)=>{const o1=document.createElement("option");o1.value=i;o1.textContent=c.name+', '+c.country;ref.appendChild(o1);const o2=document.createElement("option");o2.value=i;o2.textContent=c.name+', '+c.country;cmp.appendChild(o2);});
 }
-
-function findClosestCity(lat,lon){
-let closest=0,minDist=Infinity;
-cities.forEach((c,i)=>{
-const dist=Math.sqrt((c.lat-lat)**2+(c.lon-lon)**2);
-if(dist<minDist){
-minDist=dist;
-closest=i;
+function findClosest(lat,lon){let best=0,minD=Infinity;cities.forEach((c,i)=>{const d=Math.sqrt((c.lat-lat)**2+(c.lon-lon)**2);if(d<minD){minD=d;best=i;}});return best;}
+function initGeo(){
+if(navigator.geolocation){navigator.geolocation.getCurrentPosition(p=>{document.getElementById("referenceCity").selectedIndex=findClosest(p.coords.latitude,p.coords.longitude);updateAll();},()=>{const ti=cities.findIndex(c=>c.name==="Tampa, FL");document.getElementById("referenceCity").selectedIndex=ti>=0?ti:0;updateAll();},{timeout:5000});}
+else{const ti=cities.findIndex(c=>c.name==="Tampa, FL");document.getElementById("referenceCity").selectedIndex=ti>=0?ti:0;updateAll();}
 }
-});
-return closest;
-}
+function init(){populateSelectors();document.getElementById("compareCity").selectedIndex=16;document.getElementById("dateSlider").value=dayOfYear(new Date());initGeo();}
 
-function initWithGeolocation(){
-if(navigator.geolocation){
-navigator.geolocation.getCurrentPosition(pos=>{
-const closest=findClosestCity(pos.coords.latitude,pos.coords.longitude);
-document.getElementById("referenceCity").selectedIndex=closest;
-updateAll();
-},err=>{
-console.log('Geolocation error:',err);
-// Default to Tampa if geolocation fails
-const tampaIndex=cities.findIndex(c=>c.name==="Tampa, FL");
-document.getElementById("referenceCity").selectedIndex=tampaIndex>=0?tampaIndex:0;
-updateAll();
-},{timeout:5000,enableHighAccuracy:false});
-}else{
-// Default to Tampa if geolocation not available
-const tampaIndex=cities.findIndex(c=>c.name==="Tampa, FL");
-document.getElementById("referenceCity").selectedIndex=tampaIndex>=0?tampaIndex:0;
-updateAll();
-}
-}
-
-function init(){
-populateSelectors();
-document.getElementById("compareCity").selectedIndex=16;
-const now=new Date();
-document.getElementById("dateSlider").value=dayOfYear(now);
-initWithGeolocation();
-}
-
-document.getElementById("dateSlider").addEventListener("input",syncFromSlider);
-document.getElementById("referenceCity").addEventListener("change",updateAll);
-document.getElementById("compareCity").addEventListener("change",updateAll);
-
-// Cloud slider for SAD mode
-document.getElementById("cloudSlider").addEventListener("input",function(){
-    document.getElementById("cloudValue").textContent=this.value+'%';
-    if(mode==='sad'){
-        chartData=prepareChartData(chartData.base,chartData.comp);
-        updateAnnotationsOnly();
-    }
-});
-
-document.getElementById("hoursBtn").addEventListener("click",()=>{
-mode="hours";
-hoursBtn.classList.add("active");
-hoursBtn.classList.remove("active-green");
-elevBtn.classList.remove("active");
-elevBtn.classList.remove("active-green");
-sadBtn.classList.remove("active");
-sadBtn.classList.remove("active-green");
-updateAll();
-});
-document.getElementById("elevBtn").addEventListener("click",()=>{
-mode="elev";
-elevBtn.classList.add("active");
-elevBtn.classList.remove("active-green");
-hoursBtn.classList.remove("active");
-hoursBtn.classList.remove("active-green");
-sadBtn.classList.remove("active");
-sadBtn.classList.remove("active-green");
-updateAll();
-});
-document.getElementById("sadBtn").addEventListener("click",()=>{
-mode="sad";
-sadBtn.classList.add("active-green");
-sadBtn.classList.remove("active");
-hoursBtn.classList.remove("active");
-hoursBtn.classList.remove("active-green");
-elevBtn.classList.remove("active");
-elevBtn.classList.remove("active-green");
-updateAll();
-});
+document.getElementById("dateSlider").addEventListener("input",updateAll);
+document.getElementById("referenceCity").addEventListener("change",()=>{useAutoCloud=true;updateAll();});
+document.getElementById("compareCity").addEventListener("change",()=>{useAutoCloud=true;updateAll();});
+document.getElementById("cloudSlider").addEventListener("input",function(){useAutoCloud=false;document.getElementById("cloudValue").textContent=this.value+'%';if(mode==='sad'){chartData=prepChartData(chartData.base,chartData.comp);updateAll();}});
+document.getElementById("resetCloudBtn").addEventListener("click",()=>{useAutoCloud=true;updateAll();});
+document.getElementById("regionMode").addEventListener("change",()=>{if(mode==='sad'){chartData=prepChartData(chartData.base,chartData.comp);updateAll();}});
+document.getElementById("hoursBtn").addEventListener("click",()=>{mode="hours";hoursBtn.classList.add("active");hoursBtn.classList.remove("active-green");elevBtn.classList.remove("active","active-green");sadBtn.classList.remove("active","active-green");updateAll();});
+document.getElementById("elevBtn").addEventListener("click",()=>{mode="elev";elevBtn.classList.add("active");elevBtn.classList.remove("active-green");hoursBtn.classList.remove("active","active-green");sadBtn.classList.remove("active","active-green");updateAll();});
+document.getElementById("sadBtn").addEventListener("click",()=>{mode="sad";sadBtn.classList.add("active-green");sadBtn.classList.remove("active");hoursBtn.classList.remove("active","active-green");elevBtn.classList.remove("active","active-green");updateAll();});
 window.addEventListener("DOMContentLoaded",init);
 </script>
 </body>
