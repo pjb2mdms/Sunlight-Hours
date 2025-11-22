@@ -191,8 +191,21 @@ const cities=[
 
 const toRad=d=>d*Math.PI/180,toDeg=r=>r*180/Math.PI;
 
+// More accurate solar declination using Spencer formula
 function solarDeclination(day){
-return 23.44*Math.sin(toRad((360/365)*(day-81)));
+const gamma = (2 * Math.PI / 365) * (day - 1);
+const decl = 0.006918 - 0.399912 * Math.cos(gamma) + 0.070257 * Math.sin(gamma)
+             - 0.006758 * Math.cos(2 * gamma) + 0.000907 * Math.sin(2 * gamma)
+             - 0.002697 * Math.cos(3 * gamma) + 0.00148 * Math.sin(3 * gamma);
+return toDeg(decl);
+}
+
+// Equation of Time using Spencer formula (returns minutes)
+function equationOfTime(day) {
+const gamma = (2 * Math.PI / 365) * (day - 1);
+const eqTime = 229.18 * (0.000075 + 0.001868 * Math.cos(gamma) - 0.032077 * Math.sin(gamma)
+               - 0.014615 * Math.cos(2 * gamma) - 0.040849 * Math.sin(2 * gamma));
+return eqTime;
 }
 
 function daylightHours(lat,day){
@@ -239,9 +252,27 @@ function getSummerSolsticeReference(lat) {
 }
 
 function getSunriseMinutes(lat, day) {
-    const daylightMins = daylightHours(lat, day) * 60;
-    const solarNoon = 12.5 * 60; // ~12:30 PM solar noon
-    return solarNoon - (daylightMins / 2);
+    const dec = toRad(solarDeclination(day));
+    const latR = toRad(lat);
+    const solarDep = toRad(-0.833); // Standard refraction correction
+    
+    const cosH = (Math.sin(solarDep) - Math.sin(latR) * Math.sin(dec)) / (Math.cos(latR) * Math.cos(dec));
+    if (cosH > 1) return 12 * 60; // No sunrise (polar night)
+    if (cosH < -1) return 0; // No sunset (midnight sun)
+    
+    const H = Math.acos(cosH);
+    const Hh = toDeg(H) / 15; // Hour angle in hours
+    
+    // Equation of Time correction
+    const EoT = equationOfTime(day); // in minutes
+    
+    // Solar noon in local solar time is 12:00, but we need clock time
+    // For a rough approximation, sunrise = 12:00 - (daylight/2) hours, converted to minutes
+    // This is simplified since we're comparing relative values
+    const solarNoonMinutes = 12 * 60 - EoT;
+    const sunriseMinutes = solarNoonMinutes - (Hh * 60);
+    
+    return sunriseMinutes;
 }
 
 function calculateSADLightIndex(lat, day, cloudCoverPercent = 30) {
@@ -351,7 +382,7 @@ return'';
 }
 
 function getTimes(lat,lon,day,tz){
-const dec=toRad(solarDeclination(day)),latR=toRad(lat),solarDep=toRad(-0.83);
+const dec=toRad(solarDeclination(day)),latR=toRad(lat),solarDep=toRad(-0.833);
 const cosH=(Math.sin(solarDep)-Math.sin(latR)*Math.sin(dec))/(Math.cos(latR)*Math.cos(dec));
 if(cosH>1||cosH<-1)return{sunrise:'—',sunset:'—',hrs:0};
 const H=Math.acos(cosH);
@@ -361,13 +392,33 @@ const year=new Date().getFullYear();
 const dateObj=new Date(year,0,day);
 const month=dateObj.getMonth();
 const dayOfMonth=dateObj.getDate();
-const solarNoon=12-(lon/15);
-const sunriseUTC=solarNoon-Hh;
-const sunsetUTC=solarNoon+Hh;
+
+// Get timezone offset for this specific date (handles DST)
+const testDate = new Date(year, month, dayOfMonth, 12, 0, 0);
+const utcDate = new Date(testDate.toLocaleString('en-US', { timeZone: 'UTC' }));
+const tzDate = new Date(testDate.toLocaleString('en-US', { timeZone: tz }));
+const tzOffsetHours = (tzDate - utcDate) / (1000 * 60 * 60);
+
+// Equation of Time correction (convert minutes to hours)
+const EoT = equationOfTime(day) / 60;
+
+// Solar noon in UTC, corrected for longitude and Equation of Time
+// Standard formula: Solar Noon (UTC) = 12:00 - (longitude/15) - EoT
+const solarNoonUTC = 12 - (lon / 15) - EoT;
+
+const sunriseUTC = solarNoonUTC - Hh;
+const sunsetUTC = solarNoonUTC + Hh;
+
 const fmtTime=(utcHr)=>{
-const hrs=Math.floor(utcHr);
-const mins=Math.round((utcHr-hrs)*60);
-const d=new Date(Date.UTC(year,month,dayOfMonth,hrs,mins,0));
+// Handle day wraparound
+let adjustedHr = utcHr;
+let dayOffset = 0;
+if (adjustedHr < 0) { adjustedHr += 24; dayOffset = -1; }
+if (adjustedHr >= 24) { adjustedHr -= 24; dayOffset = 1; }
+
+const hrs=Math.floor(adjustedHr);
+const mins=Math.round((adjustedHr-hrs)*60);
+const d=new Date(Date.UTC(year,month,dayOfMonth + dayOffset,hrs,mins,0));
 return d.toLocaleTimeString('en-US',{timeZone:tz,hour:'numeric',minute:'2-digit'});
 };
 return{sunrise:fmtTime(sunriseUTC),sunset:fmtTime(sunsetUTC),hrs:daylight};
