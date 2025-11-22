@@ -841,299 +841,297 @@ drawChart(day,eqDate,angleDate,refElev);
 drawEarth(day);
 }
 
-function drawEarth(day){
-const canvas=document.getElementById('earthCanvas');
-const ctx=canvas.getContext('2d');
-const w=canvas.width;
-const h=canvas.height;
-const cx=w/2;
-const cy=h/2;
-const radius=w*0.45;
+// Earth texture images (loaded once)
+let earthDayImg = null;
+let earthNightImg = null;
+let earthImagesLoaded = false;
+let earthImagesLoading = false;
 
-// Tampa FL coordinates for geosynchronous view
-const tampaLat=27.95;
-const tampaLon=-82.46;
-
-ctx.clearRect(0,0,w,h);
-
-// Draw space background
-const spaceGrad=ctx.createRadialGradient(cx,cy,0,cx,cy,w*0.7);
-spaceGrad.addColorStop(0,'#001a33');
-spaceGrad.addColorStop(1,'#000000');
-ctx.fillStyle=spaceGrad;
-ctx.fillRect(0,0,w,h);
-
-// Add stars
-ctx.fillStyle='#ffffff';
-for(let i=0;i<80;i++){
-const sx=Math.random()*w;
-const sy=Math.random()*h;
-const sr=Math.random()*1.5;
-ctx.beginPath();
-ctx.arc(sx,sy,sr,0,Math.PI*2);
-ctx.fill();
+// Smoothstep function for smooth interpolation
+function smoothstep(edge0, edge1, x) {
+    const t = Math.max(0, Math.min(1, (x - edge0) / (edge1 - edge0)));
+    return t * t * (3 - 2 * t);
 }
 
-// Calculate solar declination
-const declination=solarDeclination(day);
-const decRad=toRad(declination);
-
-// Draw Earth sphere with realistic ocean gradient
-const earthGrad=ctx.createRadialGradient(cx-radius*0.3,cy-radius*0.3,radius*0.1,cx,cy,radius);
-earthGrad.addColorStop(0,'#7cb9e8');
-earthGrad.addColorStop(0.3,'#4a90c8');
-earthGrad.addColorStop(0.6,'#2a5f8f');
-earthGrad.addColorStop(0.85,'#1a3f5f');
-earthGrad.addColorStop(1,'#0d1f2f');
-ctx.fillStyle=earthGrad;
-ctx.beginPath();
-ctx.arc(cx,cy,radius,0,Math.PI*2);
-ctx.fill();
-
-// Draw landmasses (simplified continents visible from Tampa perspective)
-ctx.save();
-ctx.beginPath();
-ctx.arc(cx,cy,radius,0,Math.PI*2);
-ctx.clip();
-
-// Function to convert lat/lon to x/y on canvas from Tampa's perspective
-function latLonToXY(lat,lon){
-// Orthographic projection centered on Tampa
-const latR=toRad(lat);
-const lonR=toRad(lon);
-const tampaLatR=toRad(tampaLat);
-const tampaLonR=toRad(tampaLon);
-const dLon=lonR-tampaLonR;
-const x=radius*Math.cos(latR)*Math.sin(dLon);
-const y=radius*(Math.cos(tampaLatR)*Math.sin(latR)-Math.sin(tampaLatR)*Math.cos(latR)*Math.cos(dLon));
-return{x:cx+x,y:cy-y,visible:Math.cos(latR)*Math.cos(dLon)>0};
+// Load Earth textures
+function loadEarthImages(callback) {
+    if (earthImagesLoaded) {
+        if (callback) callback();
+        return;
+    }
+    if (earthImagesLoading) return;
+    earthImagesLoading = true;
+    
+    let loaded = 0;
+    const checkDone = () => {
+        loaded++;
+        if (loaded === 2) {
+            earthImagesLoaded = true;
+            earthImagesLoading = false;
+            if (callback) callback();
+        }
+    };
+    
+    // NASA Blue Marble (day)
+    earthDayImg = new Image();
+    earthDayImg.crossOrigin = 'anonymous';
+    earthDayImg.onload = checkDone;
+    earthDayImg.onerror = () => {
+        console.warn('Failed to load day Earth image, using fallback');
+        earthDayImg = null;
+        checkDone();
+    };
+    earthDayImg.src = 'https://eoimages.gsfc.nasa.gov/images/imagerecords/57000/57752/land_ocean_ice_2048.jpg';
+    
+    // NASA Black Marble (night with city lights)
+    earthNightImg = new Image();
+    earthNightImg.crossOrigin = 'anonymous';
+    earthNightImg.onload = checkDone;
+    earthNightImg.onerror = () => {
+        console.warn('Failed to load night Earth image, using fallback');
+        earthNightImg = null;
+        checkDone();
+    };
+    earthNightImg.src = 'https://eoimages.gsfc.nasa.gov/images/imagerecords/144000/144898/BlackMarble_2016_01deg.jpg';
 }
 
-// Draw more detailed landmasses
-ctx.fillStyle='#3a8f3a';
-ctx.strokeStyle='rgba(45,80,22,0.3)';
-ctx.lineWidth=0.5;
-
-// North America - more detailed
-ctx.beginPath();
-const naCoords=[
-[72,-140],[70,-100],[68,-70],[60,-65],[50,-55],[45,-60],[40,-70],[32,-80],
-[28,-97],[25,-98],[22,-105],[18,-110],[25,-115],[35,-120],[45,-125],[55,-130],
-[65,-140],[72,-140]
-];
-let first=true;
-naCoords.forEach(([lat,lon])=>{
-const pt=latLonToXY(lat,lon);
-if(pt.visible){
-if(first){ctx.moveTo(pt.x,pt.y);first=false;}
-else ctx.lineTo(pt.x,pt.y);
-}
-});
-ctx.closePath();
-ctx.fill();
-ctx.stroke();
-
-// Central America
-ctx.beginPath();
-const caCoords=[
-[22,-105],[18,-95],[15,-88],[10,-85],[8,-80],[10,-78],[15,-82],[20,-90],[22,-105]
-];
-first=true;
-caCoords.forEach(([lat,lon])=>{
-const pt=latLonToXY(lat,lon);
-if(pt.visible){
-if(first){ctx.moveTo(pt.x,pt.y);first=false;}
-else ctx.lineTo(pt.x,pt.y);
-}
-});
-ctx.closePath();
-ctx.fill();
-ctx.stroke();
-
-// South America - more detailed
-ctx.beginPath();
-const saCoords=[
-[12,-72],[10,-75],[5,-78],[0,-79],[-5,-80],[-15,-77],[-25,-71],[-35,-72],
-[-45,-73],[-52,-70],[-55,-68],[-54,-65],[-50,-62],[-40,-60],[-30,-58],
-[-20,-55],[-10,-60],[-5,-65],[0,-70],[5,-72],[10,-70],[12,-72]
-];
-first=true;
-saCoords.forEach(([lat,lon])=>{
-const pt=latLonToXY(lat,lon);
-if(pt.visible){
-if(first){ctx.moveTo(pt.x,pt.y);first=false;}
-else ctx.lineTo(pt.x,pt.y);
-}
-});
-ctx.closePath();
-ctx.fill();
-ctx.stroke();
-
-// Europe/Africa (partially visible from Tampa perspective)
-ctx.beginPath();
-const eaCoords=[
-[70,25],[60,10],[50,0],[40,-5],[30,-10],[20,-15],[10,-15],[0,-10],
-[-10,-5],[-20,5],[-30,15],[-35,25],[-30,35],[0,40],[30,35],[50,30],[70,25]
-];
-first=true;
-eaCoords.forEach(([lat,lon])=>{
-const pt=latLonToXY(lat,lon);
-if(pt.visible){
-if(first){ctx.moveTo(pt.x,pt.y);first=false;}
-else ctx.lineTo(pt.x,pt.y);
-}
-});
-ctx.closePath();
-ctx.fill();
-ctx.stroke();
-
-ctx.restore();
-
-// Draw realistic terminator with gradual twilight zone
-ctx.save();
-ctx.beginPath();
-ctx.arc(cx,cy,radius,0,Math.PI*2);
-ctx.clip();
-
-// Function to calculate sun angle for any point on visible hemisphere
-function getSunAngle(lat,lon){
-const latR=toRad(lat);
-const lonR=toRad(lon);
-const sunLon=0; // Noon at prime meridian
-const sunLonR=toRad(sunLon);
-const dLon=lonR-sunLonR;
-
-// Calculate solar elevation angle
-const sinAlt=Math.sin(latR)*Math.sin(decRad)+Math.cos(latR)*Math.cos(decRad)*Math.cos(dLon);
-return Math.asin(sinAlt);
+// Precomputed stars for consistent rendering
+let starsCache = null;
+function getStars(w, h) {
+    if (!starsCache || starsCache.w !== w || starsCache.h !== h) {
+        const stars = [];
+        // Use seeded random for consistent star positions
+        const seed = 12345;
+        let rand = seed;
+        const random = () => {
+            rand = (rand * 1103515245 + 12345) & 0x7fffffff;
+            return rand / 0x7fffffff;
+        };
+        for (let i = 0; i < 120; i++) {
+            stars.push({
+                x: random() * w,
+                y: random() * h,
+                r: random() * 1.2 + 0.3,
+                brightness: random() * 0.5 + 0.5
+            });
+        }
+        starsCache = { w, h, stars };
+    }
+    return starsCache.stars;
 }
 
-// Create an offscreen canvas for the darkness overlay
-const overlayCanvas=document.createElement('canvas');
-overlayCanvas.width=w;
-overlayCanvas.height=h;
-const overlayCtx=overlayCanvas.getContext('2d');
+function drawEarth(day) {
+    const canvas = document.getElementById('earthCanvas');
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width;
+    const h = canvas.height;
+    const cx = w / 2;
+    const cy = h / 2;
+    const radius = w * 0.45;
 
-// Draw pixel-by-pixel terminator with smooth gradient
-const imageData=overlayCtx.createImageData(w,h);
-const data=imageData.data;
+    // View centered on Tampa FL
+    const viewLat = 27.95;
+    const viewLon = -82.46;
 
-for(let py=0;py<h;py++){
-for(let px=0;px<w;px++){
-const dx=px-cx;
-const dy=py-cy;
-const distFromCenter=Math.sqrt(dx*dx+dy*dy);
+    ctx.clearRect(0, 0, w, h);
 
-if(distFromCenter<=radius){
-// Convert pixel position back to lat/lon
-const x=dx/radius;
-const y=-dy/radius;
-const rho=Math.sqrt(x*x+y*y);
+    // Draw space background
+    const spaceGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, w * 0.7);
+    spaceGrad.addColorStop(0, '#0a0a1a');
+    spaceGrad.addColorStop(0.5, '#050510');
+    spaceGrad.addColorStop(1, '#000000');
+    ctx.fillStyle = spaceGrad;
+    ctx.fillRect(0, 0, w, h);
 
-if(rho<=1){
-const c=Math.asin(rho);
-const latR=Math.asin(Math.cos(c)*Math.sin(toRad(tampaLat))+y*Math.sin(c)*Math.cos(toRad(tampaLat))/rho);
-const lonR=toRad(tampaLon)+Math.atan2(x*Math.sin(c),rho*Math.cos(toRad(tampaLat))*Math.cos(c)-y*Math.sin(toRad(tampaLat))*Math.sin(c));
-const lat=toDeg(latR);
-const lon=toDeg(lonR);
+    // Draw stars (consistent positions)
+    const stars = getStars(w, h);
+    stars.forEach(star => {
+        ctx.fillStyle = `rgba(255, 255, 255, ${star.brightness})`;
+        ctx.beginPath();
+        ctx.arc(star.x, star.y, star.r, 0, Math.PI * 2);
+        ctx.fill();
+    });
 
-// Calculate sun angle at this point
-const sunAngle=getSunAngle(lat,lon);
-const sunAngleDeg=toDeg(sunAngle);
+    // Calculate solar declination
+    const declination = solarDeclination(day);
+    const decRad = toRad(declination);
 
-// Create smooth twilight gradient
-let darkness=0;
-if(sunAngleDeg<-18){
-// Full night (astronomical twilight)
-darkness=0.7;
-}else if(sunAngleDeg<-12){
-// Astronomical twilight
-darkness=0.55+0.15*(sunAngleDeg+18)/6;
-}else if(sunAngleDeg<-6){
-// Nautical twilight
-darkness=0.35+0.2*(sunAngleDeg+12)/6;
-}else if(sunAngleDeg<0){
-// Civil twilight
-darkness=0.1+0.25*(sunAngleDeg+6)/6;
-}else if(sunAngleDeg<6){
-// Early day
-darkness=0.02+0.08*(6-sunAngleDeg)/6;
-}else{
-// Full daylight
-darkness=0;
-}
+    // Create offscreen canvas for Earth rendering
+    const earthCanvas = document.createElement('canvas');
+    earthCanvas.width = w;
+    earthCanvas.height = h;
+    const earthCtx = earthCanvas.getContext('2d');
 
-const idx=(py*w+px)*4;
-data[idx]=0; // Black overlay
-data[idx+1]=0;
-data[idx+2]=0;
-data[idx+3]=Math.floor(darkness*255); // Alpha channel for darkness
-}
-}
-}
-}
+    // If images are loaded, use them; otherwise use fallback
+    if (earthImagesLoaded && earthDayImg && earthNightImg) {
+        // Render Earth with NASA imagery
+        const imageData = earthCtx.createImageData(w, h);
+        const data = imageData.data;
 
-// Apply the overlay to the offscreen canvas
-overlayCtx.putImageData(imageData,0,0);
+        // Precompute view angles
+        const viewLatR = toRad(viewLat);
+        const viewLonR = toRad(viewLon);
+        const cosViewLat = Math.cos(viewLatR);
+        const sinViewLat = Math.sin(viewLatR);
 
-// Draw the overlay onto the main canvas
-ctx.drawImage(overlayCanvas,0,0);
+        // Get image data from day and night textures
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = earthDayImg.width;
+        tempCanvas.height = earthDayImg.height;
+        const tempCtx = tempCanvas.getContext('2d');
+        
+        tempCtx.drawImage(earthDayImg, 0, 0);
+        const dayData = tempCtx.getImageData(0, 0, earthDayImg.width, earthDayImg.height).data;
+        
+        tempCanvas.width = earthNightImg.width;
+        tempCanvas.height = earthNightImg.height;
+        tempCtx.drawImage(earthNightImg, 0, 0);
+        const nightData = tempCtx.getImageData(0, 0, earthNightImg.width, earthNightImg.height).data;
 
-ctx.restore();
+        const dayW = earthDayImg.width;
+        const dayH = earthDayImg.height;
+        const nightW = earthNightImg.width;
+        const nightH = earthNightImg.height;
 
-// Draw atmospheric glow
-const glowGrad=ctx.createRadialGradient(cx,cy,radius*0.98,cx,cy,radius*1.12);
-glowGrad.addColorStop(0,'rgba(135,206,250,0)');
-glowGrad.addColorStop(0.7,'rgba(135,206,250,0.2)');
-glowGrad.addColorStop(0.9,'rgba(100,180,240,0.15)');
-glowGrad.addColorStop(1,'rgba(70,130,180,0)');
-ctx.fillStyle=glowGrad;
-ctx.beginPath();
-ctx.arc(cx,cy,radius*1.12,0,Math.PI*2);
-ctx.fill();
+        for (let py = 0; py < h; py++) {
+            for (let px = 0; px < w; px++) {
+                const dx = px - cx;
+                const dy = py - cy;
+                const distSq = dx * dx + dy * dy;
+                const radiusSq = radius * radius;
 
-// Draw sun indicator
-const sunAngle=declination>0?-Math.PI/3.5:-Math.PI/2.5;
-const sunDist=radius*1.4;
-const sunX=cx+sunDist*Math.cos(sunAngle);
-const sunY=cy+sunDist*Math.sin(sunAngle);
+                if (distSq <= radiusSq) {
+                    // Convert pixel to normalized coordinates on sphere
+                    const x = dx / radius;
+                    const y = -dy / radius;
+                    const rho = Math.sqrt(x * x + y * y);
 
-// Sun glow
-const sunGlowGrad=ctx.createRadialGradient(sunX,sunY,0,sunX,sunY,18);
-sunGlowGrad.addColorStop(0,'rgba(255,240,150,1)');
-sunGlowGrad.addColorStop(0.4,'rgba(255,220,100,0.8)');
-sunGlowGrad.addColorStop(1,'rgba(255,200,80,0)');
-ctx.fillStyle=sunGlowGrad;
-ctx.beginPath();
-ctx.arc(sunX,sunY,18,0,Math.PI*2);
-ctx.fill();
+                    if (rho <= 1) {
+                        // Inverse orthographic projection
+                        const c = Math.asin(rho);
+                        const cosC = Math.cos(c);
+                        const sinC = Math.sin(c);
 
-// Sun core
-ctx.fillStyle='#ffeb3b';
-ctx.beginPath();
-ctx.arc(sunX,sunY,9,0,Math.PI*2);
-ctx.fill();
+                        // Handle center point separately to avoid division by zero
+                        let lat, lon;
+                        if (rho < 0.0001) {
+                            lat = viewLat;
+                            lon = viewLon;
+                        } else {
+                            const latR = Math.asin(cosC * sinViewLat + (y * sinC * cosViewLat) / rho);
+                            const lonR = viewLonR + Math.atan2(x * sinC, rho * cosViewLat * cosC - y * sinViewLat * sinC);
+                            lat = toDeg(latR);
+                            lon = toDeg(lonR);
+                        }
 
-// Sun rays
-ctx.strokeStyle='rgba(255,235,100,0.5)';
-ctx.lineWidth=1.5;
-for(let i=0;i<8;i++){
-const rayAngle=sunAngle+(i*Math.PI/4);
-ctx.beginPath();
-ctx.moveTo(sunX+13*Math.cos(rayAngle),sunY+13*Math.sin(rayAngle));
-ctx.lineTo(sunX+23*Math.cos(rayAngle),sunY+23*Math.sin(rayAngle));
-ctx.stroke();
-}
+                        // Normalize longitude to -180 to 180
+                        while (lon > 180) lon -= 360;
+                        while (lon < -180) lon += 360;
 
-// Date label
-ctx.fillStyle='#fff';
-ctx.font='bold 14px Arial';
-ctx.textAlign='center';
-ctx.shadowColor='rgba(0,0,0,0.8)';
-ctx.shadowBlur=4;
-const dateStr=fmtMD(dateFromDay(new Date().getFullYear(),day));
-ctx.fillText(dateStr,cx,h-15);
-ctx.shadowBlur=0;
+                        // Calculate sun angle at this point (smooth terminator)
+                        const latR = toRad(lat);
+                        const sunLon = 0; // Noon at prime meridian
+                        const dLon = toRad(lon - sunLon);
+                        const sinAlt = Math.sin(latR) * Math.sin(decRad) + Math.cos(latR) * Math.cos(decRad) * Math.cos(dLon);
+                        const sunAngleDeg = toDeg(Math.asin(sinAlt));
+
+                        // Smooth day/night blend using smoothstep
+                        // Transition from full day (>6°) to full night (<-12°)
+                        const dayBlend = smoothstep(-12, 6, sunAngleDeg);
+                        const nightBlend = 1 - dayBlend;
+
+                        // Sample from equirectangular textures
+                        // Day texture
+                        const dayU = ((lon + 180) / 360) * dayW;
+                        const dayV = ((90 - lat) / 180) * dayH;
+                        const dayPx = Math.floor(Math.max(0, Math.min(dayW - 1, dayU)));
+                        const dayPy = Math.floor(Math.max(0, Math.min(dayH - 1, dayV)));
+                        const dayIdx = (dayPy * dayW + dayPx) * 4;
+
+                        // Night texture
+                        const nightU = ((lon + 180) / 360) * nightW;
+                        const nightV = ((90 - lat) / 180) * nightH;
+                        const nightPx = Math.floor(Math.max(0, Math.min(nightW - 1, nightU)));
+                        const nightPy = Math.floor(Math.max(0, Math.min(nightH - 1, nightV)));
+                        const nightIdx = (nightPy * nightW + nightPx) * 4;
+
+                        // Blend day and night
+                        const r = dayData[dayIdx] * dayBlend + nightData[nightIdx] * nightBlend * 1.5;
+                        const g = dayData[dayIdx + 1] * dayBlend + nightData[nightIdx + 1] * nightBlend * 1.3;
+                        const b = dayData[dayIdx + 2] * dayBlend + nightData[nightIdx + 2] * nightBlend * 0.8;
+
+                        // Apply slight darkening at edges (limb darkening)
+                        const limbFactor = 1 - (rho * rho * 0.3);
+
+                        const idx = (py * w + px) * 4;
+                        data[idx] = Math.min(255, r * limbFactor);
+                        data[idx + 1] = Math.min(255, g * limbFactor);
+                        data[idx + 2] = Math.min(255, b * limbFactor);
+                        data[idx + 3] = 255;
+                    }
+                }
+            }
+        }
+
+        earthCtx.putImageData(imageData, 0, 0);
+    } else {
+        // Fallback: simple gradient sphere if images not loaded
+        const earthGrad = earthCtx.createRadialGradient(cx - radius * 0.3, cy - radius * 0.3, radius * 0.1, cx, cy, radius);
+        earthGrad.addColorStop(0, '#7cb9e8');
+        earthGrad.addColorStop(0.5, '#4a90c8');
+        earthGrad.addColorStop(1, '#1a3f5f');
+        earthCtx.fillStyle = earthGrad;
+        earthCtx.beginPath();
+        earthCtx.arc(cx, cy, radius, 0, Math.PI * 2);
+        earthCtx.fill();
+    }
+
+    // Draw Earth onto main canvas
+    ctx.drawImage(earthCanvas, 0, 0);
+
+    // Draw atmospheric glow (blue limb)
+    const glowGrad = ctx.createRadialGradient(cx, cy, radius * 0.95, cx, cy, radius * 1.15);
+    glowGrad.addColorStop(0, 'rgba(100, 180, 255, 0)');
+    glowGrad.addColorStop(0.5, 'rgba(120, 180, 255, 0.15)');
+    glowGrad.addColorStop(0.75, 'rgba(80, 140, 220, 0.1)');
+    glowGrad.addColorStop(1, 'rgba(50, 100, 180, 0)');
+    ctx.fillStyle = glowGrad;
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius * 1.15, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Draw sun indicator (position based on declination)
+    const sunAngle = declination > 0 ? -Math.PI / 3.5 : -Math.PI / 2.5;
+    const sunDist = radius * 1.35;
+    const sunX = cx + sunDist * Math.cos(sunAngle);
+    const sunY = cy + sunDist * Math.sin(sunAngle);
+
+    // Sun glow
+    const sunGlowGrad = ctx.createRadialGradient(sunX, sunY, 0, sunX, sunY, 22);
+    sunGlowGrad.addColorStop(0, 'rgba(255, 250, 200, 1)');
+    sunGlowGrad.addColorStop(0.3, 'rgba(255, 240, 150, 0.8)');
+    sunGlowGrad.addColorStop(0.6, 'rgba(255, 220, 100, 0.3)');
+    sunGlowGrad.addColorStop(1, 'rgba(255, 200, 80, 0)');
+    ctx.fillStyle = sunGlowGrad;
+    ctx.beginPath();
+    ctx.arc(sunX, sunY, 22, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Sun core
+    ctx.fillStyle = '#fff8e0';
+    ctx.beginPath();
+    ctx.arc(sunX, sunY, 7, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Date label
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 13px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.shadowColor = 'rgba(0,0,0,0.9)';
+    ctx.shadowBlur = 4;
+    const dateStr = fmtMD(dateFromDay(new Date().getFullYear(), day));
+    ctx.fillText(dateStr, cx, h - 12);
+    ctx.shadowBlur = 0;
 }
 
 function syncFromSlider(){
@@ -1193,7 +1191,16 @@ populateSelectors();
 document.getElementById("compareCity").selectedIndex=16;
 const now=new Date();
 document.getElementById("dateSlider").value=dayOfYear(now);
+
+// Start geolocation and initial render immediately
 initWithGeolocation();
+
+// Preload Earth images in background, redraw when ready
+loadEarthImages(() => {
+    // Redraw Earth with loaded textures
+    const day = Number(document.getElementById("dateSlider").value);
+    drawEarth(day);
+});
 }
 
 document.getElementById("dateSlider").addEventListener("input",syncFromSlider);
