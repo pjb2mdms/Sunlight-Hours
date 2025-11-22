@@ -28,7 +28,7 @@ main{max-width:1100px;margin:2rem auto 3rem;padding:0 1rem;}
 .earth-canvas{width:100%;height:100%;border-radius:50%;box-shadow:0 4px 12px rgba(0,0,0,.15);}
 .slider-controls{flex:1;}
 .live-dates{font-weight:600;margin-bottom:1rem;display:flex;justify-content:center;gap:1rem;flex-wrap:wrap;align-items:center;}
-.live-dates span{display:inline-block;padding:.5rem 1rem;background:#fff;border-radius:6px;box-shadow:0 1px 2px rgba(0,0,0,.05);}
+.live-dates span{display:inline-block;padding:.5rem 1rem;background:#fff;border-radius:6px;box-shadow:0 1px 2px rgba(0,0,0,.05);min-width:140px;text-align:center;}
 .date-label{font-size:.85rem;color:#666;display:block;}
 .date-value{font-size:1.1rem;color:#000;}
 .date-selected{border:2px solid #1e293b;}
@@ -124,7 +124,7 @@ td svg{width:60px;height:35px;vertical-align:middle;margin-left:auto;display:blo
 <div class="slider-controls">
 <div class="live-dates">
 <span class="date-selected"><span class="date-label">Selected Date</span><span class="date-value" id="selectedLabel">—</span></span>
-<span class="date-equiv"><span class="date-label">Equivalent Date</span><span class="date-value" id="equivLabel">—</span></span>
+<span class="date-equiv"><span class="date-label" id="equivLabelTitle">Equivalent Date</span><span class="date-value" id="equivLabel">—</span></span>
 </div>
 <input type="range" id="dateSlider" min="1" max="365" step="1" value="172">
 <div class="note">💡 Drag the slider to explore different dates throughout the year</div>
@@ -353,17 +353,30 @@ return dateFromDay(year,normalizedMirror);
 }
 
 function findEquivalentAngleDate(lat,targetElev,refDay,year){
-let best=null,bestDiff=1e9;
+// Find the day where the comparison city's elevation matches the target,
+// choosing the one closest to the reference day.
+// Returns null if no actual intersection exists (target elevation unreachable).
+let best=null;
+let bestDist=Infinity;
+
 for(let d=1;d<=365;d++){
 if(d===refDay)continue;
 const elev=noonElevation(lat,d);
 const diff=Math.abs(elev-targetElev);
-if(diff<bestDiff){
-bestDiff=diff;
-best=d;
+
+// Only consider days where elevation is very close to target (actual intersection)
+if(diff < 0.5) {
+    // Calculate circular distance from refDay
+    const dist = Math.min(Math.abs(d - refDay), 365 - Math.abs(d - refDay));
+    if(dist < bestDist) {
+        bestDist = dist;
+        best = d;
+    }
 }
 }
-return best?dateFromDay(year,best):null;
+
+// Only return if we found an actual intersection
+return best ? dateFromDay(year, best) : null;
 }
 
 function fmtHoursMin(h){
@@ -428,52 +441,12 @@ function arcSVG(lat,day,color){
 const elev=noonElevation(lat,day);
 const R=28,a=Math.min(90,Math.max(0,elev))*Math.PI/180;
 const x=26+R*Math.cos(Math.PI-a),y=30-R*Math.sin(Math.PI-a);
-return `<svg viewBox='0 0 60 36' style='display:block;margin:0 auto;'><path d='M4 30 A28 28 0 0 1 56 30' stroke='#c9d3e3' stroke-width='1.2' fill='none'/><line x1='26' y1='30' x2='${x.toFixed(1)}' y2='${y.toFixed(1)}' stroke='${color}' stroke-width='2.5'/><circle cx='${x.toFixed(1)}' cy='${y.toFixed(1)}' r='3.5' fill='${color}'/></svg>`;
+return '<svg viewBox="0 0 60 36" style="display:block;margin:0 auto;"><path d="M4 30 A28 28 0 0 1 56 30" stroke="#c9d3e3" stroke-width="1.2" fill="none"/><line x1="26" y1="30" x2="'+x.toFixed(1)+'" y2="'+y.toFixed(1)+'" stroke="'+color+'" stroke-width="2.5"/><circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="3.5" fill="'+color+'"/></svg>';
 }
 
 function buildSADBreakdown(result, cityName, color) {
     const c = result.components;
-    return `
-        <div class="sad-breakdown">
-            <div class="sad-breakdown-title">${cityName} Breakdown</div>
-            <div class="sad-component">
-                <div class="sad-component-header">
-                    <span class="sad-component-label">Daylight Duration (35%)</span>
-                    <span class="sad-component-value">${fmtHoursMin(c.daylight.value / 60)}</span>
-                </div>
-                <div class="sad-component-bar">
-                    <div class="sad-component-fill" style="width:${c.daylight.score}%;background:${color};"></div>
-                </div>
-            </div>
-            <div class="sad-component">
-                <div class="sad-component-header">
-                    <span class="sad-component-label">Solar Elevation (30%)</span>
-                    <span class="sad-component-value">${c.elevation.value.toFixed(1)}°</span>
-                </div>
-                <div class="sad-component-bar">
-                    <div class="sad-component-fill" style="width:${c.elevation.score}%;background:${color};"></div>
-                </div>
-            </div>
-            <div class="sad-component">
-                <div class="sad-component-header">
-                    <span class="sad-component-label">Sky Clarity (25%)</span>
-                    <span class="sad-component-value">${100 - c.cloud.value}% clear</span>
-                </div>
-                <div class="sad-component-bar">
-                    <div class="sad-component-fill" style="width:${c.cloud.score}%;background:${color};"></div>
-                </div>
-            </div>
-            <div class="sad-component">
-                <div class="sad-component-header">
-                    <span class="sad-component-label">Sunrise Time (10%)</span>
-                    <span class="sad-component-value">${formatTimeFromMinutes(c.sunrise.value)}</span>
-                </div>
-                <div class="sad-component-bar">
-                    <div class="sad-component-fill" style="width:${c.sunrise.score}%;background:${color};"></div>
-                </div>
-            </div>
-        </div>
-    `;
+    return '<div class="sad-breakdown"><div class="sad-breakdown-title">'+cityName+' Breakdown</div><div class="sad-component"><div class="sad-component-header"><span class="sad-component-label">Daylight Duration (35%)</span><span class="sad-component-value">'+fmtHoursMin(c.daylight.value / 60)+'</span></div><div class="sad-component-bar"><div class="sad-component-fill" style="width:'+c.daylight.score+'%;background:'+color+';"></div></div></div><div class="sad-component"><div class="sad-component-header"><span class="sad-component-label">Solar Elevation (30%)</span><span class="sad-component-value">'+c.elevation.value.toFixed(1)+'°</span></div><div class="sad-component-bar"><div class="sad-component-fill" style="width:'+c.elevation.score+'%;background:'+color+';"></div></div></div><div class="sad-component"><div class="sad-component-header"><span class="sad-component-label">Sky Clarity (25%)</span><span class="sad-component-value">'+(100 - c.cloud.value)+'% clear</span></div><div class="sad-component-bar"><div class="sad-component-fill" style="width:'+c.cloud.score+'%;background:'+color+';"></div></div></div><div class="sad-component"><div class="sad-component-header"><span class="sad-component-label">Sunrise Time (10%)</span><span class="sad-component-value">'+formatTimeFromMinutes(c.sunrise.value)+'</span></div><div class="sad-component-bar"><div class="sad-component-fill" style="width:'+c.sunrise.score+'%;background:'+color+';"></div></div></div></div>';
 }
 
 function buildTable(base,comp,day,mode){
@@ -487,45 +460,45 @@ const angleDate=findEquivalentAngleDate(comp.lat,refElev,day,new Date().getFullY
 
 if(mode==='hours'){
 const rows=[
-{label:'',value:`<div class="city-header">${base.name}</div>`,span:true},
+{label:'',value:'<div class="city-header">'+base.name+'</div>',span:true},
 {label:'Latitude',value:base.lat.toFixed(2)+'°'},
-{label:'Sunrise',value:`${tb1.sunrise} ${ab1}`},
-{label:'Sunset',value:`${tb1.sunset} ${ab1}`},
+{label:'Sunrise',value:tb1.sunrise+' '+ab1},
+{label:'Sunset',value:tb1.sunset+' '+ab1},
 {label:'Daylight',value:fmtHoursMin(tb1.hrs)},
-{label:'',value:`<div class="city-header">${comp.name}</div>`,span:true},
+{label:'',value:'<div class="city-header">'+comp.name+'</div>',span:true},
 {label:'Latitude',value:comp.lat.toFixed(2)+'°'},
-{label:'Sunrise',value:`${tb2.sunrise} ${ab2}`},
-{label:'Sunset',value:`${tb2.sunset} ${ab2}`},
+{label:'Sunrise',value:tb2.sunrise+' '+ab2},
+{label:'Sunset',value:tb2.sunset+' '+ab2},
 {label:'Daylight',value:fmtHoursMin(tb2.hrs)}
 ];
 rows.forEach(r=>{
 const tr=document.createElement('tr');
 if(r.span){
-tr.innerHTML=`<td colspan="2">${r.value}</td>`;
+tr.innerHTML='<td colspan="2">'+r.value+'</td>';
 }else{
-tr.innerHTML=`<td>${r.label}</td><td>${r.value}</td>`;
+tr.innerHTML='<td>'+r.label+'</td><td>'+r.value+'</td>';
 }
 body.appendChild(tr);
 });
 }else if(mode==='elev'){
 const rows=[
-{label:'',value:`<div class="city-header">${base.name}</div>`,span:true},
+{label:'',value:'<div class="city-header">'+base.name+'</div>',span:true},
 {label:'Latitude',value:base.lat.toFixed(2)+'°'},
-{label:'Noon Elevation',value:`${refElev.toFixed(1)}°`},
+{label:'Noon Elevation',value:refElev.toFixed(1)+'°'},
 {label:'',value:arcSVG(base.lat,day,'#0b5fb3'),span:true},
-{label:'',value:`<div class="city-header">${comp.name}</div>`,span:true},
+{label:'',value:'<div class="city-header">'+comp.name+'</div>',span:true},
 {label:'Latitude',value:comp.lat.toFixed(2)+'°'},
-{label:'Noon Elevation',value:`${compElev.toFixed(1)}°`},
+{label:'Noon Elevation',value:compElev.toFixed(1)+'°'},
 {label:'',value:arcSVG(comp.lat,day,'#f28e2b'),span:true},
 {label:'',value:'<div style="height:8px"></div>',span:true},
-{label:'Equivalent Angle',value:angleDate?`${refElev.toFixed(1)}° on ${fmtMD(angleDate)}`:'—',span:true}
+{label:'Equivalent Angle',value:angleDate?refElev.toFixed(1)+'° on '+fmtMD(angleDate):'—',span:true}
 ];
 rows.forEach(r=>{
 const tr=document.createElement('tr');
 if(r.span){
-tr.innerHTML=`<td colspan="2">${r.value}</td>`;
+tr.innerHTML='<td colspan="2">'+r.value+'</td>';
 }else{
-tr.innerHTML=`<td>${r.label}</td><td>${r.value}</td>`;
+tr.innerHTML='<td>'+r.label+'</td><td>'+r.value+'</td>';
 }
 body.appendChild(tr);
 });
@@ -541,37 +514,7 @@ body.appendChild(tr);
     const worseScore = Math.min(sadBase.totalScore, sadComp.totalScore);
     const worseCategory = getSADCategory(worseScore);
     
-    body.innerHTML = `
-        <tr><td colspan="2">
-            <div class="sad-score-display">
-                <div class="sad-score-card" style="background:${catBase.color}22;border:2px solid ${catBase.color}44;">
-                    <div class="sad-score-value" style="color:${catBase.color};">${sadBase.totalScore}</div>
-                    <div class="sad-score-label" style="color:${catBase.color};">${catBase.label}</div>
-                    <div class="sad-score-city">${base.name}</div>
-                </div>
-                <div class="sad-score-card" style="background:${catComp.color}22;border:2px solid ${catComp.color}44;">
-                    <div class="sad-score-value" style="color:${catComp.color};">${sadComp.totalScore}</div>
-                    <div class="sad-score-label" style="color:${catComp.color};">${catComp.label}</div>
-                    <div class="sad-score-city">${comp.name}</div>
-                </div>
-            </div>
-        </td></tr>
-        <tr><td colspan="2">${buildSADBreakdown(sadBase, base.name, '#0b5fb3')}</td></tr>
-        <tr><td colspan="2">${buildSADBreakdown(sadComp, comp.name, '#f28e2b')}</td></tr>
-        <tr><td colspan="2">
-            <div class="sad-advice ${worseCategory.class}">
-                💡 <strong>Recommendation:</strong> ${worseCategory.advice}
-            </div>
-        </td></tr>
-        <tr><td colspan="2">
-            <div style="font-size:.8rem;color:#888;margin-top:.5rem;line-height:1.5;">
-                <strong>About this index:</strong> The SAD Light Index (0-100) compares daily light conditions 
-                to each city's summer solstice as a reference. Based on research showing that ~5,000 lux-hours 
-                daily helps manage SAD symptoms. Scores are weighted: daylight duration (35%), solar elevation (30%), 
-                sky clarity (25%), and sunrise timing (10%).
-            </div>
-        </td></tr>
-    `;
+    body.innerHTML = '<tr><td colspan="2"><div class="sad-score-display"><div class="sad-score-card" style="background:'+catBase.color+'22;border:2px solid '+catBase.color+'44;"><div class="sad-score-value" style="color:'+catBase.color+';">'+sadBase.totalScore+'</div><div class="sad-score-label" style="color:'+catBase.color+';">'+catBase.label+'</div><div class="sad-score-city">'+base.name+'</div></div><div class="sad-score-card" style="background:'+catComp.color+'22;border:2px solid '+catComp.color+'44;"><div class="sad-score-value" style="color:'+catComp.color+';">'+sadComp.totalScore+'</div><div class="sad-score-label" style="color:'+catComp.color+';">'+catComp.label+'</div><div class="sad-score-city">'+comp.name+'</div></div></div></td></tr><tr><td colspan="2">'+buildSADBreakdown(sadBase, base.name, '#0b5fb3')+'</td></tr><tr><td colspan="2">'+buildSADBreakdown(sadComp, comp.name, '#f28e2b')+'</td></tr><tr><td colspan="2"><div class="sad-advice '+worseCategory.class+'">💡 <strong>Recommendation:</strong> '+worseCategory.advice+'</div></td></tr><tr><td colspan="2"><div style="font-size:.8rem;color:#888;margin-top:.5rem;line-height:1.5;"><strong>About this index:</strong> The SAD Light Index (0-100) compares daily light conditions to each city\'s summer solstice as a reference. Based on research showing that ~5,000 lux-hours daily helps manage SAD symptoms. Scores are weighted: daylight duration (35%), solar elevation (30%), sky clarity (25%), and sunrise timing (10%).</div></td></tr>';
 }
 }
 
@@ -579,8 +522,10 @@ let chart,mode='hours',chartData=null;
 
 function prepareChartData(base,comp){
 const daysRaw=[];
+// Start at winter solstice (Dec 21 = day 355) and go through a full year
+// ending just before the next winter solstice (Dec 20 = day 354)
 for(let d=355;d<=365;d++)daysRaw.push(d);
-for(let d=1;d<=356;d++)daysRaw.push(d);
+for(let d=1;d<=354;d++)daysRaw.push(d);
 const days=Array.from({length:daysRaw.length},(_,i)=>i+1);
 const dataHours={
 base:daysRaw.map(d=>daylightHours(base.lat,d)),
@@ -651,7 +596,7 @@ borderWidth:2,
 borderDash:[5,5],
 label:{
 enabled:true,
-content:`${base.name} Dec 21: ${threshold.toFixed(1)}°`,
+content:base.name+' Dec 21: '+threshold.toFixed(1)+'°',
 position:"end",
 backgroundColor:"rgba(255,255,255,.9)",
 color:"#0b5fb3",
@@ -660,7 +605,7 @@ font:{size:11}
 };
 const below=daysRaw.map(d=>dataElev.comp[daysRaw.indexOf(d)]<threshold?threshold:null);
 const shade={
-label:`Below ${base.name} Dec 21`,
+label:'Below '+base.name+' Dec 21',
 data:below,
 backgroundColor:"rgba(11,95,179,0.12)",
 borderWidth:0,
@@ -679,7 +624,7 @@ borderWidth:2.5,
 borderDash:[5,5],
 label:{
 enabled:true,
-content:`${base.name} angle: ${refElev.toFixed(1)}°`,
+content:base.name+' angle: '+refElev.toFixed(1)+'°',
 position:"start",
 backgroundColor:"rgba(255,255,255,.95)",
 color:"#10b981",
@@ -743,8 +688,11 @@ font:{size:11,weight:"bold"}
 }
 };
 }
-if(eqDate && mode!=='sad'){
-const eqD=dayOfYear(eqDate);
+
+// Show appropriate equivalent date vertical line based on mode
+const displayEqDate = (mode === 'elev') ? angleDate : eqDate;
+if(displayEqDate && mode!=='sad'){
+const eqD=dayOfYear(displayEqDate);
 const eqIdx=daysRaw.indexOf(eqD);
 if(eqIdx!==-1){
 annotations.equiv={
@@ -755,7 +703,7 @@ borderColor:"#e11d48",
 borderWidth:2.5,
 label:{
 enabled:true,
-content:fmtMD(eqDate),
+content:fmtMD(displayEqDate),
 position:"start",
 backgroundColor:"rgba(255,255,255,.95)",
 color:"#e11d48",
@@ -813,7 +761,21 @@ const eqDate=findEquivalentDate(comp.lat,daylightHours(base.lat,day),day,date.ge
 const refElev=noonElevation(base.lat,day);
 const angleDate=findEquivalentAngleDate(comp.lat,refElev,day,date.getFullYear());
 document.getElementById("selectedLabel").textContent=fmtMD(date);
-document.getElementById("equivLabel").textContent=eqDate?fmtMD(eqDate):"—";
+
+// Update the equivalent date label and value based on mode
+const equivBox = document.querySelector('.date-equiv');
+if (mode === 'elev') {
+    equivBox.style.display = 'inline-block';
+    document.getElementById("equivLabelTitle").textContent="Elevation Equivalent";
+    document.getElementById("equivLabel").textContent=angleDate?fmtMD(angleDate):"—";
+} else if (mode === 'sad') {
+    equivBox.style.display = 'none';
+} else {
+    equivBox.style.display = 'inline-block';
+    document.getElementById("equivLabelTitle").textContent="Daylight Equivalent";
+    document.getElementById("equivLabel").textContent=eqDate?fmtMD(eqDate):"—";
+}
+
 buildTable(base,comp,day,mode);
 chartData=prepareChartData(base,comp);
 drawChart(day,eqDate,angleDate,refElev);
@@ -835,7 +797,21 @@ const eqDate=findEquivalentDate(comp.lat,daylightHours(base.lat,day),day,date.ge
 const refElev=noonElevation(base.lat,day);
 const angleDate=findEquivalentAngleDate(comp.lat,refElev,day,date.getFullYear());
 document.getElementById("selectedLabel").textContent=fmtMD(date);
-document.getElementById("equivLabel").textContent=eqDate?fmtMD(eqDate):"—";
+
+// Update the equivalent date label and value based on mode
+const equivBox2 = document.querySelector('.date-equiv');
+if (mode === 'elev') {
+    equivBox2.style.display = 'inline-block';
+    document.getElementById("equivLabelTitle").textContent="Elevation Equivalent";
+    document.getElementById("equivLabel").textContent=angleDate?fmtMD(angleDate):"—";
+} else if (mode === 'sad') {
+    equivBox2.style.display = 'none';
+} else {
+    equivBox2.style.display = 'inline-block';
+    document.getElementById("equivLabelTitle").textContent="Daylight Equivalent";
+    document.getElementById("equivLabel").textContent=eqDate?fmtMD(eqDate):"—";
+}
+
 buildTable(base,comp,day,mode);
 drawChart(day,eqDate,angleDate,refElev);
 drawEarth(day);
@@ -930,7 +906,7 @@ function drawEarth(day) {
     // Draw stars (consistent positions)
     const stars = getStars(w, h);
     stars.forEach(star => {
-        ctx.fillStyle = `rgba(255, 255, 255, ${star.brightness})`;
+        ctx.fillStyle = 'rgba(255, 255, 255, '+star.brightness+')';
         ctx.beginPath();
         ctx.arc(star.x, star.y, star.r, 0, Math.PI * 2);
         ctx.fill();
@@ -1091,8 +1067,8 @@ function drawEarth(day) {
                     if (land && nightAmount > 0.3) {
                         for (const city of cityLights) {
                             const dLat = lat - city.lat;
-                            const dLon = lon - city.lon;
-                            const dist = Math.sqrt(dLat * dLat + dLon * dLon);
+                            const dLon2 = lon - city.lon;
+                            const dist = Math.sqrt(dLat * dLat + dLon2 * dLon2);
                             if (dist < city.size * 3) {
                                 const glow = Math.exp(-dist / city.size) * nightAmount;
                                 nightR += glow * 255 * 0.9;
@@ -1186,11 +1162,11 @@ const compSel=document.getElementById("compareCity");
 cities.forEach((c,i)=>{
 const opt1=document.createElement("option");
 opt1.value=i;
-opt1.textContent=`${c.name}, ${c.country}`;
+opt1.textContent=c.name+', '+c.country;
 refSel.appendChild(opt1);
 const opt2=document.createElement("option");
 opt2.value=i;
-opt2.textContent=`${c.name}, ${c.country}`;
+opt2.textContent=c.name+', '+c.country;
 compSel.appendChild(opt2);
 });
 }
