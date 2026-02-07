@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Sunlight Comparator</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.2.1"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
 <style>
 :root{--blue:#0b5fb3;--orange:#f28e2b;--green:#10b981;--text:#222;--bg:#f8fafc;--card:#fff;}
 body{font-family:"Helvetica Neue",Arial,sans-serif;margin:0;color:var(--text);background:var(--bg);}
@@ -128,33 +128,33 @@ td:last-child{text-align:right;}
 </main>
 <script>
 const cities=[
-{lat:52.37,lon:4.89,tz:"Europe/Amsterdam",name:"Amsterdam",country:"Netherlands",cloud:65},
-{lat:47.50,lon:19.04,tz:"Europe/Budapest",name:"Budapest",country:"Hungary",cloud:55},
-{lat:50.85,lon:4.35,tz:"Europe/Brussels",name:"Brussels",country:"Belgium",cloud:65},
-{lat:-34.60,lon:-58.38,tz:"America/Argentina/Buenos_Aires",name:"Buenos Aires",country:"Argentina",cloud:45},
-{lat:35.23,lon:-80.84,tz:"America/New_York",name:"Charlotte, NC",country:"USA",cloud:50},
-{lat:38.03,lon:-78.48,tz:"America/New_York",name:"Charlottesville, VA",country:"USA",cloud:50},
-{lat:64.13,lon:-21.82,tz:"Atlantic/Reykjavik",name:"Reykjavik",country:"Iceland",cloud:70},
-{lat:55.68,lon:12.57,tz:"Europe/Copenhagen",name:"Copenhagen",country:"Denmark",cloud:60},
-{lat:53.35,lon:-6.26,tz:"Europe/Dublin",name:"Dublin",country:"Ireland",cloud:70},
-{lat:42.06,lon:-72.51,tz:"America/New_York",name:"East Longmeadow, MA",country:"USA",cloud:55},
-{lat:60.17,lon:24.94,tz:"Europe/Helsinki",name:"Helsinki",country:"Finland",cloud:65},
-{lat:29.76,lon:-95.37,tz:"America/Chicago",name:"Houston, TX",country:"USA",cloud:45},
-{lat:51.51,lon:-0.13,tz:"Europe/London",name:"London",country:"UK",cloud:70},
-{lat:40.42,lon:-3.70,tz:"Europe/Madrid",name:"Madrid",country:"Spain",cloud:35},
-{lat:19.43,lon:-99.13,tz:"America/Mexico_City",name:"Mexico City",country:"Mexico",cloud:40},
-{lat:59.91,lon:10.75,tz:"Europe/Oslo",name:"Oslo",country:"Norway",cloud:60},
-{lat:45.42,lon:-75.70,tz:"America/Toronto",name:"Ottawa",country:"Canada",cloud:55},
-{lat:9.10,lon:-79.38,tz:"America/Panama",name:"Panama City",country:"Panama",cloud:55},
-{lat:48.85,lon:2.35,tz:"Europe/Paris",name:"Paris",country:"France",cloud:60},
-{lat:33.45,lon:-112.07,tz:"America/Phoenix",name:"Phoenix, AZ",country:"USA",cloud:20},
-{lat:50.08,lon:14.44,tz:"Europe/Prague",name:"Prague",country:"Czech Republic",cloud:55},
-{lat:41.90,lon:12.50,tz:"Europe/Rome",name:"Rome",country:"Italy",cloud:40},
-{lat:-33.45,lon:-70.67,tz:"America/Santiago",name:"Santiago",country:"Chile",cloud:40},
-{lat:56.34,lon:-2.80,tz:"Europe/London",name:"St Andrews",country:"Scotland",cloud:70},
-{lat:59.33,lon:18.06,tz:"Europe/Stockholm",name:"Stockholm",country:"Sweden",cloud:60},
-{lat:27.95,lon:-82.46,tz:"America/New_York",name:"Tampa, FL",country:"USA",cloud:40},
-{lat:38.91,lon:-77.04,tz:"America/New_York",name:"Washington, D.C.",country:"USA",cloud:50}
+{lat:52.37,lon:4.89,tz:"Europe/Amsterdam",name:"Amsterdam",country:"Netherlands",cloudMonthly:[75,70,65,60,60,65,65,65,70,75,80,80]},
+{lat:47.50,lon:19.04,tz:"Europe/Budapest",name:"Budapest",country:"Hungary",cloudMonthly:[70,65,60,55,50,50,45,45,50,60,70,75]},
+{lat:50.85,lon:4.35,tz:"Europe/Brussels",name:"Brussels",country:"Belgium",cloudMonthly:[75,70,65,60,60,65,65,65,70,75,80,80]},
+{lat:-34.60,lon:-58.38,tz:"America/Argentina/Buenos_Aires",name:"Buenos Aires",country:"Argentina",cloudMonthly:[50,50,50,55,60,65,60,55,55,50,45,45]},
+{lat:35.23,lon:-80.84,tz:"America/New_York",name:"Charlotte, NC",country:"USA",cloudMonthly:[55,55,55,50,50,50,55,50,50,45,50,55]},
+{lat:38.03,lon:-78.48,tz:"America/New_York",name:"Charlottesville, VA",country:"USA",cloudMonthly:[60,55,55,50,50,50,55,50,50,45,50,55]},
+{lat:64.13,lon:-21.82,tz:"Atlantic/Reykjavik",name:"Reykjavik",country:"Iceland",cloudMonthly:[75,75,75,70,70,70,75,75,75,75,75,75]},
+{lat:55.68,lon:12.57,tz:"Europe/Copenhagen",name:"Copenhagen",country:"Denmark",cloudMonthly:[75,70,65,60,55,60,65,65,70,75,80,80]},
+{lat:53.35,lon:-6.26,tz:"Europe/Dublin",name:"Dublin",country:"Ireland",cloudMonthly:[80,75,70,65,65,65,70,70,70,75,80,80]},
+{lat:42.06,lon:-72.51,tz:"America/New_York",name:"East Longmeadow, MA",country:"USA",cloudMonthly:[65,60,60,55,55,55,55,55,55,55,60,65]},
+{lat:60.17,lon:24.94,tz:"Europe/Helsinki",name:"Helsinki",country:"Finland",cloudMonthly:[80,75,70,60,55,60,65,65,70,75,80,85]},
+{lat:29.76,lon:-95.37,tz:"America/Chicago",name:"Houston, TX",country:"USA",cloudMonthly:[55,55,50,45,45,40,40,40,45,40,50,55]},
+{lat:51.51,lon:-0.13,tz:"Europe/London",name:"London",country:"UK",cloudMonthly:[75,70,65,60,60,60,65,65,65,70,75,75]},
+{lat:40.42,lon:-3.70,tz:"Europe/Madrid",name:"Madrid",country:"Spain",cloudMonthly:[50,45,40,40,35,25,20,20,30,40,45,50]},
+{lat:19.43,lon:-99.13,tz:"America/Mexico_City",name:"Mexico City",country:"Mexico",cloudMonthly:[25,25,30,35,45,60,60,60,65,50,35,30]},
+{lat:59.91,lon:10.75,tz:"Europe/Oslo",name:"Oslo",country:"Norway",cloudMonthly:[75,70,65,60,55,60,65,65,70,75,80,80]},
+{lat:45.42,lon:-75.70,tz:"America/Toronto",name:"Ottawa",country:"Canada",cloudMonthly:[70,65,60,55,55,55,50,50,55,60,70,75]},
+{lat:9.10,lon:-79.38,tz:"America/Panama",name:"Panama City",country:"Panama",cloudMonthly:[45,40,40,50,65,70,70,70,70,70,65,55]},
+{lat:48.85,lon:2.35,tz:"Europe/Paris",name:"Paris",country:"France",cloudMonthly:[75,70,65,60,60,60,60,60,65,70,75,75]},
+{lat:33.45,lon:-112.07,tz:"America/Phoenix",name:"Phoenix, AZ",country:"USA",cloudMonthly:[25,25,25,15,10,5,25,30,20,15,20,25]},
+{lat:50.08,lon:14.44,tz:"Europe/Prague",name:"Prague",country:"Czech Republic",cloudMonthly:[75,70,65,60,55,55,55,55,60,65,75,80]},
+{lat:41.90,lon:12.50,tz:"Europe/Rome",name:"Rome",country:"Italy",cloudMonthly:[55,50,50,45,40,30,25,25,35,45,55,60]},
+{lat:-33.45,lon:-70.67,tz:"America/Santiago",name:"Santiago",country:"Chile",cloudMonthly:[15,15,20,30,45,55,55,50,40,30,20,15]},
+{lat:56.34,lon:-2.80,tz:"Europe/London",name:"St Andrews",country:"Scotland",cloudMonthly:[75,70,65,60,60,60,65,65,65,70,75,75]},
+{lat:59.33,lon:18.06,tz:"Europe/Stockholm",name:"Stockholm",country:"Sweden",cloudMonthly:[80,75,70,60,55,60,65,65,70,75,80,85]},
+{lat:27.95,lon:-82.46,tz:"America/New_York",name:"Tampa, FL",country:"USA",cloudMonthly:[35,35,35,35,40,55,60,60,55,45,40,35]},
+{lat:38.91,lon:-77.04,tz:"America/New_York",name:"Washington, D.C.",country:"USA",cloudMonthly:[60,55,55,50,50,50,50,50,50,50,55,60]}
 ];
 
 let useAutoCloud=true;
@@ -289,9 +289,16 @@ cloud: cloudCover
 }
 
 function getCloud(){return useAutoCloud?getAvgCloud():Number(document.getElementById('cloudSlider').value);}
+function getCloudForCity(city,day){
+// Convert day of year to month (approximate)
+const month=Math.floor((day-1)/30.44);
+const monthIndex=Math.min(11,Math.max(0,month));
+return city.cloudMonthly[monthIndex];
+}
 function getAvgCloud(){
 const r=document.getElementById('referenceCity').selectedIndex,c=document.getElementById('compareCity').selectedIndex;
-return Math.round((cities[r].cloud+cities[c].cloud)/2);
+const day=Number(document.getElementById('dateSlider').value);
+return Math.round((getCloudForCity(cities[r],day)+getCloudForCity(cities[c],day))/2);
 }
 
 function buildTable(base,comp,day,mode){
@@ -302,30 +309,47 @@ const rows=[{v:'<div class="city-header">'+base.name+'</div>',s:1},{l:'Latitude'
 {v:'<div class="city-header">'+comp.name+'</div>',s:1},{l:'Latitude',v:comp.lat.toFixed(2)+'°'},{l:'Sunrise',v:tb2.sunrise},{l:'Sunset',v:tb2.sunset},{l:'Daylight',v:fmtHM(tb2.hrs)}];
 rows.forEach(r=>{const tr=document.createElement('tr');tr.innerHTML=r.s?'<td colspan="2">'+r.v+'</td>':'<td>'+r.l+'</td><td>'+r.v+'</td>';body.appendChild(tr);});
 }else{
-const cloud=getCloud();
-const fluxB=integratedSolarFlux(base.lat,day,cloud);
-const fluxC=integratedSolarFlux(comp.lat,day,cloud);
+const cloudB=getCloudForCity(base,day);
+const cloudC=getCloudForCity(comp,day);
+const fluxB=integratedSolarFlux(base.lat,day,cloudB);
+const fluxC=integratedSolarFlux(comp.lat,day,cloudC);
 const pctB = (fluxB.total / THEORETICAL_MAX * 100).toFixed(1);
 const pctC = (fluxC.total / THEORETICAL_MAX * 100).toFixed(1);
-body.innerHTML='<tr><td colspan="2"><div class="flux-display">'+
+// Calculate annual extremes
+let maxFluxB=0,minFluxB=999,maxDayB=172,minDayB=355;
+let maxFluxC=0,minFluxC=999,maxDayC=172,minDayC=355;
+for(let d=1;d<=365;d++){
+const fB=integratedSolarFlux(base.lat,d,getCloudForCity(base,d)).total;
+const fC=integratedSolarFlux(comp.lat,d,getCloudForCity(comp,d)).total;
+if(fB>maxFluxB){maxFluxB=fB;maxDayB=d;}
+if(fB<minFluxB){minFluxB=fB;minDayB=d;}
+if(fC>maxFluxC){maxFluxC=fC;maxDayC=d;}
+if(fC<minFluxC){minFluxC=fC;minDayC=d;}
+}
+body.innerHTML='<tr><td colspan="2"><div class="city-header">Selected Date: '+fmtMD(dateFromDay(new Date().getFullYear(),day))+'</div></td></tr>'+
+'<tr><td colspan="2"><div class="flux-display">'+
 '<div class="flux-card" style="border-color:#0b5fb3;"><div class="flux-value" style="color:#0b5fb3;">'+fluxB.total.toFixed(1)+'</div><div class="flux-label">MJ/m²/day</div><div class="flux-city">'+base.name+'</div><div style="font-size:.7rem;color:#888;margin-top:.5rem;">'+pctB+'% of theoretical max</div></div>'+
 '<div class="flux-card" style="border-color:#f28e2b;"><div class="flux-value" style="color:#f28e2b;">'+fluxC.total.toFixed(1)+'</div><div class="flux-label">MJ/m²/day</div><div class="flux-city">'+comp.name+'</div><div style="font-size:.7rem;color:#888;margin-top:.5rem;">'+pctC+'% of theoretical max</div></div>'+
 '</div></td></tr>'+
-'<tr><td colspan="2"><div class="city-header">'+base.name+' Breakdown</div></td></tr>'+
+'<tr><td colspan="2"><div class="city-header">'+base.name+' Details</div></td></tr>'+
 '<tr><td colspan="2"><div class="flux-breakdown">'+
 '<div class="flux-breakdown-row"><span class="flux-breakdown-label">Clear Sky Potential</span><span>'+fluxB.clearSky.toFixed(1)+' MJ/m²/day</span></div>'+
 '<div class="flux-breakdown-row"><span class="flux-breakdown-label">Direct Radiation</span><span>'+fluxB.components.direct.toFixed(1)+' MJ/m²/day</span></div>'+
 '<div class="flux-breakdown-row"><span class="flux-breakdown-label">Diffuse Radiation</span><span>'+fluxB.components.diffuse.toFixed(1)+' MJ/m²/day</span></div>'+
-'<div class="flux-breakdown-row"><span class="flux-breakdown-label">Cloud Cover</span><span>'+cloud+'%</span></div>'+
+'<div class="flux-breakdown-row"><span class="flux-breakdown-label">Cloud Cover</span><span>'+cloudB+'%</span></div>'+
+'<div class="flux-breakdown-row" style="border-top:1px solid #e2e8f0;margin-top:.5rem;padding-top:.5rem;"><span class="flux-breakdown-label">Annual Peak</span><span>'+maxFluxB.toFixed(1)+' on '+fmtMD(dateFromDay(new Date().getFullYear(),maxDayB))+'</span></div>'+
+'<div class="flux-breakdown-row"><span class="flux-breakdown-label">Annual Low</span><span>'+minFluxB.toFixed(1)+' on '+fmtMD(dateFromDay(new Date().getFullYear(),minDayB))+'</span></div>'+
 '</div></td></tr>'+
-'<tr><td colspan="2"><div class="city-header">'+comp.name+' Breakdown</div></td></tr>'+
+'<tr><td colspan="2"><div class="city-header">'+comp.name+' Details</div></td></tr>'+
 '<tr><td colspan="2"><div class="flux-breakdown">'+
 '<div class="flux-breakdown-row"><span class="flux-breakdown-label">Clear Sky Potential</span><span>'+fluxC.clearSky.toFixed(1)+' MJ/m²/day</span></div>'+
 '<div class="flux-breakdown-row"><span class="flux-breakdown-label">Direct Radiation</span><span>'+fluxC.components.direct.toFixed(1)+' MJ/m²/day</span></div>'+
 '<div class="flux-breakdown-row"><span class="flux-breakdown-label">Diffuse Radiation</span><span>'+fluxC.components.diffuse.toFixed(1)+' MJ/m²/day</span></div>'+
-'<div class="flux-breakdown-row"><span class="flux-breakdown-label">Cloud Cover</span><span>'+cloud+'%</span></div>'+
+'<div class="flux-breakdown-row"><span class="flux-breakdown-label">Cloud Cover</span><span>'+cloudC+'%</span></div>'+
+'<div class="flux-breakdown-row" style="border-top:1px solid #e2e8f0;margin-top:.5rem;padding-top:.5rem;"><span class="flux-breakdown-label">Annual Peak</span><span>'+maxFluxC.toFixed(1)+' on '+fmtMD(dateFromDay(new Date().getFullYear(),maxDayC))+'</span></div>'+
+'<div class="flux-breakdown-row"><span class="flux-breakdown-label">Annual Low</span><span>'+minFluxC.toFixed(1)+' on '+fmtMD(dateFromDay(new Date().getFullYear(),minDayC))+'</span></div>'+
 '</div></td></tr>'+
-'<tr><td colspan="2"><div style="font-size:.75rem;color:#888;margin-top:.5rem;line-height:1.4;padding:.5rem;background:#f8fafc;border-radius:4px;"><strong>Note:</strong> Calculations use atmospheric transmission models and assume standard atmospheric conditions. Theoretical maximum ('+THEORETICAL_MAX+' MJ/m²/day) represents clear-sky equatorial conditions at equinox.</div></td></tr>';
+'<tr><td colspan="2"><div style="font-size:.75rem;color:#888;margin-top:.5rem;line-height:1.4;padding:.5rem;background:#f8fafc;border-radius:4px;"><strong>Note:</strong> Calculations use atmospheric transmission models and city-specific monthly cloud cover data. Theoretical maximum ('+THEORETICAL_MAX+' MJ/m²/day) represents clear-sky equatorial conditions at equinox.</div></td></tr>';
 }
 }
 
@@ -333,9 +357,11 @@ let chart,mode='hours',chartData=null;
 function prepChartData(base,comp){
 const daysRaw=[];for(let d=355;d<=365;d++)daysRaw.push(d);for(let d=1;d<=354;d++)daysRaw.push(d);
 const days=Array.from({length:daysRaw.length},(_,i)=>i+1);
-const cloud=getCloud();
 const dataH={base:daysRaw.map(d=>daylightHours(base.lat,d)),comp:daysRaw.map(d=>daylightHours(comp.lat,d))};
-const dataF={base:daysRaw.map(d=>integratedSolarFlux(base.lat,d,cloud).total),comp:daysRaw.map(d=>integratedSolarFlux(comp.lat,d,cloud).total)};
+const dataF={
+base:daysRaw.map(d=>integratedSolarFlux(base.lat,d,getCloudForCity(base,d)).total),
+comp:daysRaw.map(d=>integratedSolarFlux(comp.lat,d,getCloudForCity(comp,d)).total)
+};
 return{days,daysRaw,dataH,dataF,base,comp};
 }
 function drawChart(refDay,eqDate){
