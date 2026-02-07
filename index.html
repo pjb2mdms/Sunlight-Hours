@@ -1,299 +1,462 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1.0">
-    <title>Solar Energy Comparator</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        :root { --blue: #0b5fb3; --orange: #f28e2b; --bg: #f8fafc; --card: #fff; --text: #1e293b; --red: #e11d48; }
-        body { font-family: "Helvetica Neue", Arial, sans-serif; margin: 0; color: var(--text); background: var(--bg); }
-        header { background: linear-gradient(135deg, #0b5fb3 0%, #084a8f 100%); color: #fff; text-align: center; padding: 2rem 1rem; box-shadow: 0 2px 8px rgba(0,0,0,.1); }
-        main { max-width: 1100px; margin: 2rem auto; padding: 0 1rem; }
-        .card { background: var(--card); border-radius: 12px; padding: 1.5rem; margin: 1.5rem 0; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
-        
-        .city-selectors { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1rem; }
-        .selector-group { display: flex; flex-direction: column; gap: .5rem; }
-        select { padding: .7rem; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 1rem; background: white; }
-
-        .controls { display: flex; flex-direction: column; gap: 1rem; background: #f1f5f9; padding: 1.2rem; border-radius: 8px; margin-bottom: 1.5rem; }
-        input[type="range"] { width: 100%; cursor: pointer; }
-
-        .tabs { display: flex; gap: 1rem; margin-bottom: 1.5rem; justify-content: center; }
-        .tabs button { padding: 1rem 2rem; border-radius: 12px; border: 2px solid #e2e8f0; cursor: pointer; background: white; font-weight: bold; transition: 0.2s; display: flex; align-items: center; gap: 8px; }
-        .tabs button.active { background: var(--blue); color: white; border-color: var(--blue); }
-
-        .display-grid { display: grid; grid-template-columns: 1fr 320px; gap: 1.5rem; }
-        @media (max-width: 850px) { .display-grid { grid-template-columns: 1fr; } }
-
-        .chart-container { position: relative; height: 400px; }
-        .stats-panel { background: #f8fafc; border-radius: 8px; padding: 1rem; border: 1px solid #e2e8f0; display: flex; flex-direction: column; gap: 1rem; }
-        
-        .stat-card { background: white; padding: 1rem; border-radius: 8px; border: 1px solid #e2e8f0; text-align: center; }
-        .stat-value { font-size: 2.2rem; font-weight: bold; color: var(--blue); line-height: 1; }
-        .stat-label { font-size: 0.75rem; color: #64748b; font-weight: 700; text-transform: uppercase; margin-bottom: 4px; }
-        
-        .equiv-badge { background: #fff1f2; color: var(--red); padding: 0.8rem; border-radius: 8px; border: 1px solid #fecdd3; font-size: 0.9rem; text-align: center; }
-        .equiv-date { font-weight: 800; display: block; font-size: 1.1rem; }
-
-        .info-box { background: #e0f2fe; border-left: 4px solid var(--blue); padding: 1rem; border-radius: 4px; font-size: 0.85rem; line-height: 1.4; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Sunlight Comparator</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.2.1"></script>
+<style>
+:root{--blue:#0b5fb3;--orange:#f28e2b;--green:#10b981;--text:#222;--bg:#f8fafc;--card:#fff;}
+body{font-family:"Helvetica Neue",Arial,sans-serif;margin:0;color:var(--text);background:var(--bg);}
+header{background:linear-gradient(135deg,#0b5fb3 0%,#084a8f 100%);color:#fff;text-align:center;padding:2rem 1rem;box-shadow:0 2px 8px rgba(0,0,0,.1);}
+header h1{margin:0;font-size:2.2rem;font-weight:300;letter-spacing:.5px;}
+header p{margin:.5rem 0 0;opacity:.9;font-size:1rem;}
+main{max-width:1100px;margin:2rem auto 3rem;padding:0 1rem;}
+.card{background:var(--card);border-radius:12px;padding:1.5rem;margin:1.5rem 0;box-shadow:0 1px 3px rgba(0,0,0,.08);}
+.city-selectors{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;}
+@media(max-width:768px){.city-selectors{grid-template-columns:1fr;}}
+.selector-group{display:flex;flex-direction:column;gap:.5rem;}
+.selector-group label{font-weight:600;font-size:.95rem;color:#555;display:flex;align-items:center;gap:.5rem;}
+.selector-group select{font:inherit;font-size:1rem;padding:.7rem;border:2px solid #e2e8f0;border-radius:8px;background:#fff;transition:all .2s;}
+.selector-group select:hover{border-color:#cbd5e1;}
+.selector-group select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(11,95,179,.1);}
+.date-earth-section{display:grid;grid-template-columns:160px 1fr;gap:1.5rem;align-items:center;margin-bottom:1.5rem;padding:1.2rem;background:#f8fafc;border-radius:8px;}
+@media(max-width:768px){.date-earth-section{grid-template-columns:1fr;}}
+.earth-container{position:relative;width:160px;height:160px;margin:0 auto;}
+.earth-canvas{width:100%;height:100%;border-radius:50%;box-shadow:0 4px 12px rgba(0,0,0,.15);}
+.slider-controls{flex:1;}
+.live-dates{font-weight:600;margin-bottom:1rem;display:flex;justify-content:center;gap:1rem;flex-wrap:wrap;align-items:center;}
+.live-dates span{display:inline-block;padding:.5rem 1rem;background:#fff;border-radius:6px;box-shadow:0 1px 2px rgba(0,0,0,.05);min-width:140px;text-align:center;}
+.date-label{font-size:.85rem;color:#666;display:block;}
+.date-value{font-size:1.1rem;color:#000;}
+.date-selected{border:2px solid #1e293b;}
+.date-equiv{border:2px solid #e11d48;}
+input[type="range"]{-webkit-appearance:none;appearance:none;width:100%;max-width:800px;height:8px;background:linear-gradient(to right,#e2e8f0 0%,#cbd5e1 100%);border-radius:4px;outline:none;margin:1rem 0;}
+input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--blue);border:3px solid #fff;box-shadow:0 2px 4px rgba(0,0,0,.2);cursor:pointer;transition:all .2s;}
+input[type="range"]::-webkit-slider-thumb:hover{transform:scale(1.1);}
+input[type="range"]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:var(--blue);border:3px solid #fff;box-shadow:0 2px 4px rgba(0,0,0,.2);cursor:pointer;}
+.note{font-size:.85rem;color:#666;margin-top:.5rem;text-align:center;}
+.chart-section{display:grid;grid-template-columns:auto 1fr auto;gap:1.5rem;align-items:start;}
+@media(max-width:968px){.chart-section{grid-template-columns:1fr;}}
+.vertical-tabs{display:flex;flex-direction:column;gap:.5rem;padding-top:2rem;}
+@media(max-width:968px){.vertical-tabs{flex-direction:row;flex-wrap:wrap;padding-top:0;justify-content:center;margin-bottom:1rem;}}
+.vertical-tabs button{font:inherit;font-weight:600;padding:.7rem 1rem;border-radius:8px;border:2px solid #e2e8f0;cursor:pointer;background:#fff;color:#333;transition:all .2s;white-space:nowrap;min-width:140px;}
+@media(max-width:968px){.vertical-tabs button{min-width:auto;flex:1;}}
+.vertical-tabs button:hover{background:#f8fafc;}
+.vertical-tabs button.active{background:var(--blue);color:#fff;border-color:var(--blue);}
+.chart-and-table{flex:1;min-width:0;}
+.chart-container{position:relative;height:400px;margin-bottom:1.5rem;}
+.data-table-section{min-width:280px;}
+@media(max-width:968px){.data-table-section{min-width:0;}}
+table{width:100%;border-collapse:collapse;font-size:.9rem;}
+th,td{padding:.7rem .5rem;border-bottom:1px solid #e9eef5;text-align:left;}
+th{background:#f8fafc;font-weight:600;color:#555;font-size:.85rem;}
+td:first-child{font-weight:500;color:#666;}
+td:last-child{text-align:right;}
+.city-header{background:#f1f5f9;font-weight:700;color:#334155;text-align:center;padding:.6rem;}
+.icon{display:inline-block;width:18px;height:18px;vertical-align:middle;}
+.flux-controls{display:flex;flex-direction:column;gap:1rem;margin-top:1rem;padding:1rem;background:#fff;border-radius:8px;box-shadow:0 1px 2px rgba(0,0,0,.05);}
+.control-row{display:flex;align-items:center;justify-content:center;gap:1rem;flex-wrap:wrap;}
+.control-row label{font-size:.9rem;color:#555;display:flex;align-items:center;gap:.5rem;}
+.control-row input[type="range"]{width:150px;margin:0;}
+.control-row .value-display{font-weight:600;min-width:50px;text-align:center;}
+.flux-display{display:flex;justify-content:center;gap:2rem;margin:1.5rem 0;flex-wrap:wrap;}
+.flux-card{text-align:center;padding:1.5rem 2rem;border-radius:12px;min-width:160px;background:#f8fafc;border:2px solid #e2e8f0;}
+.flux-value{font-size:2.2rem;font-weight:700;margin-bottom:.25rem;}
+.flux-label{font-size:.85rem;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:#666;}
+.flux-city{font-size:.75rem;margin-top:.5rem;color:#888;}
+.flux-breakdown{margin-top:1rem;font-size:.85rem;color:#666;}
+.flux-breakdown-row{display:flex;justify-content:space-between;margin:.5rem 0;padding:.4rem;background:#fff;border-radius:4px;}
+.flux-breakdown-label{font-weight:500;}
+.info-box{background:linear-gradient(135deg,#eff6ff 0%,#dbeafe 100%);border-left:4px solid var(--blue);padding:1rem;margin:1rem 0;border-radius:0 8px 8px 0;font-size:.85rem;line-height:1.5;}
+.info-title{font-weight:700;color:#1e40af;margin-bottom:.5rem;display:flex;align-items:center;gap:.5rem;}
+</style>
 </head>
 <body>
-
 <header>
-    <h1>☀️ Solar Comparator</h1>
-    <p>Physics-based comparison of light duration and energy flux</p>
+<h1>☀️ Sunlight Comparator</h1>
+<p>Compare daylight hours and integrated solar flux between any two cities</p>
 </header>
-
 <main>
-    <div class="card city-selectors">
-        <div class="selector-group">
-            <label>City A (The Baseline)</label>
-            <select id="cityA"></select>
-        </div>
-        <div class="selector-group">
-            <label>City B (Compare to...)</label>
-            <select id="cityB"></select>
-        </div>
-    </div>
-
-    <div class="card">
-        <div class="controls">
-            <div style="display:flex; justify-content: space-between; font-weight: bold; font-size: 0.9rem;">
-                <span>📅 Date: <span id="dateLabel"></span></span>
-                <span>☁️ Cloud Factor: <span id="cloudLabel">30%</span></span>
-            </div>
-            <input type="range" id="daySlider" min="1" max="365">
-            <input type="range" id="cloudSlider" min="0" max="100" value="30">
-        </div>
-
-        <div class="tabs">
-            <button id="tabHours" class="active">📊 Daylight Hours</button>
-            <button id="tabFlux">⚡ Integrated Flux</button>
-        </div>
-
-        <div class="display-grid">
-            <div class="chart-container">
-                <canvas id="mainChart"></canvas>
-            </div>
-            <div class="stats-panel">
-                <div class="stat-card">
-                    <div class="stat-label" id="nameA">City A</div>
-                    <div class="stat-value" id="valA">0</div>
-                    <div id="subA" style="font-size: 0.8rem; color: #94a3b8; margin-top: 4px;"></div>
-                </div>
-
-                <div class="stat-card">
-                    <div class="stat-label" id="nameB">City B</div>
-                    <div class="stat-value" id="valB" style="color: var(--orange);">0</div>
-                    <div id="subB" style="font-size: 0.8rem; color: #94a3b8; margin-top: 4px;"></div>
-                </div>
-
-                <div class="equiv-badge" id="equivContainer">
-                    <span id="equivText">Today in City A is like</span>
-                    <span class="equiv-date" id="equivDate">—</span>
-                    <span id="equivContext">in City B</span>
-                </div>
-
-                <div class="info-box" id="explanation">
-                    Toggle to see how City B matches up.
-                </div>
-            </div>
-        </div>
-    </div>
+<div class="card">
+<div class="city-selectors">
+<div class="selector-group">
+<label><svg class="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>Reference City</label>
+<select id="referenceCity"></select>
+</div>
+<div class="selector-group">
+<label><svg class="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>Comparison City</label>
+<select id="compareCity"></select>
+</div>
+</div>
+</div>
+<div class="card">
+<div class="date-earth-section">
+<div class="earth-container"><canvas id="earthCanvas" class="earth-canvas" width="320" height="320"></canvas></div>
+<div class="slider-controls">
+<div class="live-dates">
+<span class="date-selected"><span class="date-label">Selected Date</span><span class="date-value" id="selectedLabel">—</span></span>
+<span class="date-equiv"><span class="date-label" id="equivLabelTitle">Equivalent Date</span><span class="date-value" id="equivLabel">—</span></span>
+</div>
+<input type="range" id="dateSlider" min="1" max="365" step="1" value="172">
+<div class="note">💡 Drag the slider to explore different dates throughout the year</div>
+</div>
+</div>
+<div class="flux-controls" id="fluxControls" style="display:none;">
+<div class="control-row">
+<label>☁️ Cloud Cover:
+<input type="range" id="cloudSlider" min="0" max="100" value="30">
+<span class="value-display" id="cloudValue">30%</span>
+</label>
+<button id="resetCloudBtn" style="font-size:.75rem;padding:.25rem .5rem;border:1px solid #cbd5e1;border-radius:4px;background:#fff;cursor:pointer;" title="Reset to city defaults">↺ Auto</button>
+</div>
+</div>
+<div class="info-box" id="fluxInfo" style="display:none;">
+<div class="info-title">ℹ️ About Integrated Solar Flux</div>
+<p style="margin:0;">This metric calculates the total solar energy received at Earth's surface throughout the entire day, accounting for sun angle variations, atmospheric absorption, and cloud cover. Values are shown in MJ/m²/day (megajoules per square meter per day). The theoretical maximum represents clear-sky conditions at the equator during equinox.</p>
+</div>
+<div class="chart-section">
+<div class="vertical-tabs">
+<button id="hoursBtn" class="active">📊 Daylight<br>Hours</button>
+<button id="fluxBtn">⚡ Solar<br>Flux</button>
+</div>
+<div class="chart-and-table"><div class="chart-container"><canvas id="chartCanvas"></canvas></div></div>
+<div class="data-table-section"><table id="resultsTable"><tbody id="tableBody"></tbody></table></div>
+</div>
+</div>
 </main>
-
 <script>
-    const cities = [
-        { name: "Tampa, FL", lat: 27.95, lon: -82.46 },
-        { name: "East Longmeadow, MA", lat: 42.06, lon: -72.51 },
-        { name: "Reykjavik, Iceland", lat: 64.13, lon: -21.82 },
-        { name: "Phoenix, AZ", lat: 33.45, lon: -112.07 },
-        { name: "London, UK", lat: 51.51, lon: -0.13 },
-        { name: "Sydney, AU", lat: -33.86, lon: 151.20 }
-    ];
+const cities=[
+{lat:52.37,lon:4.89,tz:"Europe/Amsterdam",name:"Amsterdam",country:"Netherlands",cloud:65},
+{lat:47.50,lon:19.04,tz:"Europe/Budapest",name:"Budapest",country:"Hungary",cloud:55},
+{lat:50.85,lon:4.35,tz:"Europe/Brussels",name:"Brussels",country:"Belgium",cloud:65},
+{lat:-34.60,lon:-58.38,tz:"America/Argentina/Buenos_Aires",name:"Buenos Aires",country:"Argentina",cloud:45},
+{lat:35.23,lon:-80.84,tz:"America/New_York",name:"Charlotte, NC",country:"USA",cloud:50},
+{lat:38.03,lon:-78.48,tz:"America/New_York",name:"Charlottesville, VA",country:"USA",cloud:50},
+{lat:64.13,lon:-21.82,tz:"Atlantic/Reykjavik",name:"Reykjavik",country:"Iceland",cloud:70},
+{lat:55.68,lon:12.57,tz:"Europe/Copenhagen",name:"Copenhagen",country:"Denmark",cloud:60},
+{lat:53.35,lon:-6.26,tz:"Europe/Dublin",name:"Dublin",country:"Ireland",cloud:70},
+{lat:42.06,lon:-72.51,tz:"America/New_York",name:"East Longmeadow, MA",country:"USA",cloud:55},
+{lat:60.17,lon:24.94,tz:"Europe/Helsinki",name:"Helsinki",country:"Finland",cloud:65},
+{lat:29.76,lon:-95.37,tz:"America/Chicago",name:"Houston, TX",country:"USA",cloud:45},
+{lat:51.51,lon:-0.13,tz:"Europe/London",name:"London",country:"UK",cloud:70},
+{lat:40.42,lon:-3.70,tz:"Europe/Madrid",name:"Madrid",country:"Spain",cloud:35},
+{lat:19.43,lon:-99.13,tz:"America/Mexico_City",name:"Mexico City",country:"Mexico",cloud:40},
+{lat:59.91,lon:10.75,tz:"Europe/Oslo",name:"Oslo",country:"Norway",cloud:60},
+{lat:45.42,lon:-75.70,tz:"America/Toronto",name:"Ottawa",country:"Canada",cloud:55},
+{lat:9.10,lon:-79.38,tz:"America/Panama",name:"Panama City",country:"Panama",cloud:55},
+{lat:48.85,lon:2.35,tz:"Europe/Paris",name:"Paris",country:"France",cloud:60},
+{lat:33.45,lon:-112.07,tz:"America/Phoenix",name:"Phoenix, AZ",country:"USA",cloud:20},
+{lat:50.08,lon:14.44,tz:"Europe/Prague",name:"Prague",country:"Czech Republic",cloud:55},
+{lat:41.90,lon:12.50,tz:"Europe/Rome",name:"Rome",country:"Italy",cloud:40},
+{lat:-33.45,lon:-70.67,tz:"America/Santiago",name:"Santiago",country:"Chile",cloud:40},
+{lat:56.34,lon:-2.80,tz:"Europe/London",name:"St Andrews",country:"Scotland",cloud:70},
+{lat:59.33,lon:18.06,tz:"Europe/Stockholm",name:"Stockholm",country:"Sweden",cloud:60},
+{lat:27.95,lon:-82.46,tz:"America/New_York",name:"Tampa, FL",country:"USA",cloud:40},
+{lat:38.91,lon:-77.04,tz:"America/New_York",name:"Washington, D.C.",country:"USA",cloud:50}
+];
 
-    let currentMode = 'hours'; 
-    let chart;
-    const toRad = (d) => d * Math.PI / 180;
+let useAutoCloud=true;
+const toRad=d=>d*Math.PI/180,toDeg=r=>r*180/Math.PI;
 
-    function getSolarParams(lat, day, hour) {
-        const declination = 23.45 * Math.sin(toRad((360 / 365) * (day - 81)));
-        const l = toRad(lat);
-        const d = toRad(declination);
-        const h = toRad((hour - 12) * 15);
-        const sinAlt = Math.sin(l) * Math.sin(d) + Math.cos(l) * Math.cos(d) * Math.cos(h);
-        const alt = Math.asin(sinAlt);
-        return { alt: Math.max(0, alt), sinAlt: Math.max(0, sinAlt) };
-    }
+// Solar constant in W/m²
+const SOLAR_CONSTANT = 1361;
+// Theoretical maximum daily flux at equator, clear sky (MJ/m²/day)
+const THEORETICAL_MAX = 32.5;
 
-    // Returns a single numeric value for a city/day/mode to allow comparisons
-    function getMetric(lat, day, cloudFactor, mode) {
-        let total = 0;
-        for (let h = 0; h <= 24; h += 0.25) {
-            const p = getSolarParams(lat, day, h);
-            if (p.alt > 0) {
-                if (mode === 'hours') {
-                    total += 0.25;
-                } else {
-                    // Flux with Air Mass attenuation
-                    total += (Math.pow(0.7, 1/Math.sin(p.alt)) * p.sinAlt * cloudFactor) * 0.25;
-                }
-            }
-        }
-        return total;
-    }
+function solarDeclination(day){
+const g=(2*Math.PI/365)*(day-1);
+return toDeg(0.006918-0.399912*Math.cos(g)+0.070257*Math.sin(g)-0.006758*Math.cos(2*g)+0.000907*Math.sin(2*g)-0.002697*Math.cos(3*g)+0.00148*Math.sin(3*g));
+}
+function equationOfTime(day){
+const g=(2*Math.PI/365)*(day-1);
+return 229.18*(0.000075+0.001868*Math.cos(g)-0.032077*Math.sin(g)-0.014615*Math.cos(2*g)-0.040849*Math.sin(2*g));
+}
+function daylightHours(lat,day){
+const decR=toRad(solarDeclination(day)),latR=toRad(lat),cosH=-Math.tan(latR)*Math.tan(decR);
+if(cosH>=1)return 0;if(cosH<=-1)return 24;
+return(2*toDeg(Math.acos(cosH)))/15;
+}
+function dayOfYear(dt){return Math.floor((dt-new Date(dt.getFullYear(),0,0))/86400000);}
+function dateFromDay(y,d){return new Date(y,0,d);}
+function fmtMD(date){return date.toLocaleDateString("en-US",{month:"short",day:"numeric"}).replace(',','');}
 
-    function findEquivDate(targetVal, cityBLat, cloudFactor, mode) {
-        let bestDay = 1, minDiff = Infinity;
-        // Scan the year to find the closest match in City B
-        for (let d = 1; d <= 365; d++) {
-            const val = getMetric(cityBLat, d, cloudFactor, mode);
-            const diff = Math.abs(val - targetVal);
-            if (diff < minDiff) {
-                minDiff = diff;
-                bestDay = d;
-            }
-        }
-        // If the best match is still very far off (e.g., Iceland in winter vs Tampa), return null
-        if (mode === 'hours' && minDiff > 0.5) return null;
-        if (mode === 'flux' && minDiff > 1.5) return null;
-        
-        return new Date(2026, 0, bestDay).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    }
+function findEquivDate(lat,tgtHrs,refDay,yr){
+const ss=172,ws=355,dss=Math.abs(refDay-ss),dws=Math.min(Math.abs(refDay-ws),Math.abs(refDay-(ws-365)));
+let mirror=2*(dss<dws?ss:ws)-refDay;
+if(mirror<1)mirror+=365;if(mirror>365)mirror-=365;
+return dateFromDay(yr,mirror);
+}
 
-    function calculateData() {
-        const cityA = cities[document.getElementById('cityA').selectedIndex];
-        const cityB = cities[document.getElementById('cityB').selectedIndex];
-        const day = parseInt(document.getElementById('daySlider').value);
-        const cloudVal = parseInt(document.getElementById('cloudSlider').value);
-        const cloudFactor = 1 - (cloudVal / 100);
-        
-        const labels = [], dataA = [], dataB = [];
-        let valA = getMetric(cityA.lat, day, cloudFactor, currentMode);
-        let valB = getMetric(cityB.lat, day, cloudFactor, currentMode);
+function getTimes(lat,lon,day,tz){
+const dec=toRad(solarDeclination(day)),latR=toRad(lat),cosH=(Math.sin(toRad(-0.833))-Math.sin(latR)*Math.sin(dec))/(Math.cos(latR)*Math.cos(dec));
+if(cosH>1||cosH<-1)return{sunrise:'—',sunset:'—',hrs:0};
+const Hh=toDeg(Math.acos(cosH))/15,daylight=2*Hh,yr=new Date().getFullYear(),dt=new Date(yr,0,day);
+const EoT=equationOfTime(day)/60,solarNoonUTC=12-(lon/15)-EoT;
+const fmt=utcHr=>{let h=utcHr,off=0;if(h<0){h+=24;off=-1;}if(h>=24){h-=24;off=1;}
+const d=new Date(Date.UTC(yr,dt.getMonth(),dt.getDate()+off,Math.floor(h),Math.round((h%1)*60)));
+return d.toLocaleTimeString('en-US',{timeZone:tz,hour:'numeric',minute:'2-digit'});};
+return{sunrise:fmt(solarNoonUTC-Hh),sunset:fmt(solarNoonUTC+Hh),hrs:daylight};
+}
 
-        // Populate Chart
-        for (let h = 4; h <= 21; h += 0.25) {
-            labels.push(h % 1 === 0 ? (h > 12 ? (h-12)+'pm' : h+'am') : '');
-            const pA = getSolarParams(cityA.lat, day, h);
-            const pB = getSolarParams(cityB.lat, day, h);
-            
-            if (currentMode === 'hours') {
-                dataA.push(pA.alt > 0 ? 1 : 0);
-                dataB.push(pB.alt > 0 ? 1 : 0);
-            } else {
-                dataA.push(pA.alt > 0 ? (Math.pow(0.7, 1/Math.sin(pA.alt)) * pA.sinAlt * cloudFactor) : 0);
-                dataB.push(pB.alt > 0 ? (Math.pow(0.7, 1/Math.sin(pB.alt)) * pB.sinAlt * cloudFactor) : 0);
-            }
-        }
+function fmtHM(h){const hrs=Math.floor(h),mins=Math.round((h-hrs)*60);return hrs+'h '+mins.toString().padStart(2,'0')+'m';}
 
-        const equiv = findEquivDate(valA, cityB.lat, cloudFactor, currentMode);
-        updateUI(cityA.name, cityB.name, valA, valB, day, equiv);
-        renderChart(labels, dataA, dataB, cityA.name, cityB.name);
-    }
+// Calculate solar altitude angle at a given hour angle
+function solarAltitude(lat, declination, hourAngle) {
+const latR = toRad(lat);
+const decR = toRad(declination);
+const haR = toRad(hourAngle);
+const sinAlt = Math.sin(latR) * Math.sin(decR) + Math.cos(latR) * Math.cos(decR) * Math.cos(haR);
+return toDeg(Math.asin(Math.max(-1, Math.min(1, sinAlt))));
+}
 
-    function updateUI(nA, nB, vA, vB, day, equiv) {
-        const date = new Date(2026, 0, day);
-        document.getElementById('dateLabel').innerText = date.toLocaleDateString('en-US', {month:'short', day:'numeric'});
-        document.getElementById('nameA').innerText = nA;
-        document.getElementById('nameB').innerText = nB;
+// Calculate air mass using Kasten-Young formula
+function airMass(altitude) {
+if (altitude <= 0) return 0;
+const zenith = 90 - altitude;
+const zenithR = toRad(zenith);
+return 1 / (Math.cos(zenithR) + 0.50572 * Math.pow(96.07995 - zenith, -1.6364));
+}
 
-        if (currentMode === 'hours') {
-            document.getElementById('valA').innerText = vA.toFixed(1) + "h";
-            document.getElementById('valB').innerText = vB.toFixed(1) + "h";
-            document.getElementById('subA').innerText = "Daylight Duration";
-            document.getElementById('subB').innerText = "Daylight Duration";
-            document.getElementById('equivText').innerText = "Daylight in " + nA + " matches";
-            document.getElementById('explanation').innerText = "Comparing how long the sun stays above the horizon.";
-        } else {
-            document.getElementById('valA').innerText = (vA * 15).toFixed(1);
-            document.getElementById('valB').innerText = (vB * 15).toFixed(1);
-            document.getElementById('subA').innerText = "Solar Energy Units";
-            document.getElementById('subB').innerText = "Solar Energy Units";
-            document.getElementById('equivText').innerText = "Solar Energy in " + nA + " matches";
-            document.getElementById('explanation').innerText = "Comparing the total 'dose' of solar energy (Flux) reaching the ground.";
-        }
+// Calculate atmospheric transmittance
+function atmosphericTransmittance(am) {
+if (am <= 0) return 0;
+// Simplified clear-sky model
+return Math.pow(0.7, Math.pow(am, 0.678));
+}
 
-        const equivEl = document.getElementById('equivDate');
-        if (equiv) {
-            equivEl.innerText = equiv;
-            document.getElementById('equivContext').innerText = "in " + nB;
-            document.getElementById('equivContainer').style.opacity = "1";
-        } else {
-            equivEl.innerText = "No Match";
-            document.getElementById('equivContext').innerText = "in " + nB + " (Too different!)";
-            document.getElementById('equivContainer').style.opacity = "0.6";
-        }
-    }
+// Calculate integrated solar flux for a day (MJ/m²/day)
+function integratedSolarFlux(lat, day, cloudCover) {
+const dec = solarDeclination(day);
+const dlHours = daylightHours(lat, day);
+if (dlHours === 0) return { total: 0, clearSky: 0, components: { direct: 0, diffuse: 0, cloud: cloudCover } };
+if (dlHours === 24) {
+// Polar day - integrate over 24 hours
+let totalEnergy = 0;
+const steps = 96; // Every 15 minutes
+for (let i = 0; i < steps; i++) {
+const hour = (i / steps) * 24;
+const hourAngle = (hour - 12) * 15;
+const alt = solarAltitude(lat, dec, hourAngle);
+if (alt > 0) {
+const am = airMass(alt);
+const trans = atmosphericTransmittance(am);
+const irradiance = SOLAR_CONSTANT * trans * Math.sin(toRad(alt));
+totalEnergy += irradiance * (24 / steps) * 3600; // J/m²
+}
+}
+const clearSkyMJ = totalEnergy / 1e6;
+const cloudFactor = 1 - (cloudCover / 100) * 0.75;
+const totalMJ = clearSkyMJ * cloudFactor;
+return {
+total: totalMJ,
+clearSky: clearSkyMJ,
+components: {
+direct: clearSkyMJ * 0.7 * cloudFactor,
+diffuse: clearSkyMJ * 0.3 * cloudFactor,
+cloud: cloudCover
+}
+};
+}
+// Normal day - integrate over daylight hours
+let totalEnergy = 0;
+const halfDaylight = dlHours / 2;
+const steps = Math.ceil(dlHours * 4); // 15-minute intervals
+for (let i = 0; i < steps; i++) {
+const hourFromNoon = -halfDaylight + (i / steps) * dlHours;
+const hourAngle = hourFromNoon * 15;
+const alt = solarAltitude(lat, dec, hourAngle);
+if (alt > 0) {
+const am = airMass(alt);
+const trans = atmosphericTransmittance(am);
+const irradiance = SOLAR_CONSTANT * trans * Math.sin(toRad(alt));
+totalEnergy += irradiance * (dlHours / steps) * 3600; // J/m²
+}
+}
+const clearSkyMJ = totalEnergy / 1e6; // Convert to MJ
+const cloudFactor = 1 - (cloudCover / 100) * 0.75; // Clouds reduce by up to 75%
+const totalMJ = clearSkyMJ * cloudFactor;
+return {
+total: totalMJ,
+clearSky: clearSkyMJ,
+components: {
+direct: clearSkyMJ * 0.7 * cloudFactor, // 70% direct
+diffuse: clearSkyMJ * 0.3 * cloudFactor, // 30% diffuse
+cloud: cloudCover
+}
+};
+}
 
-    function renderChart(labels, dataA, dataB, nA, nB) {
-        const ctx = document.getElementById('mainChart').getContext('2d');
-        if (chart) chart.destroy();
-        chart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: [
-                    { label: nA, data: dataA, borderColor: '#0b5fb3', backgroundColor: 'rgba(11, 95, 179, 0.15)', fill: true, pointRadius: 0, tension: 0.4 },
-                    { label: nB, data: dataB, borderColor: '#f28e2b', backgroundColor: 'rgba(242, 142, 43, 0.15)', fill: true, pointRadius: 0, tension: 0.4 }
-                ]
-            },
-            options: { 
-                responsive: true, maintainAspectRatio: false,
-                plugins: { legend: { position: 'bottom' } },
-                scales: { 
-                    y: { 
-                        beginAtZero: true, 
-                        display: currentMode !== 'hours',
-                        title: { display: true, text: currentMode === 'hours' ? '' : 'Energy Intensity' }
-                    },
-                    x: { ticks: { autoSkip: true, maxTicksLimit: 12 } }
-                }
-            }
-        });
-    }
+function getCloud(){return useAutoCloud?getAvgCloud():Number(document.getElementById('cloudSlider').value);}
+function getAvgCloud(){
+const r=document.getElementById('referenceCity').selectedIndex,c=document.getElementById('compareCity').selectedIndex;
+return Math.round((cities[r].cloud+cities[c].cloud)/2);
+}
 
-    // Init Logic
-    const selA = document.getElementById('cityA'), selB = document.getElementById('cityB');
-    cities.forEach((c, i) => {
-        selA.options[i] = new Option(c.name, i);
-        selB.options[i] = new Option(c.name, i);
-    });
-    
-    // Set default view (Tampa vs East Longmeadow on today's date)
-    selA.selectedIndex = 0;
-    selB.selectedIndex = 1;
-    const today = new Date();
-    const startOfYear = new Date(today.getFullYear(), 0, 0);
-    const diff = today - startOfYear;
-    const oneDay = 1000 * 60 * 60 * 24;
-    document.getElementById('daySlider').value = Math.floor(diff / oneDay);
+function buildTable(base,comp,day,mode){
+const body=document.getElementById('tableBody');body.innerHTML='';
+const tb1=getTimes(base.lat,base.lon,day,base.tz),tb2=getTimes(comp.lat,comp.lon,day,comp.tz);
+if(mode==='hours'){
+const rows=[{v:'<div class="city-header">'+base.name+'</div>',s:1},{l:'Latitude',v:base.lat.toFixed(2)+'°'},{l:'Sunrise',v:tb1.sunrise},{l:'Sunset',v:tb1.sunset},{l:'Daylight',v:fmtHM(tb1.hrs)},
+{v:'<div class="city-header">'+comp.name+'</div>',s:1},{l:'Latitude',v:comp.lat.toFixed(2)+'°'},{l:'Sunrise',v:tb2.sunrise},{l:'Sunset',v:tb2.sunset},{l:'Daylight',v:fmtHM(tb2.hrs)}];
+rows.forEach(r=>{const tr=document.createElement('tr');tr.innerHTML=r.s?'<td colspan="2">'+r.v+'</td>':'<td>'+r.l+'</td><td>'+r.v+'</td>';body.appendChild(tr);});
+}else{
+const cloud=getCloud();
+const fluxB=integratedSolarFlux(base.lat,day,cloud);
+const fluxC=integratedSolarFlux(comp.lat,day,cloud);
+const pctB = (fluxB.total / THEORETICAL_MAX * 100).toFixed(1);
+const pctC = (fluxC.total / THEORETICAL_MAX * 100).toFixed(1);
+body.innerHTML='<tr><td colspan="2"><div class="flux-display">'+
+'<div class="flux-card" style="border-color:#0b5fb3;"><div class="flux-value" style="color:#0b5fb3;">'+fluxB.total.toFixed(1)+'</div><div class="flux-label">MJ/m²/day</div><div class="flux-city">'+base.name+'</div><div style="font-size:.7rem;color:#888;margin-top:.5rem;">'+pctB+'% of theoretical max</div></div>'+
+'<div class="flux-card" style="border-color:#f28e2b;"><div class="flux-value" style="color:#f28e2b;">'+fluxC.total.toFixed(1)+'</div><div class="flux-label">MJ/m²/day</div><div class="flux-city">'+comp.name+'</div><div style="font-size:.7rem;color:#888;margin-top:.5rem;">'+pctC+'% of theoretical max</div></div>'+
+'</div></td></tr>'+
+'<tr><td colspan="2"><div class="city-header">'+base.name+' Breakdown</div></td></tr>'+
+'<tr><td colspan="2"><div class="flux-breakdown">'+
+'<div class="flux-breakdown-row"><span class="flux-breakdown-label">Clear Sky Potential</span><span>'+fluxB.clearSky.toFixed(1)+' MJ/m²/day</span></div>'+
+'<div class="flux-breakdown-row"><span class="flux-breakdown-label">Direct Radiation</span><span>'+fluxB.components.direct.toFixed(1)+' MJ/m²/day</span></div>'+
+'<div class="flux-breakdown-row"><span class="flux-breakdown-label">Diffuse Radiation</span><span>'+fluxB.components.diffuse.toFixed(1)+' MJ/m²/day</span></div>'+
+'<div class="flux-breakdown-row"><span class="flux-breakdown-label">Cloud Cover</span><span>'+cloud+'%</span></div>'+
+'</div></td></tr>'+
+'<tr><td colspan="2"><div class="city-header">'+comp.name+' Breakdown</div></td></tr>'+
+'<tr><td colspan="2"><div class="flux-breakdown">'+
+'<div class="flux-breakdown-row"><span class="flux-breakdown-label">Clear Sky Potential</span><span>'+fluxC.clearSky.toFixed(1)+' MJ/m²/day</span></div>'+
+'<div class="flux-breakdown-row"><span class="flux-breakdown-label">Direct Radiation</span><span>'+fluxC.components.direct.toFixed(1)+' MJ/m²/day</span></div>'+
+'<div class="flux-breakdown-row"><span class="flux-breakdown-label">Diffuse Radiation</span><span>'+fluxC.components.diffuse.toFixed(1)+' MJ/m²/day</span></div>'+
+'<div class="flux-breakdown-row"><span class="flux-breakdown-label">Cloud Cover</span><span>'+cloud+'%</span></div>'+
+'</div></td></tr>'+
+'<tr><td colspan="2"><div style="font-size:.75rem;color:#888;margin-top:.5rem;line-height:1.4;padding:.5rem;background:#f8fafc;border-radius:4px;"><strong>Note:</strong> Calculations use atmospheric transmission models and assume standard atmospheric conditions. Theoretical maximum ('+THEORETICAL_MAX+' MJ/m²/day) represents clear-sky equatorial conditions at equinox.</div></td></tr>';
+}
+}
 
-    document.getElementById('tabHours').addEventListener('click', function() {
-        currentMode = 'hours';
-        this.classList.add('active');
-        document.getElementById('tabFlux').classList.remove('active');
-        calculateData();
-    });
+let chart,mode='hours',chartData=null;
+function prepChartData(base,comp){
+const daysRaw=[];for(let d=355;d<=365;d++)daysRaw.push(d);for(let d=1;d<=354;d++)daysRaw.push(d);
+const days=Array.from({length:daysRaw.length},(_,i)=>i+1);
+const cloud=getCloud();
+const dataH={base:daysRaw.map(d=>daylightHours(base.lat,d)),comp:daysRaw.map(d=>daylightHours(comp.lat,d))};
+const dataF={base:daysRaw.map(d=>integratedSolarFlux(base.lat,d,cloud).total),comp:daysRaw.map(d=>integratedSolarFlux(comp.lat,d,cloud).total)};
+return{days,daysRaw,dataH,dataF,base,comp};
+}
+function drawChart(refDay,eqDate){
+if(!chartData)return;
+const ctx=document.getElementById("chartCanvas").getContext("2d");
+const{days,daysRaw,dataH,dataF,base,comp}=chartData;
+let data,lbl,yCfg;
+if(mode==="hours"){data=dataH;lbl="Daylight Hours";yCfg={min:5,max:20};}
+else{data=dataF;lbl="Solar Flux (MJ/m²/day)";yCfg={min:0,max:35};}
+const dsBase={label:base.name,data:data.base,borderColor:"#0b5fb3",borderWidth:2.5,tension:.3,fill:false,pointRadius:0};
+const dsComp={label:comp.name,data:data.comp,borderColor:"#f28e2b",borderWidth:2.5,tension:.3,fill:false,pointRadius:0};
+const datasets=[dsBase,dsComp];
+const annotations={};
+if(mode==='flux'){
+annotations.maxLine={
+type:"line",
+yMin:THEORETICAL_MAX,
+yMax:THEORETICAL_MAX,
+borderColor:"rgba(16,185,129,0.5)",
+borderWidth:2,
+borderDash:[5,5],
+label:{
+enabled:true,
+content:'Theoretical Max: '+THEORETICAL_MAX+' MJ/m²/day',
+position:"end",
+backgroundColor:"rgba(255,255,255,.95)",
+color:"#10b981",
+font:{size:11,weight:"bold"}
+}
+};
+}
+const refIdx=daysRaw.indexOf(refDay);
+if(refIdx!==-1)annotations.selected={type:"line",xMin:refIdx+1,xMax:refIdx+1,borderColor:"#1e293b",borderWidth:2.5,label:{enabled:true,content:fmtMD(dateFromDay(new Date().getFullYear(),refDay)),position:"start",backgroundColor:"rgba(255,255,255,.95)",color:"#1e293b",font:{size:11,weight:"bold"}}};
+if(eqDate&&mode==='hours'){const eqIdx=daysRaw.indexOf(dayOfYear(eqDate));if(eqIdx!==-1)annotations.equiv={type:"line",xMin:eqIdx+1,xMax:eqIdx+1,borderColor:"#e11d48",borderWidth:2.5,label:{enabled:true,content:fmtMD(eqDate),position:"start",backgroundColor:"rgba(255,255,255,.95)",color:"#e11d48",font:{size:11,weight:"bold"}}};}
+if(chart)chart.destroy();
+chart=new Chart(ctx,{type:"line",data:{labels:days,datasets},options:{responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{display:true,position:"bottom",labels:{usePointStyle:true,padding:15,font:{size:12}}},annotation:{annotations}},scales:{x:{display:false},y:{title:{display:true,text:lbl,font:{size:13,weight:"600"}},...yCfg,grid:{color:"#e2e8f0"}}}},plugins:[Chart.registry.getPlugin("annotation")]});
+}
 
-    document.getElementById('tabFlux').addEventListener('click', function() {
-        currentMode = 'flux';
-        this.classList.add('active');
-        document.getElementById('tabHours').classList.remove('active');
-        calculateData();
-    });
+function updateAll(){
+const base=cities[document.getElementById("referenceCity").selectedIndex];
+const comp=cities[document.getElementById("compareCity").selectedIndex];
+const day=Number(document.getElementById("dateSlider").value);
+const date=dateFromDay(new Date().getFullYear(),day);
+const eqDate=findEquivDate(comp.lat,daylightHours(base.lat,day),day,date.getFullYear());
+document.getElementById("selectedLabel").textContent=fmtMD(date);
+const eqBox=document.querySelector('.date-equiv');
+if(mode==='flux'){
+eqBox.style.display='none';
+}else{
+eqBox.style.display='inline-block';
+document.getElementById("equivLabelTitle").textContent="Daylight Equivalent";
+document.getElementById("equivLabel").textContent=eqDate?fmtMD(eqDate):"—";
+}
+if(useAutoCloud){const avg=getAvgCloud();document.getElementById('cloudSlider').value=avg;document.getElementById('cloudValue').textContent=avg+'%';}
+buildTable(base,comp,day,mode);
+chartData=prepChartData(base,comp);
+drawChart(day,eqDate);
+drawEarth(day);
+document.getElementById('fluxControls').style.display=mode==='flux'?'flex':'none';
+document.getElementById('fluxInfo').style.display=mode==='flux'?'block':'none';
+}
 
-    document.getElementById('daySlider').addEventListener('input', calculateData);
-    document.getElementById('cloudSlider').addEventListener('input', function() {
-        document.getElementById('cloudLabel').innerText = this.value + "%";
-        calculateData();
-    });
-    document.getElementById('cityA').addEventListener('change', calculateData);
-    document.getElementById('cityB').addEventListener('change', calculateData);
+function smoothstep(e0,e1,x){const t=Math.max(0,Math.min(1,(x-e0)/(e1-e0)));return t*t*(3-2*t);}
+let starsCache=null;
+function getStars(w,h){if(!starsCache||starsCache.w!==w||starsCache.h!==h){const stars=[];let r=12345;const rnd=()=>{r=(r*1103515245+12345)&0x7fffffff;return r/0x7fffffff;};for(let i=0;i<100;i++)stars.push({x:rnd()*w,y:rnd()*h,r:rnd()*1.2+0.3,b:rnd()*0.5+0.5});starsCache={w,h,stars};}return starsCache.stars;}
+const cityLights=[{lat:40.7,lon:-74.0,size:3},{lat:34.0,lon:-118.2,size:2.5},{lat:41.9,lon:-87.6,size:2},{lat:29.8,lon:-95.4,size:1.8},{lat:33.4,lon:-112.1,size:1.5},{lat:39.7,lon:-104.9,size:1.5},{lat:47.6,lon:-122.3,size:1.5},{lat:25.8,lon:-80.2,size:1.8},{lat:43.7,lon:-79.4,size:1.8},{lat:19.4,lon:-99.1,size:2.5},{lat:-23.5,lon:-46.6,size:2.5},{lat:-34.6,lon:-58.4,size:2},{lat:-22.9,lon:-43.2,size:2},{lat:4.7,lon:-74.1,size:1.5},{lat:-12.0,lon:-77.0,size:1.5},{lat:51.5,lon:-0.1,size:2.5},{lat:48.9,lon:2.3,size:2.5},{lat:52.5,lon:13.4,size:2},{lat:41.9,lon:12.5,size:2},{lat:40.4,lon:-3.7,size:2},{lat:30.0,lon:31.2,size:2},{lat:-33.9,lon:18.4,size:1.5},{lat:6.5,lon:3.4,size:2}];
+const continents={northAmerica:[[70,-140],[72,-120],[70,-100],[65,-85],[60,-75],[55,-60],[50,-55],[45,-65],[42,-70],[38,-75],[35,-78],[30,-82],[28,-82],[25,-80],[25,-85],[27,-97],[26,-98],[22,-100],[18,-105],[15,-95],[18,-88],[21,-87],[22,-90],[25,-90],[28,-95],[29,-104],[32,-115],[35,-120],[40,-124],[45,-124],[50,-127],[55,-130],[60,-140],[65,-145],[70,-140]],centralAmerica:[[18,-88],[15,-88],[12,-85],[10,-84],[8,-80],[9,-78],[10,-75],[8,-77],[7,-77],[9,-80],[10,-83],[14,-87],[18,-88]],southAmerica:[[10,-75],[12,-72],[12,-68],[10,-65],[6,-60],[4,-52],[0,-50],[-5,-35],[-10,-37],[-15,-40],[-20,-42],[-25,-48],[-30,-52],[-35,-58],[-40,-65],[-45,-68],[-50,-72],[-55,-68],[-55,-65],[-52,-60],[-48,-65],[-42,-63],[-35,-55],[-28,-49],[-22,-42],[-15,-45],[-10,-50],[-5,-55],[0,-60],[2,-68],[5,-73],[10,-75]],europe:[[70,30],[65,25],[60,30],[55,38],[50,40],[45,40],[40,30],[37,25],[36,28],[38,30],[40,25],[42,18],[43,10],[44,5],[46,0],[48,-5],[50,0],[52,5],[55,10],[58,15],[60,20],[62,25],[65,28],[70,30]],africa:[[35,10],[37,-5],[35,-10],[30,-15],[25,-17],[20,-17],[15,-17],[10,-15],[5,-8],[0,-5],[-5,10],[-10,15],[-15,20],[-20,25],[-25,30],[-30,32],[-35,20],[-35,27],[-30,35],[-25,40],[-15,42],[-10,45],[0,45],[5,42],[10,40],[15,45],[20,50],[25,52],[30,35],[32,32],[35,30],[35,10]],australia:[[-12,130],[-15,125],[-20,118],[-25,114],[-30,115],[-35,118],[-38,142],[-35,148],[-30,153],[-25,152],[-20,148],[-15,145],[-12,142],[-10,145],[-12,135],[-12,130]],greenland:[[76,-20],[80,-30],[82,-40],[80,-55],[75,-60],[70,-55],[68,-45],[70,-35],[72,-25],[76,-20]]};
+function pointInPoly(lat,lon,poly){let inside=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){const xi=poly[i][1],yi=poly[i][0],xj=poly[j][1],yj=poly[j][0];if(((yi>lat)!==(yj>lat))&&(lon<(xj-xi)*(lat-yi)/(yj-yi)+xi))inside=!inside;}return inside;}
+function isLand(lat,lon){while(lon>180)lon-=360;while(lon<-180)lon+=360;for(const c of Object.values(continents))if(pointInPoly(lat,lon,c))return true;return false;}
+function drawEarth(day){
+const canvas=document.getElementById('earthCanvas'),ctx=canvas.getContext('2d'),w=canvas.width,h=canvas.height,cx=w/2,cy=h/2,radius=w*0.45;
+const viewLat=27.95,viewLon=-82.46,viewLatR=toRad(viewLat),viewLonR=toRad(viewLon);
+ctx.clearRect(0,0,w,h);
+const spaceGrad=ctx.createRadialGradient(cx,cy,0,cx,cy,w*0.7);spaceGrad.addColorStop(0,'#0a0a1a');spaceGrad.addColorStop(0.5,'#050510');spaceGrad.addColorStop(1,'#000000');ctx.fillStyle=spaceGrad;ctx.fillRect(0,0,w,h);
+const stars=getStars(w,h);stars.forEach(s=>{ctx.fillStyle='rgba(255,255,255,'+s.b+')';ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fill();});
+const decRad=toRad(solarDeclination(day));
+const imageData=ctx.createImageData(w,h),data=imageData.data;
+for(let py=0;py<h;py++){for(let px=0;px<w;px++){const dx=px-cx,dy=py-cy,distSq=dx*dx+dy*dy,radiusSq=radius*radius;
+if(distSq<=radiusSq){const x=dx/radius,y=-dy/radius,rho=Math.sqrt(x*x+y*y);
+if(rho<=1&&rho>0.001){const c=Math.asin(rho),cosC=Math.cos(c),sinC=Math.sin(c),cosVL=Math.cos(viewLatR),sinVL=Math.sin(viewLatR);
+const latR=Math.asin(cosC*sinVL+(y*sinC*cosVL)/rho);const lonR=viewLonR+Math.atan2(x*sinC,rho*cosVL*cosC-y*sinVL*sinC);
+const lat=toDeg(latR);let lon=toDeg(lonR);while(lon>180)lon-=360;while(lon<-180)lon+=360;
+const dLon=toRad(lon);const sinAlt=Math.sin(latR)*Math.sin(decRad)+Math.cos(latR)*Math.cos(decRad)*Math.cos(dLon);
+const sunAngle=toDeg(Math.asin(sinAlt));const dayAmt=smoothstep(-12,6,sunAngle),nightAmt=1-dayAmt;
+const land=isLand(lat,lon),limb=1-(rho*rho*0.25);
+let dayR,dayG,dayB;
+if(land){const lf=Math.abs(lat)/90;if(Math.abs(lat)>65){dayR=240;dayG=245;dayB=250;}else if(Math.abs(lat)>50){dayR=60+lf*40;dayG=100+lf*30;dayB=50;}else if(Math.abs(lat)<25){dayR=50;dayG=130;dayB=50;}else{dayR=80;dayG=120;dayB=60;}}
+else{const dv=Math.sin(lat*0.1)*10;dayR=30+dv;dayG=80+dv;dayB=160+dv;}
+let nightR=5,nightG=5,nightB=15;
+if(land&&nightAmt>0.3){for(const city of cityLights){const dLat=lat-city.lat,dLon2=lon-city.lon,dist=Math.sqrt(dLat*dLat+dLon2*dLon2);if(dist<city.size*3){const glow=Math.exp(-dist/city.size)*nightAmt;nightR+=glow*255*0.9;nightG+=glow*200*0.7;nightB+=glow*100*0.3;}}}
+let r=dayR*dayAmt*limb+nightR*nightAmt,g=dayG*dayAmt*limb+nightG*nightAmt,b=dayB*dayAmt*limb+nightB*nightAmt;
+if(rho>0.85){const ab=(rho-0.85)/0.15;r=r*(1-ab*0.3)+100*ab*0.3;g=g*(1-ab*0.3)+150*ab*0.3;b=b*(1-ab*0.3)+255*ab*0.3;}
+const idx=(py*w+px)*4;data[idx]=Math.min(255,Math.max(0,r));data[idx+1]=Math.min(255,Math.max(0,g));data[idx+2]=Math.min(255,Math.max(0,b));data[idx+3]=255;}
+else if(rho<=0.001){const idx=(py*w+px)*4;data[idx]=30;data[idx+1]=80;data[idx+2]=160;data[idx+3]=255;}}}}
+ctx.putImageData(imageData,0,0);
+const glowGrad=ctx.createRadialGradient(cx,cy,radius*0.92,cx,cy,radius*1.12);glowGrad.addColorStop(0,'rgba(100,180,255,0)');glowGrad.addColorStop(0.4,'rgba(120,180,255,0.12)');glowGrad.addColorStop(0.7,'rgba(80,140,220,0.08)');glowGrad.addColorStop(1,'rgba(50,100,180,0)');ctx.fillStyle=glowGrad;ctx.beginPath();ctx.arc(cx,cy,radius*1.12,0,Math.PI*2);ctx.fill();
+const dec=solarDeclination(day),sunAngle=dec>0?-Math.PI/3.5:-Math.PI/2.5,sunDist=radius*1.35,sunX=cx+sunDist*Math.cos(sunAngle),sunY=cy+sunDist*Math.sin(sunAngle);
+const sunGlow=ctx.createRadialGradient(sunX,sunY,0,sunX,sunY,20);sunGlow.addColorStop(0,'rgba(255,250,220,1)');sunGlow.addColorStop(0.3,'rgba(255,240,150,0.8)');sunGlow.addColorStop(0.6,'rgba(255,220,100,0.3)');sunGlow.addColorStop(1,'rgba(255,200,80,0)');ctx.fillStyle=sunGlow;ctx.beginPath();ctx.arc(sunX,sunY,20,0,Math.PI*2);ctx.fill();
+ctx.fillStyle='#fffef0';ctx.beginPath();ctx.arc(sunX,sunY,6,0,Math.PI*2);ctx.fill();
+ctx.fillStyle='#fff';ctx.font='bold 13px -apple-system,BlinkMacSystemFont,sans-serif';ctx.textAlign='center';ctx.shadowColor='rgba(0,0,0,0.9)';ctx.shadowBlur=4;ctx.fillText(fmtMD(dateFromDay(new Date().getFullYear(),day)),cx,h-12);ctx.shadowBlur=0;
+}
 
-    calculateData();
+function populateSelectors(){
+const ref=document.getElementById("referenceCity"),cmp=document.getElementById("compareCity");
+cities.forEach((c,i)=>{const o1=document.createElement("option");o1.value=i;o1.textContent=c.name+', '+c.country;ref.appendChild(o1);const o2=document.createElement("option");o2.value=i;o2.textContent=c.name+', '+c.country;cmp.appendChild(o2);});
+}
+function findClosest(lat,lon){let best=0,minD=Infinity;cities.forEach((c,i)=>{const d=Math.sqrt((c.lat-lat)**2+(c.lon-lon)**2);if(d<minD){minD=d;best=i;}});return best;}
+function initGeo(){
+if(navigator.geolocation){navigator.geolocation.getCurrentPosition(p=>{document.getElementById("referenceCity").selectedIndex=findClosest(p.coords.latitude,p.coords.longitude);updateAll();},()=>{const ti=cities.findIndex(c=>c.name==="Tampa, FL");document.getElementById("referenceCity").selectedIndex=ti>=0?ti:0;updateAll();},{timeout:5000});}
+else{const ti=cities.findIndex(c=>c.name==="Tampa, FL");document.getElementById("referenceCity").selectedIndex=ti>=0?ti:0;updateAll();}
+}
+function init(){populateSelectors();document.getElementById("compareCity").selectedIndex=16;document.getElementById("dateSlider").value=dayOfYear(new Date());initGeo();}
+
+document.getElementById("dateSlider").addEventListener("input",updateAll);
+document.getElementById("referenceCity").addEventListener("change",()=>{useAutoCloud=true;updateAll();});
+document.getElementById("compareCity").addEventListener("change",()=>{useAutoCloud=true;updateAll();});
+document.getElementById("cloudSlider").addEventListener("input",function(){useAutoCloud=false;document.getElementById("cloudValue").textContent=this.value+'%';if(mode==='flux'){chartData=prepChartData(chartData.base,chartData.comp);updateAll();}});
+document.getElementById("resetCloudBtn").addEventListener("click",()=>{useAutoCloud=true;updateAll();});
+document.getElementById("hoursBtn").addEventListener("click",()=>{mode="hours";hoursBtn.classList.add("active");fluxBtn.classList.remove("active");updateAll();});
+document.getElementById("fluxBtn").addEventListener("click",()=>{mode="flux";fluxBtn.classList.add("active");hoursBtn.classList.remove("active");updateAll();});
+window.addEventListener("DOMContentLoaded",init);
 </script>
 </body>
 </html>
